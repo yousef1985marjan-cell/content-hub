@@ -23,6 +23,9 @@ import {
   ChevronDown,
   ChevronUp,
   Image as ImageIcon,
+  Pencil,
+  Save,
+  Check,
 } from "lucide-react";
 import { BRAND_META, BrandIcon, detectBrand, type BrandKey } from "@/lib/brand-icons";
 
