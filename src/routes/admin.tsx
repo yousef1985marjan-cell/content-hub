@@ -494,11 +494,21 @@ function PlatformsEditor({
                         {it.icon ? "صورة مخصّصة" : "الأيقونة الافتراضية — ارفع صورة لاستبدالها"}
                       </p>
                       {it.icon && (
+                        <div className="mt-2 flex gap-1">
+                          <button
+                            onClick={() => patch(it.id, { icon: "" })}
+                            className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-destructive/10 px-2 py-1 text-xs font-bold text-destructive hover:bg-destructive/20"
+                          >
+                            <Trash2 className="h-3 w-3" /> حذف الأيقونة
+                          </button>
+                        </div>
+                      )}
+                      {it.brand && !it.icon && (
                         <button
-                          onClick={() => patch(it.id, { icon: "" })}
-                          className="mt-1 w-full text-center text-xs text-destructive hover:underline"
+                          onClick={() => patch(it.id, { brand: "" })}
+                          className="mt-2 w-full text-center text-xs text-destructive hover:underline"
                         >
-                          إزالة
+                          إزالة أيقونة المنصة
                         </button>
                       )}
                     </div>
@@ -955,7 +965,7 @@ function BrandPicker({
             {customIcons.map((ic) => {
               const selected = currentIcon === ic.dataUrl;
               return (
-                <div key={ic.id} className="group relative">
+                <div key={ic.id} className="group relative flex flex-col gap-1">
                   <button
                     type="button"
                     title={ic.name}
@@ -970,10 +980,11 @@ function BrandPicker({
                   <button
                     type="button"
                     onClick={() => removeIcon(ic.id)}
-                    aria-label="حذف"
-                    className="absolute -right-1 -top-1 hidden h-4 w-4 place-items-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground group-hover:grid"
+                    title="حذف من المكتبة"
+                    aria-label="حذف من المكتبة"
+                    className="inline-flex items-center justify-center gap-0.5 rounded-md bg-destructive/10 py-1 text-[10px] font-bold text-destructive hover:bg-destructive/20"
                   >
-                    ×
+                    <Trash2 className="h-3 w-3" /> حذف
                   </button>
                 </div>
               );
@@ -984,9 +995,9 @@ function BrandPicker({
           <button
             type="button"
             onClick={onClearIcon}
-            className="mt-2 text-[10px] text-destructive hover:underline"
+            className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-destructive hover:underline"
           >
-            إزالة الأيقونة المخصّصة من هذه المنصة
+            <Trash2 className="h-3 w-3" /> إزالة الأيقونة المخصّصة من هذه المنصة
           </button>
         )}
       </div>
