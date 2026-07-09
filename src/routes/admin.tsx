@@ -456,15 +456,17 @@ function PlatformsEditor({
                       <label className="mb-1 block text-xs font-bold text-muted-foreground">الأيقونة</label>
                       {(() => {
                         const brand = (it.brand as BrandKey) || detectBrand(it.url);
+                        const generic = brand ? isGeneric(brand) : false;
+                        const filled = !it.icon && (it.accent || (brand && !generic));
                         return (
                           <label
                             className="grid h-24 w-24 place-items-center overflow-hidden rounded-xl border-2 border-dashed border-input bg-background hover:border-primary cursor-pointer transition-colors"
-                            style={!it.icon && (brand || it.accent) ? { background: it.accent || BRAND_META[brand!].color, borderStyle: "solid" } : undefined}
+                            style={filled ? { background: it.accent || BRAND_META[brand!].color, borderStyle: "solid" } : undefined}
                           >
                             {it.icon ? (
                               <img src={it.icon} alt="" className="h-full w-full object-cover" />
                             ) : brand ? (
-                              <BrandIcon brand={brand} className="h-10 w-10 text-white" />
+                              <BrandIcon brand={brand} className={filled ? "h-10 w-10 text-white" : "h-12 w-12 text-foreground"} />
                             ) : (
                               <span className="px-1 text-center text-xs text-muted-foreground">تحميل أيقونة</span>
                             )}
