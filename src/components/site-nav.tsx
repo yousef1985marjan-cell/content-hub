@@ -3,13 +3,13 @@ import { Heart, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const links = [
-  { to: "/", label: "الرئيسية" },
   { to: "/about", label: "من نحن" },
   { to: "/publisher", label: "منصات شفاء" },
   { to: "/privacy", label: "سياسة الخصوصية" },
   { to: "/terms", label: "الشروط والأحكام" },
   { to: "/disclaimer", label: "إخلاء المسؤولية" },
 ];
+
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
