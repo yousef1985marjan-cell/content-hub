@@ -1,26 +1,42 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/page-shell";
 import { useContent, type PlatformLink } from "@/lib/content-store";
-import { ExternalLink, Sparkles } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { BrandIcon, detectBrand, BRAND_META, type BrandKey } from "@/lib/brand-icons";
 
 export const Route = createFileRoute("/publisher")({
-  head: () => ({ meta: [{ title: "منصات شفاء — بيانات الناشر" }] }),
+  head: () => ({ meta: [{ title: "منصات شفاء — تابع شفاء وحمّل التطبيق" }] }),
   component: Page,
 });
+
+const SOCIAL_BRANDS: BrandKey[] = [
+  "facebook",
+  "instagram",
+  "tiktok",
+  "youtube",
+  "whatsapp",
+  "telegram",
+  "twitter",
+  "snapchat",
+  "linkedin",
+];
 
 function resolveBrand(p: PlatformLink): BrandKey | null {
   if (p.brand && p.brand !== "auto") return p.brand as BrandKey;
   return detectBrand(p.url);
 }
 
-function PlatformTile({ p }: { p: PlatformLink }) {
+function SocialCircle({ p }: { p: PlatformLink }) {
   const brand = resolveBrand(p);
-  const brandColor = brand ? BRAND_META[brand].color : null;
-  const bg =
+  const color = brand ? BRAND_META[brand].color : null;
+  // Instagram special gradient
+  const isInstagram = brand === "instagram";
+  const background =
     p.accent ||
-    (brandColor
-      ? `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)`
+    (isInstagram
+      ? "radial-gradient(circle at 30% 110%, #FFD776 0%, #F58529 20%, #DD2A7B 45%, #8134AF 70%, #515BD4 100%)"
+      : color
+      ? `linear-gradient(135deg, ${color}, ${color})`
       : "var(--gradient-hero)");
 
   return (
@@ -29,110 +45,153 @@ function PlatformTile({ p }: { p: PlatformLink }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={p.name}
-      className="group relative flex flex-col items-center gap-3 focus:outline-none"
+      className="group flex flex-col items-center gap-2 focus:outline-none"
     >
       <div
-        className={`relative grid h-24 w-24 place-items-center overflow-hidden rounded-3xl text-white transition-all duration-300 group-hover:-translate-y-1 group-hover:scale-105 group-focus-visible:ring-4 group-focus-visible:ring-primary/40 sm:h-28 sm:w-28 ${
-          p.featured ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
-        }`}
-        style={{ background: bg, boxShadow: "var(--shadow-card)" }}
+        className="relative grid h-16 w-16 place-items-center rounded-full text-white shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-focus-visible:ring-4 group-focus-visible:ring-primary/40 sm:h-[72px] sm:w-[72px]"
+        style={{ background }}
       >
         {p.icon ? (
-          <img src={p.icon} alt="" className="h-full w-full object-cover" />
+          <img src={p.icon} alt="" className="h-full w-full rounded-full object-cover" />
         ) : brand ? (
-          <BrandIcon brand={brand} className="h-12 w-12 drop-shadow" />
+          <BrandIcon brand={brand} className="h-8 w-8 drop-shadow-sm" />
         ) : (
-          <ExternalLink className="h-10 w-10" />
-        )}
-
-        {/* subtle shine */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/25 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-        {p.featured && (
-          <span className="absolute -top-2 -right-2 grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground shadow-md">
-            <Sparkles className="h-3.5 w-3.5" />
-          </span>
-        )}
-        {p.badge && !p.featured && (
-          <span className="absolute -top-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-[10px] font-black text-primary-foreground shadow">
-            {p.badge}
-          </span>
+          <ExternalLink className="h-7 w-7" />
         )}
       </div>
+      <div className="text-xs font-bold text-foreground sm:text-sm">{p.name}</div>
+    </a>
+  );
+}
 
-      <div className="text-center">
-        <div className="text-sm font-black text-foreground group-hover:text-primary transition-colors">
-          {p.name}
-        </div>
-        {p.description && (
-          <div className="mt-0.5 line-clamp-1 max-w-[10rem] text-[11px] text-muted-foreground">
-            {p.description}
-          </div>
-        )}
+function StoreButton({
+  href,
+  brand,
+  title,
+  subtitle,
+}: {
+  href: string;
+  brand: BrandKey;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`${title} — ${subtitle}`}
+      className="group flex flex-1 items-center gap-4 rounded-2xl border border-border/60 bg-background/60 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/30"
+    >
+      <div
+        className="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-white"
+        style={{ background: BRAND_META[brand].color }}
+      >
+        <BrandIcon brand={brand} className="h-6 w-6" />
+      </div>
+      <div className="min-w-0 text-right">
+        <div className="text-base font-black text-foreground">{title}</div>
+        <div className="text-xs text-muted-foreground">{subtitle}</div>
       </div>
     </a>
   );
 }
 
-function ExtraLinksRow({ platforms }: { platforms: PlatformLink[] }) {
-  const extras: { key: string; url: string; brand: BrandKey; label: string }[] = [];
-  platforms.forEach((p) => {
-    if (p.webUrl) extras.push({ key: p.id + "-w", url: p.webUrl, brand: "web", label: `${p.name} — الويب` });
-    if (p.androidUrl) extras.push({ key: p.id + "-a", url: p.androidUrl, brand: "android", label: `${p.name} — Android` });
-    if (p.iosUrl) extras.push({ key: p.id + "-i", url: p.iosUrl, brand: "apple", label: `${p.name} — iOS` });
-  });
-  if (extras.length === 0) return null;
+function Card({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="mt-12 rounded-3xl border border-border/60 bg-card p-6" style={{ boxShadow: "var(--shadow-card)" }}>
-      <h2 className="mb-4 text-lg font-black">روابط إضافية</h2>
-      <div className="flex flex-wrap gap-2">
-        {extras.map((e) => (
-          <a
-            key={e.key}
-            href={e.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={e.label}
-            title={e.label}
-            className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background px-3 py-2 text-xs font-bold text-foreground transition-all hover:-translate-y-0.5 hover:border-transparent hover:text-white hover:shadow-md"
-            onMouseEnter={(ev) => {
-              (ev.currentTarget as HTMLElement).style.background = BRAND_META[e.brand].color;
-            }}
-            onMouseLeave={(ev) => {
-              (ev.currentTarget as HTMLElement).style.background = "";
-            }}
-          >
-            <BrandIcon brand={e.brand} className="h-4 w-4" />
-            {e.label}
-          </a>
-        ))}
-      </div>
-    </div>
+    <section
+      className="rounded-3xl border border-border/60 bg-card p-6 sm:p-8"
+      style={{ boxShadow: "var(--shadow-card)" }}
+    >
+      <h2 className="mb-6 text-right text-2xl font-black text-primary">{title}</h2>
+      {children}
+    </section>
   );
 }
 
 function Page() {
   const { state } = useContent();
   const visible = state.platforms.filter((p) => !p.hidden);
+
+  // Social platforms: brand is a known social brand
+  const socials = visible.filter((p) => {
+    const b = resolveBrand(p);
+    return b && SOCIAL_BRANDS.includes(b);
+  });
+
+  // Aggregate app download links across all platforms
+  const androidHref =
+    visible.find((p) => p.androidUrl)?.androidUrl ||
+    visible.find((p) => resolveBrand(p) === "android")?.url;
+  const iosHref =
+    visible.find((p) => p.iosUrl)?.iosUrl ||
+    visible.find((p) => resolveBrand(p) === "apple")?.url;
+
+  // Anything else (custom platforms not fitting the two cards)
+  const others = visible.filter((p) => !socials.includes(p) && resolveBrand(p) !== "android" && resolveBrand(p) !== "apple");
+
   return (
-    <PageShell title="منصات شفاء" subtitle="اضغط على أي أيقونة للانتقال مباشرة إلى المنصة">
+    <PageShell title="منصات شفاء" subtitle="تابعنا على منصاتنا أو حمّل التطبيق">
       {state.publisherIntro && (
-        <p className="mb-10 whitespace-pre-wrap text-center text-base leading-loose text-muted-foreground md:text-lg">
+        <p className="mb-8 whitespace-pre-wrap text-center text-sm leading-loose text-muted-foreground md:text-base">
           {state.publisherIntro}
         </p>
       )}
 
-      {visible.length === 0 ? (
-        <p className="text-center text-muted-foreground">لم تُضف منصات بعد.</p>
-      ) : (
-        <div className="grid grid-cols-3 gap-6 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
-          {visible.map((p) => (
-            <PlatformTile key={p.id} p={p} />
-          ))}
-        </div>
-      )}
+      <div className="flex flex-col gap-6">
+        {socials.length > 0 && (
+          <Card title="تابع شفاء">
+            <div className="flex flex-wrap justify-center gap-5 sm:justify-start sm:gap-7">
+              {socials.map((p) => (
+                <SocialCircle key={p.id} p={p} />
+              ))}
+            </div>
+          </Card>
+        )}
 
-      <ExtraLinksRow platforms={visible} />
+        {(androidHref || iosHref) && (
+          <Card title="حمّل التطبيق">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              {androidHref && (
+                <StoreButton
+                  href={androidHref}
+                  brand="android"
+                  title="Google Play"
+                  subtitle="لأجهزة أندرويد"
+                />
+              )}
+              {iosHref && (
+                <StoreButton
+                  href={iosHref}
+                  brand="apple"
+                  title="App Store"
+                  subtitle="لأجهزة آيفون"
+                />
+              )}
+            </div>
+          </Card>
+        )}
+
+        {others.length > 0 && (
+          <Card title="روابط أخرى">
+            <div className="flex flex-wrap justify-center gap-5 sm:justify-start sm:gap-7">
+              {others.map((p) => (
+                <SocialCircle key={p.id} p={p} />
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {visible.length === 0 && (
+          <p className="text-center text-muted-foreground">لم تُضف منصات بعد.</p>
+        )}
+      </div>
     </PageShell>
   );
 }
