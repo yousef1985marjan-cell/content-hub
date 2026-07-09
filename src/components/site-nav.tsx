@@ -20,7 +20,7 @@ export function SiteNav() {
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
             <Heart className="h-5 w-5" />
           </span>
-          <span>منصات شفاء</span>
+          <span>شفاء</span>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1">
