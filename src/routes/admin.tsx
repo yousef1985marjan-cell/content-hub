@@ -342,13 +342,23 @@ function PlatformsEditor({
                   </button>
                 </div>
 
-                <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-muted ring-1 ring-border">
-                  {it.icon ? (
-                    <img src={it.icon} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <LinkIcon className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </div>
+                {(() => {
+                  const brand = (it.brand as BrandKey) || detectBrand(it.url);
+                  return (
+                    <div
+                      className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl ring-1 ring-border"
+                      style={{ background: brand ? BRAND_META[brand].color : "var(--muted)" }}
+                    >
+                      {it.icon ? (
+                        <img src={it.icon} alt="" className="h-full w-full object-cover" />
+                      ) : brand ? (
+                        <BrandIcon brand={brand} className="h-6 w-6 text-white" />
+                      ) : (
+                        <LinkIcon className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
