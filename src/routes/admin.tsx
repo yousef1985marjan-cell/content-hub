@@ -780,6 +780,27 @@ const BRAND_OPTIONS: { key: BrandKey | ""; label: string }[] = [
   { key: "compass", label: "بوصلة" },
   { key: "wallet", label: "محفظة" },
   { key: "chart", label: "رسم بياني" },
+  // social media (generic)
+  { key: "facebookAlt", label: "فيسبوك" },
+  { key: "youtubeAlt", label: "يوتيوب" },
+  { key: "tiktokAlt", label: "تيك توك" },
+  { key: "instagramAlt", label: "إنستغرام" },
+  { key: "twitterAlt", label: "تويتر / إكس" },
+  { key: "whatsappAlt", label: "واتساب" },
+  { key: "telegramAlt", label: "تلغرام" },
+  { key: "snapchatAlt", label: "سناب شات" },
+  { key: "linkedinAlt", label: "لينكد إن" },
+  { key: "messenger", label: "ماسنجر" },
+  { key: "pinterest", label: "بينتيرست" },
+  { key: "reddit", label: "ريديت" },
+  { key: "discord", label: "ديسكورد" },
+  { key: "twitch", label: "تويتش" },
+  { key: "spotify", label: "سبوتيفاي" },
+  { key: "soundcloud", label: "ساوند كلاود" },
+  { key: "vimeo", label: "فيميو" },
+  { key: "tumblr", label: "تمبلر" },
+  { key: "github", label: "جيت هاب" },
+  { key: "medium", label: "ميديوم" },
 ];
 
 const COLOR_PRESETS = [
