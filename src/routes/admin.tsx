@@ -107,28 +107,17 @@ function Admin() {
   );
 }
 
-function TextEditor({ label, value, onSave }: { label: string; value: string; onSave: (v: string) => void }) {
-  const [draft, setDraft] = useState(value);
-  const dirty = draft !== value;
+function TextEditor({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="block text-sm font-bold mb-2">{label}</label>
       <textarea
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         rows={14}
         className="w-full rounded-xl border border-input bg-background p-4 leading-loose focus:outline-none focus:ring-2 focus:ring-ring"
       />
-      <div className="mt-3 flex items-center gap-3">
-        <button
-          disabled={!dirty}
-          onClick={() => onSave(draft)}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40 hover:opacity-90"
-        >
-          <Save className="h-4 w-4" /> حفظ التغييرات
-        </button>
-        {dirty && <span className="text-xs text-muted-foreground">لديك تغييرات غير محفوظة</span>}
-      </div>
+      <p className="mt-2 text-xs text-muted-foreground">التعديلات تُحفظ تلقائياً وتظهر مباشرة في الأقسام.</p>
     </div>
   );
 }
