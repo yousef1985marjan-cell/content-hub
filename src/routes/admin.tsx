@@ -740,15 +740,18 @@ function BrandPicker({
 }) {
   const effective = (value || detected) as BrandKey | null;
   const brands = BRAND_OPTIONS.filter((o) => o.key !== "") as { key: BrandKey; label: string }[];
+  const brandBrands = brands.filter((b) => !isGeneric(b.key));
+  const genericBrands = brands.filter((b) => isGeneric(b.key));
+  const effGeneric = effective ? isGeneric(effective) : false;
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex items-center gap-2 rounded-lg border border-input bg-background/60 p-2">
         <div
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-white"
-          style={{ background: effective ? BRAND_META[effective].color : "var(--muted)" }}
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg"
+          style={effGeneric ? undefined : { background: effective ? BRAND_META[effective].color : "var(--muted)" }}
         >
           {effective ? (
-            <BrandIcon brand={effective} className="h-5 w-5" />
+            <BrandIcon brand={effective} className={effGeneric ? "h-6 w-6 text-foreground" : "h-5 w-5 text-white"} />
           ) : (
             <span className="text-xs text-muted-foreground">؟</span>
           )}
@@ -770,25 +773,52 @@ function BrandPicker({
           </button>
         )}
       </div>
-      <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
-        {brands.map((b) => {
-          const selected = value === b.key;
-          return (
-            <button
-              key={b.key}
-              type="button"
-              title={b.label}
-              aria-label={b.label}
-              onClick={() => onChange(b.key)}
-              className={`group grid aspect-square place-items-center rounded-lg border text-white transition-all hover:-translate-y-0.5 hover:shadow-md ${
-                selected ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : "border-input"
-              }`}
-              style={{ background: BRAND_META[b.key].color }}
-            >
-              <BrandIcon brand={b.key} className="h-5 w-5" />
-            </button>
-          );
-        })}
+
+      <div>
+        <div className="mb-1.5 text-[10px] font-bold text-muted-foreground">أيقونات المنصات</div>
+        <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
+          {brandBrands.map((b) => {
+            const selected = value === b.key;
+            return (
+              <button
+                key={b.key}
+                type="button"
+                title={b.label}
+                aria-label={b.label}
+                onClick={() => onChange(b.key)}
+                className={`grid aspect-square place-items-center rounded-lg border text-white transition-all hover:-translate-y-0.5 hover:shadow-md ${
+                  selected ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : "border-input"
+                }`}
+                style={{ background: BRAND_META[b.key].color }}
+              >
+                <BrandIcon brand={b.key} className="h-5 w-5" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-1.5 text-[10px] font-bold text-muted-foreground">أيقونات عامة ({genericBrands.length})</div>
+        <div className="grid grid-cols-8 gap-1.5 sm:grid-cols-10">
+          {genericBrands.map((b) => {
+            const selected = value === b.key;
+            return (
+              <button
+                key={b.key}
+                type="button"
+                title={b.label}
+                aria-label={b.label}
+                onClick={() => onChange(b.key)}
+                className={`grid aspect-square place-items-center rounded-lg border border-input bg-background text-foreground transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary ${
+                  selected ? "border-primary text-primary ring-2 ring-primary/40" : ""
+                }`}
+              >
+                <BrandIcon brand={b.key} className="h-5 w-5" />
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
