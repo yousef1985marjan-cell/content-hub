@@ -129,10 +129,20 @@ function PlatformsEditor({ platforms, onChange }: { platforms: PlatformLink[]; o
   const add = () =>
     onChange([
       ...platforms,
-      { id: crypto.randomUUID(), name: "منصة جديدة", url: "https://", description: "" },
+      { id: crypto.randomUUID(), name: "منصة جديدة", url: "https://", description: "", icon: "", androidUrl: "", iosUrl: "", webUrl: "" },
     ]);
 
   const remove = (id: string) => onChange(platforms.filter((it) => it.id !== id));
+
+  const uploadIcon = (id: string, file: File) => {
+    if (file.size > 500 * 1024) {
+      alert("حجم الأيقونة يجب أن يكون أقل من 500 كيلوبايت");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => patch(id, { icon: reader.result as string });
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div>
@@ -148,36 +158,103 @@ function PlatformsEditor({ platforms, onChange }: { platforms: PlatformLink[]; o
 
       <div className="space-y-4">
         {platforms.map((it) => (
-          <div key={it.id} className="rounded-xl border border-border bg-card p-4 grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3">
-            <div>
-              <label className="text-xs font-bold text-muted-foreground">الاسم</label>
-              <input
-                value={it.name}
-                onChange={(e) => patch(it.id, { name: e.target.value })}
-                className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              <label className="text-xs font-bold text-muted-foreground mt-2 block">الوصف (اختياري)</label>
-              <input
-                value={it.description ?? ""}
-                onChange={(e) => patch(it.id, { description: e.target.value })}
-                className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+          <div key={it.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-start gap-4">
+              <div className="shrink-0">
+                <label className="text-xs font-bold text-muted-foreground block mb-1">الأيقونة</label>
+                <label className="grid h-20 w-20 place-items-center rounded-xl border-2 border-dashed border-input bg-background cursor-pointer overflow-hidden hover:border-primary transition-colors">
+                  {it.icon ? (
+                    <img src={it.icon} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-xs text-muted-foreground text-center px-1">اضغط للتحميل</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) uploadIcon(it.id, f);
+                    }}
+                  />
+                </label>
+                {it.icon && (
+                  <button
+                    onClick={() => patch(it.id, { icon: "" })}
+                    className="mt-1 text-xs text-destructive hover:underline w-full text-center"
+                  >
+                    إزالة
+                  </button>
+                )}
+              </div>
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground">اسم المنصة</label>
+                  <input
+                    value={it.name}
+                    onChange={(e) => patch(it.id, { name: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground">الوصف (اختياري)</label>
+                  <input
+                    value={it.description ?? ""}
+                    onChange={(e) => patch(it.id, { description: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs font-bold text-muted-foreground">الرابط الرئيسي للمنصة</label>
+                  <input
+                    dir="ltr"
+                    value={it.url}
+                    onChange={(e) => patch(it.id, { url: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-bold text-muted-foreground">الرابط</label>
-              <input
-                dir="ltr"
-                value={it.url}
-                onChange={(e) => patch(it.id, { url: e.target.value })}
-                className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-border">
+              <div>
+                <label className="text-xs font-bold text-muted-foreground">🌐 موقع الويب</label>
+                <input
+                  dir="ltr"
+                  placeholder="https://..."
+                  value={it.webUrl ?? ""}
+                  onChange={(e) => patch(it.id, { webUrl: e.target.value })}
+                  className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-muted-foreground">🤖 تطبيق أندرويد</label>
+                <input
+                  dir="ltr"
+                  placeholder="https://play.google.com/..."
+                  value={it.androidUrl ?? ""}
+                  onChange={(e) => patch(it.id, { androidUrl: e.target.value })}
+                  className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-muted-foreground"> تطبيق آيفون</label>
+                <input
+                  dir="ltr"
+                  placeholder="https://apps.apple.com/..."
+                  value={it.iosUrl ?? ""}
+                  onChange={(e) => patch(it.id, { iosUrl: e.target.value })}
+                  className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
             </div>
-            <div className="flex md:flex-col items-center justify-end gap-2">
+
+            <div className="flex justify-end pt-2 border-t border-border">
               <button
                 onClick={() => remove(it.id)}
                 className="inline-flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-bold text-destructive hover:bg-destructive/20"
               >
-                <Trash2 className="h-4 w-4" /> حذف
+                <Trash2 className="h-4 w-4" /> حذف المنصة
               </button>
             </div>
           </div>
@@ -191,3 +268,4 @@ function PlatformsEditor({ platforms, onChange }: { platforms: PlatformLink[]; o
     </div>
   );
 }
+
