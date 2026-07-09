@@ -684,6 +684,25 @@ const BRAND_OPTIONS: { key: BrandKey | ""; label: string }[] = [
   { key: "android", label: "Android" },
   { key: "apple", label: "iOS" },
   { key: "web", label: "موقع ويب" },
+  { key: "link", label: "رابط" },
+  { key: "mail", label: "بريد" },
+  { key: "phone", label: "هاتف" },
+  { key: "chat", label: "محادثة" },
+  { key: "shop", label: "متجر" },
+  { key: "music", label: "موسيقى" },
+  { key: "video", label: "فيديو" },
+  { key: "star", label: "نجمة" },
+  { key: "heart", label: "قلب" },
+  { key: "news", label: "أخبار" },
+  { key: "map", label: "خريطة" },
+  { key: "camera", label: "كاميرا" },
+  { key: "download", label: "تحميل" },
+  { key: "share", label: "مشاركة" },
+];
+
+const COLOR_PRESETS = [
+  "#14B8A6", "#3B82F6", "#8B5CF6", "#EC4899", "#EF4444",
+  "#F97316", "#EAB308", "#22C55E", "#0EA5E9", "#0F172A",
 ];
 
 function BrandPicker({
