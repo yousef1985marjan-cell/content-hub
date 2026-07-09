@@ -561,7 +561,13 @@ function PlatformsEditor({
                         <BrandPicker
                           value={(it.brand as BrandKey) || ""}
                           detected={detectBrand(it.url)}
+                          currentIcon={it.icon}
+                          customIcons={customIcons}
                           onChange={(b) => patch(it.id, { brand: b })}
+                          onPickCustomIcon={(dataUrl) => patch(it.id, { icon: dataUrl, brand: "" })}
+                          onClearIcon={() => patch(it.id, { icon: "" })}
+                          onChangeIcons={onChangeIcons}
+                          flash={flash}
                         />
                       </Field>
                       <Field label="لون الخلفية (اختياري)">
