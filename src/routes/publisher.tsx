@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/page-shell";
 import { useContent, type PlatformLink } from "@/lib/content-store";
 import { ExternalLink } from "lucide-react";
-import { BrandIcon, detectBrand, BRAND_META, type BrandKey } from "@/lib/brand-icons";
+import { BrandIcon, detectBrand, BRAND_META, isGeneric, type BrandKey } from "@/lib/brand-icons";
 
 export const Route = createFileRoute("/publisher")({
   head: () => ({ meta: [{ title: "منصات شفاء — تابع شفاء وحمّل التطبيق" }] }),
@@ -28,16 +28,19 @@ function resolveBrand(p: PlatformLink): BrandKey | null {
 
 function SocialCircle({ p }: { p: PlatformLink }) {
   const brand = resolveBrand(p);
+  const generic = brand ? isGeneric(brand) : false;
+  // Generic icons: no background box, single-color line icon
+  const boxed = !generic || !!p.accent || !!p.icon;
   const color = brand ? BRAND_META[brand].color : null;
-  // Instagram special gradient
   const isInstagram = brand === "instagram";
-  const background =
-    p.accent ||
-    (isInstagram
-      ? "radial-gradient(circle at 30% 110%, #FFD776 0%, #F58529 20%, #DD2A7B 45%, #8134AF 70%, #515BD4 100%)"
-      : color
-      ? `linear-gradient(135deg, ${color}, ${color})`
-      : "var(--gradient-hero)");
+  const background = !boxed
+    ? "transparent"
+    : p.accent ||
+      (isInstagram
+        ? "radial-gradient(circle at 30% 110%, #FFD776 0%, #F58529 20%, #DD2A7B 45%, #8134AF 70%, #515BD4 100%)"
+        : color
+        ? `linear-gradient(135deg, ${color}, ${color})`
+        : "var(--gradient-hero)");
 
   return (
     <a
@@ -48,13 +51,15 @@ function SocialCircle({ p }: { p: PlatformLink }) {
       className="group flex flex-col items-center gap-2 focus:outline-none"
     >
       <div
-        className="relative grid h-16 w-16 place-items-center rounded-full text-white shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-focus-visible:ring-4 group-focus-visible:ring-primary/40 sm:h-[72px] sm:w-[72px]"
+        className={`relative grid h-16 w-16 place-items-center rounded-full transition-all duration-300 group-hover:-translate-y-1 group-focus-visible:ring-4 group-focus-visible:ring-primary/40 sm:h-[72px] sm:w-[72px] ${
+          boxed ? "text-white shadow-md group-hover:shadow-lg" : "text-foreground group-hover:text-primary"
+        }`}
         style={{ background }}
       >
         {p.icon ? (
           <img src={p.icon} alt="" className="h-full w-full rounded-full object-cover" />
         ) : brand ? (
-          <BrandIcon brand={brand} className="h-8 w-8 drop-shadow-sm" />
+          <BrandIcon brand={brand} className={boxed ? "h-8 w-8 drop-shadow-sm" : "h-10 w-10"} />
         ) : (
           <ExternalLink className="h-7 w-7" />
         )}

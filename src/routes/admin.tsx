@@ -27,7 +27,7 @@ import {
   Save,
   Check,
 } from "lucide-react";
-import { BRAND_META, BrandIcon, detectBrand, type BrandKey } from "@/lib/brand-icons";
+import { BRAND_META, BrandIcon, detectBrand, isGeneric, type BrandKey } from "@/lib/brand-icons";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "لوحة التحكم — منصات شفاء" }, { name: "robots", content: "noindex" }] }),
@@ -344,15 +344,17 @@ function PlatformsEditor({
 
                 {(() => {
                   const brand = (it.brand as BrandKey) || detectBrand(it.url);
+                  const generic = brand ? isGeneric(brand) : false;
+                  const boxed = !generic || !!it.accent;
                   return (
                     <div
-                      className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl ring-1 ring-border"
-                      style={{ background: it.accent || (brand ? BRAND_META[brand].color : "var(--muted)") }}
+                      className={`grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl ${boxed ? "ring-1 ring-border" : ""}`}
+                      style={boxed ? { background: it.accent || (brand ? BRAND_META[brand].color : "var(--muted)") } : undefined}
                     >
                       {it.icon ? (
                         <img src={it.icon} alt="" className="h-full w-full object-cover" />
                       ) : brand ? (
-                        <BrandIcon brand={brand} className="h-6 w-6 text-white" />
+                        <BrandIcon brand={brand} className={generic && !it.accent ? "h-7 w-7 text-foreground" : "h-6 w-6 text-white"} />
                       ) : (
                         <LinkIcon className="h-5 w-5 text-muted-foreground" />
                       )}
@@ -454,15 +456,17 @@ function PlatformsEditor({
                       <label className="mb-1 block text-xs font-bold text-muted-foreground">الأيقونة</label>
                       {(() => {
                         const brand = (it.brand as BrandKey) || detectBrand(it.url);
+                        const generic = brand ? isGeneric(brand) : false;
+                        const filled = !it.icon && (it.accent || (brand && !generic));
                         return (
                           <label
                             className="grid h-24 w-24 place-items-center overflow-hidden rounded-xl border-2 border-dashed border-input bg-background hover:border-primary cursor-pointer transition-colors"
-                            style={!it.icon && (brand || it.accent) ? { background: it.accent || BRAND_META[brand!].color, borderStyle: "solid" } : undefined}
+                            style={filled ? { background: it.accent || BRAND_META[brand!].color, borderStyle: "solid" } : undefined}
                           >
                             {it.icon ? (
                               <img src={it.icon} alt="" className="h-full w-full object-cover" />
                             ) : brand ? (
-                              <BrandIcon brand={brand} className="h-10 w-10 text-white" />
+                              <BrandIcon brand={brand} className={filled ? "h-10 w-10 text-white" : "h-12 w-12 text-foreground"} />
                             ) : (
                               <span className="px-1 text-center text-xs text-muted-foreground">تحميل أيقونة</span>
                             )}
@@ -718,6 +722,40 @@ const BRAND_OPTIONS: { key: BrandKey | ""; label: string }[] = [
   { key: "camera", label: "كاميرا" },
   { key: "download", label: "تحميل" },
   { key: "share", label: "مشاركة" },
+  { key: "home", label: "الرئيسية" },
+  { key: "user", label: "مستخدم" },
+  { key: "users", label: "مستخدمون" },
+  { key: "settings", label: "إعدادات" },
+  { key: "bell", label: "تنبيه" },
+  { key: "calendar", label: "تقويم" },
+  { key: "clock", label: "ساعة" },
+  { key: "search", label: "بحث" },
+  { key: "edit", label: "تعديل" },
+  { key: "trash", label: "حذف" },
+  { key: "plus", label: "إضافة" },
+  { key: "check", label: "تم" },
+  { key: "cloud", label: "سحابة" },
+  { key: "folder", label: "مجلد" },
+  { key: "file", label: "ملف" },
+  { key: "image", label: "صورة" },
+  { key: "book", label: "كتاب" },
+  { key: "gift", label: "هدية" },
+  { key: "flag", label: "علم" },
+  { key: "tag", label: "وسم" },
+  { key: "sun", label: "شمس" },
+  { key: "moon", label: "قمر" },
+  { key: "lock", label: "قفل" },
+  { key: "bookmark", label: "علامة" },
+  { key: "rocket", label: "صاروخ" },
+  { key: "coffee", label: "قهوة" },
+  { key: "wifi", label: "واي فاي" },
+  { key: "mic", label: "ميكروفون" },
+  { key: "zap", label: "طاقة" },
+  { key: "trophy", label: "كأس" },
+  { key: "target", label: "هدف" },
+  { key: "compass", label: "بوصلة" },
+  { key: "wallet", label: "محفظة" },
+  { key: "chart", label: "رسم بياني" },
 ];
 
 const COLOR_PRESETS = [
@@ -736,15 +774,18 @@ function BrandPicker({
 }) {
   const effective = (value || detected) as BrandKey | null;
   const brands = BRAND_OPTIONS.filter((o) => o.key !== "") as { key: BrandKey; label: string }[];
+  const brandBrands = brands.filter((b) => !isGeneric(b.key));
+  const genericBrands = brands.filter((b) => isGeneric(b.key));
+  const effGeneric = effective ? isGeneric(effective) : false;
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex items-center gap-2 rounded-lg border border-input bg-background/60 p-2">
         <div
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-white"
-          style={{ background: effective ? BRAND_META[effective].color : "var(--muted)" }}
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg"
+          style={effGeneric ? undefined : { background: effective ? BRAND_META[effective].color : "var(--muted)" }}
         >
           {effective ? (
-            <BrandIcon brand={effective} className="h-5 w-5" />
+            <BrandIcon brand={effective} className={effGeneric ? "h-6 w-6 text-foreground" : "h-5 w-5 text-white"} />
           ) : (
             <span className="text-xs text-muted-foreground">؟</span>
           )}
@@ -766,25 +807,52 @@ function BrandPicker({
           </button>
         )}
       </div>
-      <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
-        {brands.map((b) => {
-          const selected = value === b.key;
-          return (
-            <button
-              key={b.key}
-              type="button"
-              title={b.label}
-              aria-label={b.label}
-              onClick={() => onChange(b.key)}
-              className={`group grid aspect-square place-items-center rounded-lg border text-white transition-all hover:-translate-y-0.5 hover:shadow-md ${
-                selected ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : "border-input"
-              }`}
-              style={{ background: BRAND_META[b.key].color }}
-            >
-              <BrandIcon brand={b.key} className="h-5 w-5" />
-            </button>
-          );
-        })}
+
+      <div>
+        <div className="mb-1.5 text-[10px] font-bold text-muted-foreground">أيقونات المنصات</div>
+        <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
+          {brandBrands.map((b) => {
+            const selected = value === b.key;
+            return (
+              <button
+                key={b.key}
+                type="button"
+                title={b.label}
+                aria-label={b.label}
+                onClick={() => onChange(b.key)}
+                className={`grid aspect-square place-items-center rounded-lg border text-white transition-all hover:-translate-y-0.5 hover:shadow-md ${
+                  selected ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : "border-input"
+                }`}
+                style={{ background: BRAND_META[b.key].color }}
+              >
+                <BrandIcon brand={b.key} className="h-5 w-5" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-1.5 text-[10px] font-bold text-muted-foreground">أيقونات عامة ({genericBrands.length})</div>
+        <div className="grid grid-cols-8 gap-1.5 sm:grid-cols-10">
+          {genericBrands.map((b) => {
+            const selected = value === b.key;
+            return (
+              <button
+                key={b.key}
+                type="button"
+                title={b.label}
+                aria-label={b.label}
+                onClick={() => onChange(b.key)}
+                className={`grid aspect-square place-items-center rounded-lg border border-input bg-background text-foreground transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary ${
+                  selected ? "border-primary text-primary ring-2 ring-primary/40" : ""
+                }`}
+              >
+                <BrandIcon brand={b.key} className="h-5 w-5" />
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
