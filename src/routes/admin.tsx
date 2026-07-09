@@ -916,6 +916,80 @@ function BrandPicker({
           })}
         </div>
       </div>
+
+      <div>
+        <div className="mb-1.5 flex items-center justify-between">
+          <div className="text-[10px] font-bold text-muted-foreground">
+            مكتبة أيقوناتي ({customIcons.length})
+          </div>
+          <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-[10px] font-bold hover:bg-muted">
+            <Upload className="h-3 w-3" /> رفع أيقونات
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                addIcons(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
+        {customIcons.length === 0 ? (
+          <label className="grid cursor-pointer place-items-center rounded-lg border-2 border-dashed border-input bg-background/50 px-3 py-4 text-center text-[11px] text-muted-foreground hover:border-primary hover:text-primary">
+            اسحب أو ارفع صور PNG/SVG (حتى 500KB لكل واحدة)
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                addIcons(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        ) : (
+          <div className="grid grid-cols-8 gap-1.5 sm:grid-cols-10">
+            {customIcons.map((ic) => {
+              const selected = currentIcon === ic.dataUrl;
+              return (
+                <div key={ic.id} className="group relative">
+                  <button
+                    type="button"
+                    title={ic.name}
+                    aria-label={ic.name}
+                    onClick={() => onPickCustomIcon(ic.dataUrl)}
+                    className={`grid aspect-square w-full place-items-center overflow-hidden rounded-lg border bg-background p-1 transition-all hover:-translate-y-0.5 hover:border-primary ${
+                      selected ? "border-primary ring-2 ring-primary/40" : "border-input"
+                    }`}
+                  >
+                    <img src={ic.dataUrl} alt={ic.name} className="h-full w-full object-contain" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeIcon(ic.id)}
+                    aria-label="حذف"
+                    className="absolute -right-1 -top-1 hidden h-4 w-4 place-items-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground group-hover:grid"
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {currentIcon && (
+          <button
+            type="button"
+            onClick={onClearIcon}
+            className="mt-2 text-[10px] text-destructive hover:underline"
+          >
+            إزالة الأيقونة المخصّصة من هذه المنصة
+          </button>
+        )}
+      </div>
     </div>
   );
 }
