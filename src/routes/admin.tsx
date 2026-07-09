@@ -1,8 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/page-shell";
 import { useContent, type PlatformLink } from "@/lib/content-store";
-import { useState } from "react";
-import { Trash2, Plus, RotateCcw } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import {
+  Trash2,
+  Plus,
+  RotateCcw,
+  ArrowUp,
+  ArrowDown,
+  Copy,
+  Eye,
+  EyeOff,
+  Star,
+  StarOff,
+  Search,
+  Download,
+  Upload,
+  Link as LinkIcon,
+  Globe,
+  Smartphone,
+  Apple,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "لوحة التحكم — منصات شفاء" }, { name: "robots", content: "noindex" }] }),
@@ -19,7 +39,7 @@ const sections: { key: "about" | "privacy" | "terms" | "disclaimer" | "publisher
 
 function Admin() {
   const { state, update, reset, hydrated } = useContent();
-  const [activeTab, setActiveTab] = useState<string>("about");
+  const [activeTab, setActiveTab] = useState<string>("platforms");
   const [savedFlash, setSavedFlash] = useState<string | null>(null);
 
   const flash = (msg: string) => {
@@ -36,14 +56,24 @@ function Admin() {
   }
 
   return (
-    <PageShell title="لوحة التحكم" subtitle="أدر محتوى الأقسام — يُحفظ محلياً في متصفحك">
+    <PageShell title="لوحة التحكم" subtitle="أدر محتوى الموقع ومنصات شفاء بصلاحيات كاملة">
       {savedFlash && (
-        <div className="mb-4 rounded-lg bg-accent/20 border border-accent px-4 py-2 text-sm font-medium">
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground shadow-lg">
           {savedFlash}
         </div>
       )}
 
       <div className="flex flex-wrap gap-2 mb-6 border-b border-border pb-3">
+        <button
+          onClick={() => setActiveTab("platforms")}
+          className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+            activeTab === "platforms"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-secondary"
+          }`}
+        >
+          🚀 روابط المنصات
+        </button>
         {sections.map((s) => (
           <button
             key={s.key}
@@ -57,16 +87,6 @@ function Admin() {
             {s.label}
           </button>
         ))}
-        <button
-          onClick={() => setActiveTab("platforms")}
-          className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
-            activeTab === "platforms"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-secondary"
-          }`}
-        >
-          روابط المنصات
-        </button>
       </div>
 
       {activeTab !== "platforms" ? (
@@ -84,8 +104,9 @@ function Admin() {
           platforms={state.platforms}
           onChange={(platforms) => {
             update({ platforms });
-            flash("تم الحفظ تلقائياً");
+            flash("تم الحفظ");
           }}
+          flash={flash}
         />
       )}
 
@@ -122,17 +143,62 @@ function TextEditor({ label, value, onChange }: { label: string; value: string; 
   );
 }
 
-function PlatformsEditor({ platforms, onChange }: { platforms: PlatformLink[]; onChange: (p: PlatformLink[]) => void }) {
+function PlatformsEditor({
+  platforms,
+  onChange,
+  flash,
+}: {
+  platforms: PlatformLink[];
+  onChange: (p: PlatformLink[]) => void;
+  flash: (m: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const patch = (id: string, p: Partial<PlatformLink>) =>
     onChange(platforms.map((it) => (it.id === id ? { ...it, ...p } : it)));
 
-  const add = () =>
+  const add = () => {
+    const id = crypto.randomUUID();
     onChange([
+      {
+        id,
+        name: "منصة جديدة",
+        url: "https://",
+        description: "",
+        icon: "",
+        androidUrl: "",
+        iosUrl: "",
+        webUrl: "",
+      },
       ...platforms,
-      { id: crypto.randomUUID(), name: "منصة جديدة", url: "https://", description: "", icon: "", androidUrl: "", iosUrl: "", webUrl: "" },
     ]);
+    setExpanded((e) => ({ ...e, [id]: true }));
+  };
 
-  const remove = (id: string) => onChange(platforms.filter((it) => it.id !== id));
+  const remove = (id: string) => {
+    if (confirm("حذف هذه المنصة؟")) onChange(platforms.filter((it) => it.id !== id));
+  };
+
+  const duplicate = (id: string) => {
+    const idx = platforms.findIndex((p) => p.id === id);
+    if (idx < 0) return;
+    const copy: PlatformLink = { ...platforms[idx], id: crypto.randomUUID(), name: platforms[idx].name + " — نسخة" };
+    const next = [...platforms];
+    next.splice(idx + 1, 0, copy);
+    onChange(next);
+    flash("تم النسخ");
+  };
+
+  const move = (id: string, dir: -1 | 1) => {
+    const idx = platforms.findIndex((p) => p.id === id);
+    const target = idx + dir;
+    if (idx < 0 || target < 0 || target >= platforms.length) return;
+    const next = [...platforms];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    onChange(next);
+  };
 
   const uploadIcon = (id: string, file: File) => {
     if (file.size > 500 * 1024) {
@@ -144,128 +210,362 @@ function PlatformsEditor({ platforms, onChange }: { platforms: PlatformLink[]; o
     reader.readAsDataURL(file);
   };
 
+  const exportJson = () => {
+    const blob = new Blob([JSON.stringify(platforms, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "shifa-platforms.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    flash("تم التصدير");
+  };
+
+  const importJson = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result as string);
+        if (!Array.isArray(data)) throw new Error("Invalid");
+        onChange(data);
+        flash("تم الاستيراد");
+      } catch {
+        alert("ملف غير صالح");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return platforms;
+    return platforms.filter((p) =>
+      [p.name, p.description, p.url, p.badge].filter(Boolean).some((v) => v!.toLowerCase().includes(q))
+    );
+  }, [platforms, query]);
+
+  const visibleCount = platforms.filter((p) => !p.hidden).length;
+  const featuredCount = platforms.filter((p) => p.featured).length;
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-black text-lg">روابط منصات شفاء</h3>
-        <button
-          onClick={add}
-          className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-bold text-accent-foreground hover:opacity-90"
-        >
-          <Plus className="h-4 w-4" /> إضافة منصة
-        </button>
+      {/* Header stats + actions */}
+      <div className="mb-5 grid gap-3 rounded-2xl border border-border bg-card p-4 md:grid-cols-[1fr_auto]">
+        <div className="flex flex-wrap items-center gap-3">
+          <div>
+            <h3 className="font-black text-lg leading-tight">روابط منصات شفاء</h3>
+            <p className="text-xs text-muted-foreground">
+              {platforms.length} منصة · {visibleCount} ظاهرة · {featuredCount} مميّزة
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={add}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:opacity-90"
+          >
+            <Plus className="h-4 w-4" /> منصة جديدة
+          </button>
+          <button
+            onClick={exportJson}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-bold hover:bg-muted"
+          >
+            <Download className="h-4 w-4" /> تصدير
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-bold hover:bg-muted"
+          >
+            <Upload className="h-4 w-4" /> استيراد
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) importJson(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
       </div>
 
-      <div className="space-y-4">
-        {platforms.map((it) => (
-          <div key={it.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
-            <div className="flex items-start gap-4">
-              <div className="shrink-0">
-                <label className="text-xs font-bold text-muted-foreground block mb-1">الأيقونة</label>
-                <label className="grid h-20 w-20 place-items-center rounded-xl border-2 border-dashed border-input bg-background cursor-pointer overflow-hidden hover:border-primary transition-colors">
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="بحث في المنصات..."
+          className="w-full rounded-xl border border-input bg-background py-2.5 pr-10 pl-3 focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+
+      <div className="space-y-3">
+        {filtered.map((it, idx) => {
+          const realIdx = platforms.findIndex((p) => p.id === it.id);
+          const isOpen = expanded[it.id] ?? false;
+          return (
+            <div
+              key={it.id}
+              className={`rounded-2xl border bg-card transition-all ${
+                it.hidden ? "border-dashed border-muted-foreground/40 opacity-70" : "border-border"
+              } ${it.featured ? "ring-1 ring-primary/40" : ""}`}
+            >
+              {/* Row header */}
+              <div className="flex items-center gap-3 p-3">
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => move(it.id, -1)}
+                    disabled={realIdx === 0}
+                    aria-label="أعلى"
+                    className="rounded-md border border-input p-1 hover:bg-muted disabled:opacity-30"
+                  >
+                    <ArrowUp className="h-3 w-3" />
+                  </button>
+                  <button
+                    onClick={() => move(it.id, 1)}
+                    disabled={realIdx === platforms.length - 1}
+                    aria-label="أسفل"
+                    className="rounded-md border border-input p-1 hover:bg-muted disabled:opacity-30"
+                  >
+                    <ArrowDown className="h-3 w-3" />
+                  </button>
+                </div>
+
+                <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-muted ring-1 ring-border">
                   {it.icon ? (
                     <img src={it.icon} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <span className="text-xs text-muted-foreground text-center px-1">اضغط للتحميل</span>
+                    <LinkIcon className="h-5 w-5 text-muted-foreground" />
                   )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) uploadIcon(it.id, f);
-                    }}
-                  />
-                </label>
-                {it.icon && (
-                  <button
-                    onClick={() => patch(it.id, { icon: "" })}
-                    className="mt-1 text-xs text-destructive hover:underline w-full text-center"
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={it.name}
+                      onChange={(e) => patch(it.id, { name: e.target.value })}
+                      className="min-w-0 flex-1 rounded-md bg-transparent px-1 py-0.5 font-bold focus:bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                    {it.featured && (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                        مميّزة
+                      </span>
+                    )}
+                    {it.badge && (
+                      <span className="rounded-full bg-accent/30 px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
+                        {it.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="truncate text-[11px] text-muted-foreground" dir="ltr">
+                    {it.url}
+                  </p>
+                </div>
+
+                {/* Quick actions */}
+                <div className="flex items-center gap-1">
+                  <IconBtn
+                    title={it.featured ? "إزالة التميّز" : "جعلها مميّزة"}
+                    onClick={() => patch(it.id, { featured: !it.featured })}
+                    active={it.featured}
                   >
-                    إزالة
-                  </button>
-                )}
-              </div>
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-muted-foreground">اسم المنصة</label>
-                  <input
-                    value={it.name}
-                    onChange={(e) => patch(it.id, { name: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-muted-foreground">الوصف (اختياري)</label>
-                  <input
-                    value={it.description ?? ""}
-                    onChange={(e) => patch(it.id, { description: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-xs font-bold text-muted-foreground">الرابط الرئيسي للمنصة</label>
-                  <input
-                    dir="ltr"
-                    value={it.url}
-                    onChange={(e) => patch(it.id, { url: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
+                    {it.featured ? <Star className="h-4 w-4 fill-current" /> : <StarOff className="h-4 w-4" />}
+                  </IconBtn>
+                  <IconBtn
+                    title={it.hidden ? "إظهار" : "إخفاء"}
+                    onClick={() => patch(it.id, { hidden: !it.hidden })}
+                  >
+                    {it.hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </IconBtn>
+                  <IconBtn title="نسخ الرابط" onClick={() => {
+                    navigator.clipboard.writeText(it.url);
+                    flash("تم نسخ الرابط");
+                  }}>
+                    <LinkIcon className="h-4 w-4" />
+                  </IconBtn>
+                  <IconBtn title="تكرار" onClick={() => duplicate(it.id)}>
+                    <Copy className="h-4 w-4" />
+                  </IconBtn>
+                  <IconBtn title="حذف" onClick={() => remove(it.id)} danger>
+                    <Trash2 className="h-4 w-4" />
+                  </IconBtn>
+                  <IconBtn
+                    title={isOpen ? "طي" : "توسيع"}
+                    onClick={() => setExpanded((e) => ({ ...e, [it.id]: !isOpen }))}
+                  >
+                    {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </IconBtn>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-border">
-              <div>
-                <label className="text-xs font-bold text-muted-foreground">🌐 موقع الويب</label>
-                <input
-                  dir="ltr"
-                  placeholder="https://..."
-                  value={it.webUrl ?? ""}
-                  onChange={(e) => patch(it.id, { webUrl: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-muted-foreground">🤖 تطبيق أندرويد</label>
-                <input
-                  dir="ltr"
-                  placeholder="https://play.google.com/..."
-                  value={it.androidUrl ?? ""}
-                  onChange={(e) => patch(it.id, { androidUrl: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-muted-foreground"> تطبيق آيفون</label>
-                <input
-                  dir="ltr"
-                  placeholder="https://apps.apple.com/..."
-                  value={it.iosUrl ?? ""}
-                  onChange={(e) => patch(it.id, { iosUrl: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            </div>
+              {/* Expanded details */}
+              {isOpen && (
+                <div className="space-y-4 border-t border-border p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="shrink-0">
+                      <label className="mb-1 block text-xs font-bold text-muted-foreground">الأيقونة</label>
+                      <label className="grid h-24 w-24 place-items-center overflow-hidden rounded-xl border-2 border-dashed border-input bg-background hover:border-primary cursor-pointer transition-colors">
+                        {it.icon ? (
+                          <img src={it.icon} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="px-1 text-center text-xs text-muted-foreground">تحميل صورة</span>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) uploadIcon(it.id, f);
+                          }}
+                        />
+                      </label>
+                      {it.icon && (
+                        <button
+                          onClick={() => patch(it.id, { icon: "" })}
+                          className="mt-1 w-full text-center text-xs text-destructive hover:underline"
+                        >
+                          إزالة الأيقونة
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-2">
+                      <Field label="الوصف">
+                        <input
+                          value={it.description ?? ""}
+                          onChange={(e) => patch(it.id, { description: e.target.value })}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </Field>
+                      <Field label="شارة (مثل: جديد)">
+                        <input
+                          value={it.badge ?? ""}
+                          onChange={(e) => patch(it.id, { badge: e.target.value })}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </Field>
+                      <Field label="الرابط الرئيسي">
+                        <input
+                          dir="ltr"
+                          value={it.url}
+                          onChange={(e) => patch(it.id, { url: e.target.value })}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </Field>
+                      <Field label="لون مميز (اختياري)">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={/^#([0-9a-f]{6})$/i.test(it.accent ?? "") ? it.accent : "#14b8a6"}
+                            onChange={(e) =>
+                              patch(it.id, {
+                                accent: `linear-gradient(135deg, ${e.target.value}, ${e.target.value}dd)`,
+                              })
+                            }
+                            className="h-10 w-14 cursor-pointer rounded-md border border-input"
+                          />
+                          {it.accent && (
+                            <button
+                              onClick={() => patch(it.id, { accent: "" })}
+                              className="text-xs text-destructive hover:underline"
+                            >
+                              إعادة
+                            </button>
+                          )}
+                        </div>
+                      </Field>
+                    </div>
+                  </div>
 
-            <div className="flex justify-end pt-2 border-t border-border">
-              <button
-                onClick={() => remove(it.id)}
-                className="inline-flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-bold text-destructive hover:bg-destructive/20"
-              >
-                <Trash2 className="h-4 w-4" /> حذف المنصة
-              </button>
+                  <div className="grid grid-cols-1 gap-3 border-t border-border pt-3 md:grid-cols-3">
+                    <Field label={<><Globe className="inline h-3.5 w-3.5" /> موقع الويب</>}>
+                      <input
+                        dir="ltr"
+                        placeholder="https://..."
+                        value={it.webUrl ?? ""}
+                        onChange={(e) => patch(it.id, { webUrl: e.target.value })}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </Field>
+                    <Field label={<><Smartphone className="inline h-3.5 w-3.5" /> أندرويد</>}>
+                      <input
+                        dir="ltr"
+                        placeholder="https://play.google.com/..."
+                        value={it.androidUrl ?? ""}
+                        onChange={(e) => patch(it.id, { androidUrl: e.target.value })}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </Field>
+                    <Field label={<><Apple className="inline h-3.5 w-3.5" /> آيفون</>}>
+                      <input
+                        dir="ltr"
+                        placeholder="https://apps.apple.com/..."
+                        value={it.iosUrl ?? ""}
+                        onChange={(e) => patch(it.id, { iosUrl: e.target.value })}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </Field>
+                  </div>
+                </div>
+              )}
             </div>
+          );
+        })}
+
+        {filtered.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
+            {platforms.length === 0 ? "لا توجد منصات — ابدأ بإضافة واحدة." : "لا نتائج مطابقة."}
           </div>
-        ))}
-        {platforms.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-6">لا توجد منصات — أضف واحدة للبدء.</p>
         )}
       </div>
 
-      <p className="mt-4 text-xs text-muted-foreground">جميع التعديلات تُحفظ تلقائياً وتظهر مباشرة في صفحة "منصات شفاء".</p>
+      <p className="mt-4 text-xs text-muted-foreground">
+        جميع التعديلات تُحفظ تلقائياً وتظهر مباشرة في صفحة "منصات شفاء".
+      </p>
     </div>
   );
 }
 
+function IconBtn({
+  children,
+  onClick,
+  title,
+  active,
+  danger,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  title: string;
+  active?: boolean;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className={`grid h-8 w-8 place-items-center rounded-lg border transition-colors ${
+        danger
+          ? "border-destructive/30 text-destructive hover:bg-destructive/10"
+          : active
+            ? "border-primary bg-primary/10 text-primary"
+            : "border-input text-muted-foreground hover:bg-muted hover:text-foreground"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-1 flex items-center gap-1 text-xs font-bold text-muted-foreground">{label}</label>
+      {children}
+    </div>
+  );
+}
