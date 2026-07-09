@@ -452,22 +452,35 @@ function PlatformsEditor({
                   <div className="flex flex-wrap items-start gap-4">
                     <div className="shrink-0">
                       <label className="mb-1 block text-xs font-bold text-muted-foreground">الأيقونة</label>
-                      <label className="grid h-24 w-24 place-items-center overflow-hidden rounded-xl border-2 border-dashed border-input bg-background hover:border-primary cursor-pointer transition-colors">
-                        {it.icon ? (
-                          <img src={it.icon} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="px-1 text-center text-xs text-muted-foreground">تحميل أيقونة</span>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) uploadIcon(it.id, f);
-                          }}
-                        />
-                      </label>
+                      {(() => {
+                        const brand = (it.brand as BrandKey) || detectBrand(it.url);
+                        return (
+                          <label
+                            className="grid h-24 w-24 place-items-center overflow-hidden rounded-xl border-2 border-dashed border-input bg-background hover:border-primary cursor-pointer transition-colors"
+                            style={!it.icon && brand ? { background: BRAND_META[brand].color, borderStyle: "solid" } : undefined}
+                          >
+                            {it.icon ? (
+                              <img src={it.icon} alt="" className="h-full w-full object-cover" />
+                            ) : brand ? (
+                              <BrandIcon brand={brand} className="h-10 w-10 text-white" />
+                            ) : (
+                              <span className="px-1 text-center text-xs text-muted-foreground">تحميل أيقونة</span>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) uploadIcon(it.id, f);
+                              }}
+                            />
+                          </label>
+                        );
+                      })()}
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {it.icon ? "صورة مخصّصة" : "الأيقونة الافتراضية — ارفع صورة لاستبدالها"}
+                      </p>
                       {it.icon && (
                         <button
                           onClick={() => patch(it.id, { icon: "" })}
