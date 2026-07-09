@@ -344,15 +344,17 @@ function PlatformsEditor({
 
                 {(() => {
                   const brand = (it.brand as BrandKey) || detectBrand(it.url);
+                  const generic = brand ? isGeneric(brand) : false;
+                  const boxed = !generic || !!it.accent;
                   return (
                     <div
-                      className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl ring-1 ring-border"
-                      style={{ background: it.accent || (brand ? BRAND_META[brand].color : "var(--muted)") }}
+                      className={`grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl ${boxed ? "ring-1 ring-border" : ""}`}
+                      style={boxed ? { background: it.accent || (brand ? BRAND_META[brand].color : "var(--muted)") } : undefined}
                     >
                       {it.icon ? (
                         <img src={it.icon} alt="" className="h-full w-full object-cover" />
                       ) : brand ? (
-                        <BrandIcon brand={brand} className="h-6 w-6 text-white" />
+                        <BrandIcon brand={brand} className={generic && !it.accent ? "h-7 w-7 text-foreground" : "h-6 w-6 text-white"} />
                       ) : (
                         <LinkIcon className="h-5 w-5 text-muted-foreground" />
                       )}
