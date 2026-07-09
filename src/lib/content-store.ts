@@ -27,7 +27,7 @@ export type ContentState = {
   platforms: PlatformLink[];
 };
 
-const STORAGE_KEY = "shifa-content-v1";
+const STORAGE_KEY = "shifa-content-v2";
 
 const DEFAULTS: ContentState = {
   about:
@@ -38,10 +38,28 @@ const DEFAULTS: ContentState = {
     "باستخدامك لخدماتنا فإنك توافق على الالتزام بالشروط والأحكام المعمول بها. يحق لنا تعديل هذه الشروط في أي وقت مع إشعار المستخدمين بذلك.",
   disclaimer:
     "المحتوى المقدم في هذه المنصة لأغراض معلوماتية فقط، ولا يُعد بديلاً عن الاستشارة المتخصصة. لا نتحمل أي مسؤولية عن نتائج استخدام المعلومات.",
-  publisherIntro:
-    "منصات شفاء هي مجموعة من المنصات المتكاملة التي تهدف إلى خدمة المستخدم. اضغط على أي منصة أدناه ليتم تحويلك إليها مباشرة.",
+  publisherIntro: "",
   platforms: [
-    { id: "1", name: "المنصة الرئيسية", url: "https://example.com", description: "الموقع الرسمي" },
+    { id: "tg", name: "تلغرام", url: "https://t.me/", brand: "telegram" },
+    { id: "wa", name: "واتساب", url: "https://wa.me/", brand: "whatsapp" },
+    { id: "yt", name: "يوتيوب", url: "https://youtube.com/", brand: "youtube" },
+    { id: "tt", name: "تيك توك", url: "https://tiktok.com/", brand: "tiktok" },
+    { id: "ig", name: "إنستغرام", url: "https://instagram.com/", brand: "instagram" },
+    { id: "fb", name: "فيسبوك", url: "https://facebook.com/", brand: "facebook" },
+    {
+      id: "android",
+      name: "Google Play",
+      url: "https://play.google.com/",
+      brand: "android",
+      androidUrl: "https://play.google.com/",
+    },
+    {
+      id: "ios",
+      name: "App Store",
+      url: "https://apps.apple.com/",
+      brand: "apple",
+      iosUrl: "https://apps.apple.com/",
+    },
   ],
 };
 
