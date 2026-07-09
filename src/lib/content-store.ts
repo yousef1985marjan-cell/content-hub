@@ -9,6 +9,10 @@ export type PlatformLink = {
   androidUrl?: string;
   iosUrl?: string;
   webUrl?: string;
+  hidden?: boolean;
+  featured?: boolean;
+  badge?: string;
+  accent?: string;
 };
 
 
