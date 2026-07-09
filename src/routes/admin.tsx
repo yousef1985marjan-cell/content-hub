@@ -22,7 +22,9 @@ import {
   Apple,
   ChevronDown,
   ChevronUp,
+  Image as ImageIcon,
 } from "lucide-react";
+import { BRAND_META, BrandIcon, detectBrand, type BrandKey } from "@/lib/brand-icons";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "لوحة التحكم — منصات شفاء" }, { name: "robots", content: "noindex" }] }),
@@ -200,15 +202,17 @@ function PlatformsEditor({
     onChange(next);
   };
 
-  const uploadIcon = (id: string, file: File) => {
-    if (file.size > 500 * 1024) {
-      alert("حجم الأيقونة يجب أن يكون أقل من 500 كيلوبايت");
+  const uploadImage = (id: string, file: File, field: "icon" | "cover") => {
+    const max = field === "cover" ? 1024 * 1024 : 500 * 1024;
+    if (file.size > max) {
+      alert(`حجم الصورة يجب أن يكون أقل من ${field === "cover" ? "1 ميغا" : "500 كيلوبايت"}`);
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => patch(id, { icon: reader.result as string });
+    reader.onload = () => patch(id, { [field]: reader.result as string } as Partial<PlatformLink>);
     reader.readAsDataURL(file);
   };
+  const uploadIcon = (id: string, file: File) => uploadImage(id, file, "icon");
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(platforms, null, 2)], { type: "application/json" });
@@ -405,14 +409,14 @@ function PlatformsEditor({
               {/* Expanded details */}
               {isOpen && (
                 <div className="space-y-4 border-t border-border p-4">
-                  <div className="flex items-start gap-4">
+                  <div className="flex flex-wrap items-start gap-4">
                     <div className="shrink-0">
                       <label className="mb-1 block text-xs font-bold text-muted-foreground">الأيقونة</label>
                       <label className="grid h-24 w-24 place-items-center overflow-hidden rounded-xl border-2 border-dashed border-input bg-background hover:border-primary cursor-pointer transition-colors">
                         {it.icon ? (
                           <img src={it.icon} alt="" className="h-full w-full object-cover" />
                         ) : (
-                          <span className="px-1 text-center text-xs text-muted-foreground">تحميل صورة</span>
+                          <span className="px-1 text-center text-xs text-muted-foreground">تحميل أيقونة</span>
                         )}
                         <input
                           type="file"
@@ -429,11 +433,43 @@ function PlatformsEditor({
                           onClick={() => patch(it.id, { icon: "" })}
                           className="mt-1 w-full text-center text-xs text-destructive hover:underline"
                         >
-                          إزالة الأيقونة
+                          إزالة
                         </button>
                       )}
                     </div>
-                    <div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-2">
+
+                    <div className="shrink-0">
+                      <label className="mb-1 block text-xs font-bold text-muted-foreground">صورة الغلاف</label>
+                      <label className="grid h-24 w-40 place-items-center overflow-hidden rounded-xl border-2 border-dashed border-input bg-background hover:border-primary cursor-pointer transition-colors">
+                        {it.cover ? (
+                          <img src={it.cover} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="flex flex-col items-center gap-1 px-1 text-center text-xs text-muted-foreground">
+                            <ImageIcon className="h-4 w-4" />
+                            تحميل صورة التطبيق
+                          </span>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) uploadImage(it.id, f, "cover");
+                          }}
+                        />
+                      </label>
+                      {it.cover && (
+                        <button
+                          onClick={() => patch(it.id, { cover: "" })}
+                          className="mt-1 w-full text-center text-xs text-destructive hover:underline"
+                        >
+                          إزالة
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid min-w-[240px] flex-1 grid-cols-1 gap-3 md:grid-cols-2">
                       <Field label="الوصف">
                         <input
                           value={it.description ?? ""}
@@ -456,11 +492,22 @@ function PlatformsEditor({
                           className="w-full rounded-lg border border-input bg-background px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </Field>
+                      <Field label="نوع المنصة / الأيقونة">
+                        <BrandPicker
+                          value={(it.brand as BrandKey) || ""}
+                          detected={detectBrand(it.url)}
+                          onChange={(b) => patch(it.id, { brand: b })}
+                        />
+                      </Field>
                       <Field label="لون مميز (اختياري)">
                         <div className="flex items-center gap-2">
                           <input
                             type="color"
-                            value={/^#([0-9a-f]{6})$/i.test(it.accent ?? "") ? it.accent : "#14b8a6"}
+                            value={
+                              typeof it.accent === "string" && it.accent.startsWith("#")
+                                ? it.accent
+                                : "#14b8a6"
+                            }
                             onChange={(e) =>
                               patch(it.id, {
                                 accent: `linear-gradient(135deg, ${e.target.value}, ${e.target.value}dd)`,
@@ -566,6 +613,56 @@ function Field({ label, children }: { label: React.ReactNode; children: React.Re
     <div>
       <label className="mb-1 flex items-center gap-1 text-xs font-bold text-muted-foreground">{label}</label>
       {children}
+    </div>
+  );
+}
+
+const BRAND_OPTIONS: { key: BrandKey | ""; label: string }[] = [
+  { key: "", label: "تلقائي" },
+  { key: "facebook", label: "Facebook" },
+  { key: "youtube", label: "YouTube" },
+  { key: "tiktok", label: "TikTok" },
+  { key: "instagram", label: "Instagram" },
+  { key: "twitter", label: "X / Twitter" },
+  { key: "whatsapp", label: "WhatsApp" },
+  { key: "telegram", label: "Telegram" },
+  { key: "snapchat", label: "Snapchat" },
+  { key: "linkedin", label: "LinkedIn" },
+  { key: "android", label: "Android" },
+  { key: "apple", label: "iOS" },
+  { key: "web", label: "موقع ويب" },
+];
+
+function BrandPicker({
+  value,
+  detected,
+  onChange,
+}: {
+  value: BrandKey | "";
+  detected: BrandKey | null;
+  onChange: (b: string) => void;
+}) {
+  const effective = (value || detected) as BrandKey | null;
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-white"
+        style={{ background: effective ? BRAND_META[effective].color : "var(--muted)" }}
+      >
+        {effective ? <BrandIcon brand={effective} className="h-5 w-5" /> : <span className="text-xs text-muted-foreground">؟</span>}
+      </div>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        {BRAND_OPTIONS.map((o) => (
+          <option key={o.key} value={o.key}>
+            {o.label}
+            {o.key === "" && detected ? ` (${BRAND_META[detected].label})` : ""}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

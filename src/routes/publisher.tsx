@@ -1,59 +1,102 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/page-shell";
 import { useContent, type PlatformLink } from "@/lib/content-store";
-import { ExternalLink, Globe, Smartphone, Apple, ArrowUpLeft, Sparkles } from "lucide-react";
+import { ExternalLink, ArrowUpLeft, Sparkles } from "lucide-react";
+import { BrandIcon, detectBrand, BRAND_META, type BrandKey } from "@/lib/brand-icons";
 
 export const Route = createFileRoute("/publisher")({
   head: () => ({ meta: [{ title: "منصات شفاء — بيانات الناشر" }] }),
   component: Page,
 });
 
-function PlatformCard({ p }: { p: PlatformLink }) {
-  const extras: { key: string; label: string; url: string; icon: React.ReactNode }[] = [];
-  if (p.webUrl) extras.push({ key: "web", label: "موقع الويب", url: p.webUrl, icon: <Globe className="h-4 w-4" /> });
-  if (p.androidUrl)
-    extras.push({ key: "and", label: "أندرويد", url: p.androidUrl, icon: <Smartphone className="h-4 w-4" /> });
-  if (p.iosUrl) extras.push({ key: "ios", label: "آيفون", url: p.iosUrl, icon: <Apple className="h-4 w-4" /> });
+function resolveBrand(p: PlatformLink): BrandKey | null {
+  if (p.brand && p.brand !== "auto") return p.brand as BrandKey;
+  return detectBrand(p.url);
+}
 
-  const accent = p.accent || "var(--gradient-hero)";
+function PlatformCard({ p }: { p: PlatformLink }) {
+  const brand = resolveBrand(p);
+  const brandColor = brand ? BRAND_META[brand].color : null;
+
+  const extras: { key: string; label: string; url: string; brand: BrandKey }[] = [];
+  if (p.webUrl) extras.push({ key: "web", label: "الويب", url: p.webUrl, brand: "web" });
+  if (p.androidUrl) extras.push({ key: "and", label: "Android", url: p.androidUrl, brand: "android" });
+  if (p.iosUrl) extras.push({ key: "ios", label: "iOS", url: p.iosUrl, brand: "apple" });
+
+  const accent =
+    p.accent ||
+    (brandColor
+      ? `linear-gradient(135deg, ${brandColor}, ${brandColor}cc)`
+      : "var(--gradient-hero)");
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-3xl border bg-card p-6 transition-all duration-500 hover:-translate-y-1 ${
+      className={`group relative overflow-hidden rounded-3xl border bg-card transition-all duration-500 hover:-translate-y-1 ${
         p.featured ? "border-primary/50 ring-1 ring-primary/20" : "border-border/60 hover:border-primary/40"
       }`}
       style={{ boxShadow: "var(--shadow-card)" }}
     >
+      {/* Cover / brand banner */}
       <div
-        aria-hidden
-        className="pointer-events-none absolute -top-20 -left-20 h-48 w-48 rounded-full opacity-0 blur-3xl transition-opacity duration-700 group-hover:opacity-60"
+        className="relative h-24 overflow-hidden"
         style={{ background: accent }}
-      />
+      >
+        {p.cover && (
+          <img
+            src={p.cover}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover opacity-90"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-card/60 to-transparent" />
+        {brand && !p.cover && (
+          <BrandIcon
+            brand={brand}
+            className="absolute -bottom-4 -left-4 h-32 w-32 text-white/15"
+          />
+        )}
+        {p.featured && (
+          <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold text-foreground shadow">
+            <Sparkles className="h-3 w-3 text-primary" /> مميّز
+          </div>
+        )}
+        {p.badge && !p.featured && (
+          <div className="absolute top-3 left-3 z-10 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold text-foreground shadow">
+            {p.badge}
+          </div>
+        )}
+      </div>
 
-      {p.featured && (
-        <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold text-primary-foreground shadow">
-          <Sparkles className="h-3 w-3" /> مميّز
-        </div>
-      )}
-      {p.badge && !p.featured && (
-        <div className="absolute top-3 left-3 z-10 rounded-full bg-accent px-2.5 py-1 text-[10px] font-bold text-accent-foreground shadow">
-          {p.badge}
-        </div>
-      )}
-
-      <a href={p.url} target="_blank" rel="noopener noreferrer" className="relative flex items-start gap-4">
+      <a
+        href={p.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative -mt-8 flex items-start gap-4 px-6"
+      >
         <div
-          className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl ring-1 ring-border/70 transition-transform duration-500 group-hover:scale-105 group-hover:ring-primary/40"
-          style={{ background: p.icon ? "var(--card)" : accent }}
+          className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-card ring-4 ring-card transition-transform duration-500 group-hover:scale-105"
+          style={{ boxShadow: "0 8px 20px -8px rgba(0,0,0,0.25)" }}
         >
           {p.icon ? (
             <img src={p.icon} alt={p.name} className="h-full w-full object-cover" />
+          ) : brand ? (
+            <div
+              className="grid h-full w-full place-items-center text-white"
+              style={{ background: brandColor ?? "var(--primary)" }}
+            >
+              <BrandIcon brand={brand} className="h-8 w-8" />
+            </div>
           ) : (
-            <ExternalLink className="h-7 w-7 text-primary-foreground" />
+            <div
+              className="grid h-full w-full place-items-center text-primary-foreground"
+              style={{ background: "var(--gradient-hero)" }}
+            >
+              <ExternalLink className="h-7 w-7" />
+            </div>
           )}
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 pt-8">
           <div className="flex items-center gap-2">
             <h3 className="truncate text-lg font-black tracking-tight transition-colors group-hover:text-primary">
               {p.name}
@@ -63,14 +106,14 @@ function PlatformCard({ p }: { p: PlatformLink }) {
           {p.description && (
             <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{p.description}</p>
           )}
-          <p className="mt-2 truncate text-[11px] font-medium tracking-wide text-muted-foreground/80" dir="ltr">
+          <p className="mt-1 truncate text-[11px] font-medium tracking-wide text-muted-foreground/80" dir="ltr">
             {p.url.replace(/^https?:\/\//, "")}
           </p>
         </div>
       </a>
 
-      <div className="relative mt-5 flex items-center justify-between gap-3 border-t border-dashed border-border/70 pt-4">
-        <div className="flex flex-wrap gap-2">
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-dashed border-border/70 px-6 py-4">
+        <div className="flex flex-wrap gap-1.5">
           {extras.map((e) => (
             <a
               key={e.key}
@@ -79,10 +122,16 @@ function PlatformCard({ p }: { p: PlatformLink }) {
               rel="noopener noreferrer"
               aria-label={e.label}
               title={e.label}
-              className="group/chip inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/60 px-3 py-1.5 text-xs font-bold text-foreground/80 backdrop-blur transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-md"
+              className="group/chip grid h-9 w-9 place-items-center rounded-full border border-border/70 bg-background text-foreground/70 transition-all hover:scale-110 hover:border-transparent hover:text-white hover:shadow-md"
+              style={{ ["--brand" as never]: BRAND_META[e.brand].color }}
+              onMouseEnter={(ev) => {
+                (ev.currentTarget as HTMLElement).style.background = BRAND_META[e.brand].color;
+              }}
+              onMouseLeave={(ev) => {
+                (ev.currentTarget as HTMLElement).style.background = "";
+              }}
             >
-              <span className="transition-transform group-hover/chip:-rotate-6">{e.icon}</span>
-              {e.label}
+              <BrandIcon brand={e.brand} className="h-4 w-4" />
             </a>
           ))}
         </div>
@@ -90,7 +139,7 @@ function PlatformCard({ p }: { p: PlatformLink }) {
           href={p.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-black text-primary-foreground transition-all hover:opacity-90 hover:shadow-lg"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground transition-all hover:opacity-90 hover:shadow-lg"
         >
           زيارة
           <ArrowUpLeft className="h-3.5 w-3.5" />
@@ -109,7 +158,7 @@ function Page() {
         {state.publisherIntro}
       </p>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {visible.length === 0 && (
           <p className="text-muted-foreground">لم تُضف منصات بعد.</p>
         )}

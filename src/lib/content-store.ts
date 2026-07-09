@@ -6,6 +6,8 @@ export type PlatformLink = {
   url: string;
   description?: string;
   icon?: string;
+  cover?: string;
+  brand?: string;
   androidUrl?: string;
   iosUrl?: string;
   webUrl?: string;
