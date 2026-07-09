@@ -457,7 +457,7 @@ function PlatformsEditor({
                         return (
                           <label
                             className="grid h-24 w-24 place-items-center overflow-hidden rounded-xl border-2 border-dashed border-input bg-background hover:border-primary cursor-pointer transition-colors"
-                            style={!it.icon && brand ? { background: BRAND_META[brand].color, borderStyle: "solid" } : undefined}
+                            style={!it.icon && (brand || it.accent) ? { background: it.accent || BRAND_META[brand!].color, borderStyle: "solid" } : undefined}
                           >
                             {it.icon ? (
                               <img src={it.icon} alt="" className="h-full w-full object-cover" />
