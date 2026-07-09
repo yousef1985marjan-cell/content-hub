@@ -82,7 +82,58 @@ export type BrandKey =
   | "vimeo"
   | "tumblr"
   | "github"
-  | "medium";
+  | "medium"
+  // app stores & download platforms (branded)
+  | "playstore"
+  | "appstore"
+  | "appgallery"
+  | "galaxystore"
+  | "amazonAppstore"
+  | "microsoftStore"
+  | "macAppstore"
+  | "steam"
+  | "epicgames"
+  | "windows"
+  | "macos"
+  | "linux"
+  | "huawei"
+  // messengers & communication (branded)
+  | "threads"
+  | "wechat"
+  | "line"
+  | "kakao"
+  | "viber"
+  | "signal"
+  | "skype"
+  | "zoom"
+  | "teams"
+  | "slack"
+  | "gmail"
+  | "outlook"
+  // productivity & cloud (branded)
+  | "drive"
+  | "dropbox"
+  | "onedrive"
+  | "icloud"
+  | "notion"
+  | "figma"
+  | "behance"
+  | "dribbble"
+  // streaming & media (branded)
+  | "netflix"
+  | "shahid"
+  | "anghami"
+  | "applemusic"
+  | "spotifyBrand"
+  | "primevideo"
+  | "disneyplus"
+  // more social (branded)
+  | "quora"
+  | "mastodon"
+  | "bluesky"
+  | "threema"
+  | "xbox"
+  | "playstation";
 
 const NEUTRAL = "#64748B";
 
@@ -182,22 +233,121 @@ export const BRAND_META: Record<BrandKey, { label: string; color: string }> = {
   tumblr: { label: "تمبلر", color: NEUTRAL },
   github: { label: "جيت هاب", color: NEUTRAL },
   medium: { label: "ميديوم", color: NEUTRAL },
+  // app stores & download
+  playstore: { label: "Google Play", color: "#01875F" },
+  appstore: { label: "App Store", color: "#0D96F6" },
+  appgallery: { label: "AppGallery", color: "#C8102E" },
+  galaxystore: { label: "Galaxy Store", color: "#1428A0" },
+  amazonAppstore: { label: "Amazon Appstore", color: "#FF9900" },
+  microsoftStore: { label: "Microsoft Store", color: "#0078D4" },
+  macAppstore: { label: "Mac App Store", color: "#0D96F6" },
+  steam: { label: "Steam", color: "#171A21" },
+  epicgames: { label: "Epic Games", color: "#2A2A2A" },
+  windows: { label: "Windows", color: "#0078D4" },
+  macos: { label: "macOS", color: "#000000" },
+  linux: { label: "Linux", color: "#000000" },
+  huawei: { label: "Huawei", color: "#C8102E" },
+  // messengers
+  threads: { label: "Threads", color: "#000000" },
+  wechat: { label: "WeChat", color: "#07C160" },
+  line: { label: "LINE", color: "#00C300" },
+  kakao: { label: "KakaoTalk", color: "#FEE500" },
+  viber: { label: "Viber", color: "#7360F2" },
+  signal: { label: "Signal", color: "#3A76F0" },
+  skype: { label: "Skype", color: "#00AFF0" },
+  zoom: { label: "Zoom", color: "#2D8CFF" },
+  teams: { label: "Teams", color: "#4B53BC" },
+  slack: { label: "Slack", color: "#4A154B" },
+  gmail: { label: "Gmail", color: "#EA4335" },
+  outlook: { label: "Outlook", color: "#0078D4" },
+  // productivity & cloud
+  drive: { label: "Google Drive", color: "#1FA463" },
+  dropbox: { label: "Dropbox", color: "#0061FF" },
+  onedrive: { label: "OneDrive", color: "#0078D4" },
+  icloud: { label: "iCloud", color: "#3693F3" },
+  notion: { label: "Notion", color: "#000000" },
+  figma: { label: "Figma", color: "#F24E1E" },
+  behance: { label: "Behance", color: "#1769FF" },
+  dribbble: { label: "Dribbble", color: "#EA4C89" },
+  // streaming
+  netflix: { label: "Netflix", color: "#E50914" },
+  shahid: { label: "Shahid", color: "#7A00CC" },
+  anghami: { label: "Anghami", color: "#4300FF" },
+  applemusic: { label: "Apple Music", color: "#FA243C" },
+  spotifyBrand: { label: "Spotify", color: "#1DB954" },
+  primevideo: { label: "Prime Video", color: "#00A8E1" },
+  disneyplus: { label: "Disney+", color: "#113CCF" },
+  // more social
+  quora: { label: "Quora", color: "#B92B27" },
+  mastodon: { label: "Mastodon", color: "#6364FF" },
+  bluesky: { label: "Bluesky", color: "#0085FF" },
+  threema: { label: "Threema", color: "#3FE669" },
+  xbox: { label: "Xbox", color: "#107C10" },
+  playstation: { label: "PlayStation", color: "#003791" },
 };
 
 export function detectBrand(url?: string): BrandKey | null {
   if (!url) return null;
   const u = url.toLowerCase();
+  if (u.includes("play.google.com")) return "playstore";
+  if (u.includes("apps.apple.com") || u.includes("itunes.apple.com")) return "appstore";
+  if (u.includes("appgallery.huawei") || u.includes("consumer.huawei.com/.*/appgallery")) return "appgallery";
+  if (u.includes("galaxy.store") || u.includes("galaxystore.samsung")) return "galaxystore";
+  if (u.includes("amazon.com/gp/mas") || u.includes("amazon.com/dp/") && u.includes("appstore")) return "amazonAppstore";
+  if (u.includes("microsoft.com/store") || u.includes("apps.microsoft")) return "microsoftStore";
+  if (u.includes("store.steampowered") || u.includes("steamcommunity")) return "steam";
+  if (u.includes("epicgames.com")) return "epicgames";
   if (u.includes("facebook.com") || u.includes("fb.com")) return "facebook";
   if (u.includes("youtube.com") || u.includes("youtu.be")) return "youtube";
   if (u.includes("tiktok.com")) return "tiktok";
   if (u.includes("instagram.com")) return "instagram";
+  if (u.includes("threads.net") || u.includes("threads.com")) return "threads";
   if (u.includes("twitter.com") || u.includes("x.com")) return "twitter";
   if (u.includes("wa.me") || u.includes("whatsapp.com")) return "whatsapp";
   if (u.includes("t.me") || u.includes("telegram")) return "telegram";
   if (u.includes("snapchat.com")) return "snapchat";
   if (u.includes("linkedin.com")) return "linkedin";
-  if (u.includes("play.google.com")) return "android";
-  if (u.includes("apps.apple.com") || u.includes("itunes.apple.com")) return "apple";
+  if (u.includes("m.me") || u.includes("messenger.com")) return "messenger";
+  if (u.includes("pinterest.")) return "pinterest";
+  if (u.includes("reddit.com")) return "reddit";
+  if (u.includes("discord.")) return "discord";
+  if (u.includes("twitch.tv")) return "twitch";
+  if (u.includes("open.spotify") || u.includes("spotify.com")) return "spotifyBrand";
+  if (u.includes("music.apple.com")) return "applemusic";
+  if (u.includes("anghami.com")) return "anghami";
+  if (u.includes("shahid.")) return "shahid";
+  if (u.includes("netflix.com")) return "netflix";
+  if (u.includes("primevideo.com") || u.includes("amazon.com/gp/video")) return "primevideo";
+  if (u.includes("disneyplus.com")) return "disneyplus";
+  if (u.includes("soundcloud.com")) return "soundcloud";
+  if (u.includes("vimeo.com")) return "vimeo";
+  if (u.includes("tumblr.com")) return "tumblr";
+  if (u.includes("github.com")) return "github";
+  if (u.includes("medium.com")) return "medium";
+  if (u.includes("quora.com")) return "quora";
+  if (u.includes("bsky.app") || u.includes("bluesky")) return "bluesky";
+  if (u.includes("mastodon.")) return "mastodon";
+  if (u.includes("wechat") || u.includes("weixin")) return "wechat";
+  if (u.includes("line.me")) return "line";
+  if (u.includes("kakao")) return "kakao";
+  if (u.includes("viber.com")) return "viber";
+  if (u.includes("signal.")) return "signal";
+  if (u.includes("skype.com")) return "skype";
+  if (u.includes("zoom.us") || u.includes("zoom.com")) return "zoom";
+  if (u.includes("teams.microsoft") || u.includes("teams.live")) return "teams";
+  if (u.includes("slack.com")) return "slack";
+  if (u.includes("mail.google") || u.includes("gmail")) return "gmail";
+  if (u.includes("outlook.")) return "outlook";
+  if (u.includes("drive.google")) return "drive";
+  if (u.includes("dropbox.com")) return "dropbox";
+  if (u.includes("onedrive")) return "onedrive";
+  if (u.includes("icloud.com")) return "icloud";
+  if (u.includes("notion.")) return "notion";
+  if (u.includes("figma.com")) return "figma";
+  if (u.includes("behance.net")) return "behance";
+  if (u.includes("dribbble.com")) return "dribbble";
+  if (u.includes("xbox.com")) return "xbox";
+  if (u.includes("playstation.com")) return "playstation";
   return null;
 }
 
@@ -478,5 +628,98 @@ export function BrandIcon({ brand, ...props }: { brand: BrandKey } & P) {
       return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-1-2.6c3.3-.4 6.8-1.6 6.8-7.5 0-1.5-.5-2.7-1.4-3.7.4-1 .4-2.2 0-3.3 0 0-1.1-.3-3.4 1.3a11.8 11.8 0 0 0-6.2 0C5.3 1.7 4.2 2 4.2 2c-.4 1.1-.4 2.3 0 3.3-.9 1-1.4 2.3-1.4 3.7 0 5.9 3.5 7.1 6.8 7.5a3.4 3.4 0 0 0-1 2.6V22"/></svg>;
     case "medium":
       return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="6" cy="12" r="4"/><path d="M13 8h6v8h-6M13 12h6"/></svg>;
+    // app stores & download platforms
+    case "playstore":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M3.6 2.3c-.4.3-.6.8-.6 1.5v16.4c0 .7.2 1.2.6 1.5l9.2-9.7L3.6 2.3zm10.3 10.4 2.6 2.7-11.1 6.3 8.5-9zm4.8-4.1 2.6 1.5c1 .6 1 1.6 0 2.2l-2.7 1.5-3-3 3.1-2.2zm-4.8-.4-8.5-9 11.1 6.3-2.6 2.7z"/></svg>;
+    case "appstore":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.7 6.4L11.4 10 9 14.2h2.5l.9 1.5H7l1.8-3.1 1.5-2.7-.5-.9 1.1-.6zm4.7 7.2h-1.4l-.7-1.1L11 10l1.1-.6.9 1.5 1.7 3v.1h.9v1.6zM8.4 17H7c-.2 0-.4-.1-.4-.4l.6-1h1.5l-.6 1c-.1.3-.4.4-.7.4z"/></svg>;
+    case "appgallery":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M6 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3zm3 5v4a3 3 0 0 0 6 0V8h-1.5v4a1.5 1.5 0 0 1-3 0V8H9z"/></svg>;
+    case "galaxystore":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 6c2 0 4 1 4 3h-2c0-.5-.9-1-2-1s-2 .3-2 1c0 .6.7.8 2.3 1.1 1.5.3 3.7.8 3.7 3.1 0 2-2 3-4 3s-4-1-4-3h2c0 .7 1 1 2 1s2-.3 2-1c0-.6-.9-.8-2.3-1.1C10.2 13.8 8 13.3 8 11c0-2 2-3 4-3z"/></svg>;
+    case "amazonAppstore":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M14.5 12.6a5 5 0 0 1-3 1c-1.5 0-2.8-.7-2.8-2 0-1.2 1-2 3-2.2l1.8-.2v-.4c0-.7-.4-1-1.2-1s-1.3.3-1.5.9l-1.8-.4C8.5 7 9.7 6.3 11.4 6.3c2 0 3.1.9 3.1 2.7v4.1c0 .3 0 .5.2.7l-.2.8zm-.5-2.4v-.5l-1.5.2c-1 .1-1.5.5-1.5 1s.5.9 1.3.9c.7 0 1.3-.3 1.7-.7v-.9zM3 16.5c4.8 2.7 10.8 2.6 15.7-.2.2-.1.4.1.2.3-1.8 1.7-5 2.7-8.1 2.7-3.5 0-6.6-1.2-8.1-2.4-.1-.1 0-.4.3-.4zm17.2-.9c-.4-.5-2.7-.2-3.7 0-.3.1-.3-.2-.1-.4 1.8-1.2 4.8-.9 5.1-.5.4.4-.1 3.3-1.8 4.7-.3.2-.5.1-.4-.2.4-.9 1.2-3 .9-3.6z"/></svg>;
+    case "microsoftStore":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M3 3h9v9H3zM12 3h9v9h-9zM3 12h9v9H3zM12 12h9v9h-9z"/></svg>;
+    case "macAppstore":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-3.2 12.5c-.4.7-1 .9-1.5.6l-.5-.3c-.4-.3-.5-.9-.1-1.4l3-4.9-1-1.6c-.3-.5 0-1 .5-1s.7.3.9.6l.5.9.5-.9c.2-.3.4-.6.9-.6.5 0 .7.5.5 1l-4.7 7.6zm7.8 1.3h-.6c-.3 0-.5-.1-.7-.4l-.7-1.2H9l-.5.9h-2l4.4-7.4 1.2 2.1 2.6 4.4c.2.4.1.9-.4 1.2l-.7.4z"/></svg>;
+    case "steam":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2a10 10 0 0 0-10 9.6l5.3 2.2a2.8 2.8 0 0 1 3.5-.4l2.4-3.5v-.1a3.8 3.8 0 1 1 3.8 3.8h-.1l-3.4 2.5a2.8 2.8 0 0 1-5.4 1.1l-3.8-1.6A10 10 0 1 0 12 2zm-4.7 15.2-1.2-.5a2.1 2.1 0 1 0 2.5-3l1.2.5a1.6 1.6 0 1 1-2.5 3zm11.2-5.7a2.5 2.5 0 1 0-2.5-2.5c0 1.4 1.1 2.5 2.5 2.5z"/></svg>;
+    case "epicgames":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M4 2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2l-3 2v-2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm3 4v12h8v-2h-6v-3h5v-2h-5V8h6V6H7z"/></svg>;
+    case "windows":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M3 5.5 11 4v7.5H3zM12 3.8 21 2.5V11h-9zM3 12.5h8V20L3 18.5zM12 12.5h9V21.5L12 20.2z"/></svg>;
+    case "macos":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M16.5 12.5c0-2.5 2-3.7 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.2 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3.1 2.5 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4a10.5 10.5 0 0 0 1.4-2.9c-.1 0-2.8-1.1-2.8-3.9zm-2.4-7.1a4.4 4.4 0 0 0 1-3.2 4.5 4.5 0 0 0-3 1.5 4.2 4.2 0 0 0-1 3.1 3.8 3.8 0 0 0 3-1.4z"/></svg>;
+    case "linux":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2c-2 0-3.5 1.5-3.5 4 0 1 .3 2 .3 3 0 1.5-2.5 3-2.5 6 0 3 2 7 5.7 7s5.7-4 5.7-7c0-3-2.5-4.5-2.5-6 0-1 .3-2 .3-3 0-2.5-1.5-4-3.5-4zm-1.5 3.5a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4zm3 0a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4zM12 8c1 0 2 .5 2 1s-1 1-2 1-2-.5-2-1 1-1 2-1z"/></svg>;
+    case "huawei":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M3 4c0 4 3 7 7 8-2 1-4 3-5 6h5V8m11-4c0 4-3 7-7 8 2 1 4 3 5 6h-5V8"/></svg>;
+    case "threads":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M16.5 11.2c-.1-.1-.2-.1-.3-.2-.2-3.4-2-5.3-5-5.3-1.8 0-3.4.8-4.3 2.2l1.7 1.2c.7-1 1.6-1.4 2.6-1.4 1.5 0 2.7.9 2.9 2.8-.9-.2-1.9-.2-3-.1-2.9.2-4.7 1.9-4.6 4.3.1 2.4 2.1 3.7 4.3 3.6 2.9-.2 4.6-2 5-4.8.7.4 1.2.9 1.5 1.5.5 1.1.5 3-1 4.5-1.3 1.3-2.9 1.9-5.3 1.9-2.6 0-4.6-.8-5.9-2.5C3.9 17.2 3.3 15.1 3.3 12s.6-5.2 1.8-6.9c1.3-1.7 3.3-2.5 5.9-2.5s4.6.8 5.9 2.6c.7.9 1.2 2 1.5 3.3l2-.5c-.3-1.5-.9-2.9-1.8-4C17 1.9 14.4 1 11 1c-3.3 0-6 1-7.8 3C1.5 5.9 1 8.6 1 12c0 3.5.5 6.2 2.2 8.1C5 22 7.6 23 11 23c3 0 5.2-.8 7-2.5 2.2-2.2 2.2-4.9 1.4-6.5-.5-1-1.4-1.9-2.9-2.8zm-4.8 4.7c-1.2.1-2.4-.5-2.5-1.5-.1-1 .9-1.7 2.2-1.8h.6c.7 0 1.4.1 2 .2-.2 2.4-1.4 3.1-2.3 3.1z"/></svg>;
+    case "wechat":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M8.5 4C4.9 4 2 6.4 2 9.4c0 1.6.9 3.1 2.4 4.1L4 15.2l2-1c.7.2 1.5.4 2.4.4l.6-.1c-.1-.4-.2-.9-.2-1.3 0-2.8 2.7-5 6.1-5H15c-.5-2.4-3.2-4.2-6.5-4.2zm-2 2.5a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6zm4 0a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6zm4.5 3.7c-3 0-5.5 2-5.5 4.4 0 2.5 2.5 4.5 5.5 4.5.6 0 1.2-.1 1.8-.3l1.7.9-.4-1.5c1.3-.8 2-2.2 2-3.6 0-2.4-2.5-4.4-5.1-4.4zm-1.5 2a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4zm3.5 0a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4z"/></svg>;
+    case "line":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2C6.5 2 2 5.7 2 10.2c0 4 3.6 7.4 8.5 8 .3.1.8.2.9.5 0 .3 0 .8-.1 1.1l-.1.9c0 .3-.2 1 .9.6l6.4-3.8c1.4-.9 3.5-3.2 3.5-6.3C22 5.7 17.5 2 12 2zm-4 10.7H6.3c-.2 0-.4-.2-.4-.4V8.7c0-.2.2-.4.4-.4s.4.2.4.4v3.2H8c.2 0 .4.2.4.4s-.2.4-.4.4zm2 0c-.2 0-.4-.2-.4-.4V8.7c0-.2.2-.4.4-.4s.4.2.4.4v3.6c0 .2-.2.4-.4.4zm4.6 0c0 .2-.1.3-.3.4h-.1c-.1 0-.2 0-.3-.1L12.2 11v1.3c0 .2-.2.4-.4.4s-.4-.2-.4-.4V8.7c0-.2.1-.3.3-.4h.1c.1 0 .2 0 .3.1l1.7 2.3V8.7c0-.2.2-.4.4-.4s.4.2.4.4v3.6zm3 0c0 .2-.2.4-.4.4h-1.7c-.2 0-.4-.2-.4-.4V8.7c0-.2.2-.4.4-.4h1.7c.2 0 .4.2.4.4s-.2.4-.4.4h-1.3v.8h1.3c.2 0 .4.2.4.4s-.2.4-.4.4h-1.3v.8h1.3c.2 0 .4.2.4.4z"/></svg>;
+    case "kakao":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 3C6.5 3 2 6.5 2 10.8c0 2.8 1.9 5.3 4.7 6.7-.2.7-.8 2.7-.9 3.2-.1.6.2.6.5.4.2-.1 3-2 4.2-2.9.5.1 1 .1 1.5.1 5.5 0 10-3.5 10-7.7C22 6.5 17.5 3 12 3z"/></svg>;
+    case "viber":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2C7 2 3 5.5 3 10c0 2.3 1.1 4.5 3 6v4l3.5-2c.8.2 1.7.3 2.5.3 5 0 9-3.5 9-8.3S17 2 12 2zm3.5 11c-.3.4-.9.7-1.4.6-1.5-.3-2.9-1-4-2.2-1.1-1.1-1.9-2.5-2.2-4 0-.5.2-1 .6-1.4l.4-.3c.2-.2.5-.2.7 0l.9 1.3c.2.2.1.5-.1.7l-.4.3c.2.7.6 1.4 1.2 2 .6.6 1.2 1 2 1.2l.3-.4c.2-.2.5-.2.7-.1l1.3.9c.2.2.2.5 0 .7l-.3.4z"/></svg>;
+    case "signal":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l4.9-1.4A10 10 0 1 0 12 2z"/></svg>;
+    case "skype":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M20.4 13.4a8.4 8.4 0 0 0-9.8-9.8 5 5 0 0 0-7 7 8.4 8.4 0 0 0 9.8 9.8 5 5 0 0 0 7-7zm-8.3 4.1c-2.7 0-4.9-1.3-4.9-2.9 0-.7.5-1.1 1.2-1.1 1.5 0 1.2 2.2 3.7 2.2 1.3 0 2.1-.7 2.1-1.4 0-.5-.3-1-1.3-1.2l-3.2-.8c-2.5-.6-3-2-3-3.3 0-2.6 2.5-3.6 4.9-3.6 2.1 0 4.6.8 4.6 2.4 0 .7-.6 1.1-1.3 1.1-1.3 0-1.1-1.8-3.6-1.8-1.2 0-1.9.5-1.9 1.3 0 .8.9 1.1 1.7 1.3l2.4.5c2.5.5 3.1 2 3.1 3.4 0 2.1-1.6 3.9-4.5 3.9z"/></svg>;
+    case "zoom":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M2 7v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-3.5l4 2.5c.7.4 1.5-.1 1.5-.8V8.8c0-.7-.8-1.2-1.5-.8L16 10.5V7c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2z"/></svg>;
+    case "teams":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M3 7h9v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7zm3-4h3v3H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm7 0h4a1 1 0 0 1 1 1v3h-5V3zm5 4h3v7a2 2 0 0 1-2 2h-1V7zM7 9v2h1.5v5h1V11H11V9H7z"/></svg>;
+    case "slack":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M6 15a2 2 0 1 1-2-2h2v2zm1 0a2 2 0 1 1 4 0v5a2 2 0 1 1-4 0v-5zm2-9a2 2 0 1 1 2-2v2H9zm0 1a2 2 0 1 1 0 4H4a2 2 0 1 1 0-4h5zm9 2a2 2 0 1 1 2 2h-2V9zm-1 0a2 2 0 1 1-4 0V4a2 2 0 1 1 4 0v5zm-2 9a2 2 0 1 1-2 2v-2h2zm0-1a2 2 0 1 1 0-4h5a2 2 0 1 1 0 4h-5z"/></svg>;
+    case "gmail":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M2 6a2 2 0 0 1 2-2h1v13H4a2 2 0 0 1-2-2V6zm18 0v11h1a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1v2zM5 4l7 5 7-5v13h-3V9.8L12 13 8 9.8V17H5V4z"/></svg>;
+    case "outlook":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M2 6a2 2 0 0 1 2-2h9v16H4a2 2 0 0 1-2-2V6zm5.5 3.5A2.5 2.5 0 1 0 7.5 14.5a2.5 2.5 0 0 0 0-5zM14 5h7a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-7V5z"/></svg>;
+    case "drive":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M9 3h6l6 10.5-3 5.5H6L3 13.5 9 3zm0 2L4.5 13h6L15 5H9zm2 9-3 5h12l-3-5H11z"/></svg>;
+    case "dropbox":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M7 2 2 5.5 7 9l5-3.5L7 2zm10 0-5 3.5L17 9l5-3.5L17 2zM2 12.5 7 16l5-3.5L7 9l-5 3.5zm15-3.5-5 3.5 5 3.5 5-3.5-5-3.5zM7 17l5 3.5L17 17l-5-3.5L7 17z"/></svg>;
+    case "onedrive":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M10.5 7a5.5 5.5 0 0 1 5.4 4.4l.6-.1a4 4 0 0 1 3.5 6h-14A4.5 4.5 0 0 1 5 8.5c.4 0 .8 0 1.2.2A5.5 5.5 0 0 1 10.5 7z"/></svg>;
+    case "icloud":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.8 1A4 4 0 0 0 6 19h11.5z"/></svg>;
+    case "notion":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8v8M8 8l8 8M16 8v8" strokeLinecap="round"/></svg>;
+    case "figma":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M8.5 2h3.5v7H8.5a3.5 3.5 0 1 1 0-7zm7 0a3.5 3.5 0 1 1 0 7H12V2h3.5zM12 9.5a3.5 3.5 0 1 1 3.5 3.5H12V9.5zm-3.5 0H12V16H8.5a3.5 3.5 0 1 1 0-6.5zM12 16h-.5V22h-.5a3.5 3.5 0 1 1 .5-7 3.5 3.5 0 0 1 .5.5V16z"/></svg>;
+    case "behance":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M2 6h6c2 0 3.5 1 3.5 3s-1 2.5-2 2.8c1.5.2 2.5 1.5 2.5 3.2 0 2.5-2 3.5-4 3.5H2V6zm2.5 2.5v2.5h3c.8 0 1.5-.4 1.5-1.3s-.7-1.2-1.5-1.2h-3zm0 4.5v3h3c1 0 1.7-.5 1.7-1.5 0-1.1-.7-1.5-1.7-1.5h-3zM14 7h6v1.5h-6V7zm7.5 6c0 2.5-1.5 4.5-4.2 4.5S13 15.7 13 13s1.5-4.5 4.2-4.5c2.6 0 4.3 2 4.3 4.5zm-6.3-.7h4c-.1-1.1-.8-1.9-2-1.9s-1.9.8-2 1.9zm4 1.5h-4c.1 1.2.9 2 2 2 .8 0 1.5-.4 1.8-1.2l1.7.6c-.5 1.4-1.8 2.3-3.5 2.3-2.4 0-4-1.7-4-4 0-.3 0-.6.1-.9l5.9 1.2z"/></svg>;
+    case "dribbble":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><circle cx="12" cy="12" r="10"/><path d="M8 3.2A20 20 0 0 1 18 20M2.5 10a20 20 0 0 0 19-2M4 17c4-4 10-5 17-3" strokeLinecap="round"/></svg>;
+    case "netflix":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M6 2v20l3.5-.5V13l4.5 9.3L18 22V2l-3.5.5V11L10 2H6z"/></svg>;
+    case "shahid":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M2 12 8 4l3 4-6 8h6l3 4H2v-8zm10 0 6-8h6v8l-6 8-3-4 6-8h-6l-3 4z"/></svg>;
+    case "anghami":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM9 7c.6 0 1 .4 1 1v9c0 .6-.4 1-1 1s-1-.4-1-1V8c0-.6.4-1 1-1zm6 0c.6 0 1 .4 1 1v9c0 .6-.4 1-1 1s-1-.4-1-1V8c0-.6.4-1 1-1zM6 10c.6 0 1 .4 1 1v3c0 .6-.4 1-1 1s-1-.4-1-1v-3c0-.6.4-1 1-1zm12 0c.6 0 1 .4 1 1v3c0 .6-.4 1-1 1s-1-.4-1-1v-3c0-.6.4-1 1-1zm-6-2c.6 0 1 .4 1 1v6c0 .6-.4 1-1 1s-1-.4-1-1V9c0-.6.4-1 1-1z"/></svg>;
+    case "applemusic":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M20 3 8 5.5v10.1A3.5 3.5 0 1 0 10 19V9l10-2v6.6A3.5 3.5 0 1 0 22 17V3z"/></svg>;
+    case "spotifyBrand":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.6 14.4a.6.6 0 0 1-.8.2c-2.3-1.4-5.2-1.7-8.6-.9a.6.6 0 1 1-.3-1.2c3.8-.9 7-.5 9.5 1 .3.2.4.6.2.9zm1.2-2.7a.8.8 0 0 1-1 .3c-2.7-1.6-6.7-2.1-9.9-1.1a.8.8 0 1 1-.5-1.5c3.6-1.1 8-.6 11.1 1.3.4.2.5.7.3 1zm.1-2.8c-3.2-1.9-8.4-2-11.4-1.1a.9.9 0 1 1-.5-1.7c3.4-1 9.2-.8 12.8 1.3.5.3.7.9.4 1.4-.3.4-.9.5-1.3.2z"/></svg>;
+    case "primevideo":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M2 8h4l2 6 2-6h4l-4 10h-4L2 8zm12 0h3.5c2 0 3 1 3 2.5s-1 2.5-3 2.5H16v5h-2V8zm2 1.5v2H17c.7 0 1-.4 1-1s-.3-1-1-1h-1z"/></svg>;
+    case "disneyplus":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M2 8h2v8H2V8zm3 0h3c2 0 3.5 1.5 3.5 4S10 16 8 16H5V8zm2 2v4h.8c1 0 1.7-.7 1.7-2s-.7-2-1.7-2H7zm5-2h2v8h-2V8zm3 0h4v2h-2v6h-2V8zm5 4h3v1.5h-3V16h-1.5v-2.5H16V12h1.5V9h1.5v3z"/></svg>;
+    case "quora":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2a9 9 0 1 0 4 17l1 2h3l-2-3.3A9 9 0 0 0 12 2zm0 3c3 0 5 2.4 5 6s-2 6-5 6c-.7 0-1.3-.1-1.9-.4l-.9-2 3 .8c-.2-1.2-1.1-2-2.4-2-1.5 0-2.5 1-2.5 1S6.5 12.7 7 10c.5-3 2.5-5 5-5z"/></svg>;
+    case "mastodon":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M20 10c0-4-2.5-5-2.5-5A16 16 0 0 0 12 4a16 16 0 0 0-5.5 1S4 6 4 10v4c0 3 2 5 5 5 3 0 4-1 4-1v-2s-1.5.7-3.5.7c-2 0-2.5-1-2.5-1s3 1 6 0v-2c-3 1-6 0-6 0v-1s3 1 6 0V10c0-2-1.5-2.5-2.5-2.5S9 8.5 9 9.5v3H7v-3C7 8 8 6 10.5 6S13 8 13 9.5V13c0 .5.5 1 1.5 1s1.5-.5 1.5-1v-3c0-1.5 1-3.5 2.5-3.5S21 8 21 9.5V13h-1z"/></svg>;
+    case "bluesky":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M6 3c2 1 4 3 6 6 2-3 4-5 6-6 2 0 3 1.5 3 4 0 2-.5 3-1 4-.5.5-2 1-4 1 3 0 4 1 4 3s-2 5-5 5c-2 0-3-2-3-4 0 2-1 4-3 4-3 0-5-3-5-5s1-3 4-3c-2 0-3.5-.5-4-1-.5-1-1-2-1-4 0-2.5 1-4 3-4z"/></svg>;
+    case "threema":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2a10 10 0 0 0-9 14.5L2 22l5.5-1.4A10 10 0 1 0 12 2zM8 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>;
+    case "xbox":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2a10 10 0 0 0-6.6 2.5c2.5-.3 5.5 1.8 6.6 3 1.1-1.2 4.1-3.3 6.6-3A10 10 0 0 0 12 2zM4 6.3A10 10 0 0 0 6.6 20c-.4-2.7 1.4-7.7 4.3-11-1.5-1.7-4.4-3.7-6.9-2.7zm16 0c-2.5-1-5.4 1-6.9 2.7 2.9 3.3 4.7 8.3 4.3 11A10 10 0 0 0 20 6.3zM12 10.5c-2 2.2-4 6.3-4 8.7 0 1 1.5 1.7 4 1.7s4-.7 4-1.7c0-2.4-2-6.5-4-8.7z"/></svg>;
+    case "playstation":
+      return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M9 2v18l4-1V6.5c0-1 .3-1.5 1-1.5s1 .7 1 2.3v4.4c2 .9 3.5 1.5 5 1.5.5 0 1-.1 1-.8 0-1.7-1.4-3-4.5-4.3C13 6.5 9.7 5.4 9 2zM3 15.8c0 1.4 1.2 2 3 1.4l3-1v-2l-3 1c-.5.2-.7 0-.7-.2 0-.4.5-.8 1.3-1.1L9 13V11l-4 1.4c-1.4.5-2 1.7-2 3.4zm18 .2c0-1-.5-1.6-1.8-2.2L15 12v2l4.5 1.6c.5.2.7.3.7.5s-.2.3-.7.3l-4.5-1.5v2l4 1.4c1.5.6 2.5.3 2.5-.7"/></svg>;
   }
 }
