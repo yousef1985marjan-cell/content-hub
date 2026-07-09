@@ -154,11 +154,15 @@ function TextEditor({ label, value, onChange }: { label: string; value: string; 
 
 function PlatformsEditor({
   platforms,
+  customIcons,
   onChange,
+  onChangeIcons,
   flash,
 }: {
   platforms: PlatformLink[];
+  customIcons: CustomIcon[];
   onChange: (p: PlatformLink[]) => void;
+  onChangeIcons: (i: CustomIcon[]) => void;
   flash: (m: string) => void;
 }) {
   const [query, setQuery] = useState("");
