@@ -74,9 +74,9 @@ function Admin() {
           key={activeTab}
           label={sections.find((s) => s.key === activeTab)!.label}
           value={state[activeTab as keyof typeof state] as string}
-          onSave={(v) => {
+          onChange={(v) => {
             update({ [activeTab]: v } as never);
-            flash("تم الحفظ بنجاح");
+            flash("تم الحفظ تلقائياً");
           }}
         />
       ) : (
@@ -84,7 +84,7 @@ function Admin() {
           platforms={state.platforms}
           onChange={(platforms) => {
             update({ platforms });
-            flash("تم تحديث المنصات");
+            flash("تم الحفظ تلقائياً");
           }}
         />
       )}
