@@ -61,7 +61,28 @@ export type BrandKey =
   | "target"
   | "compass"
   | "wallet"
-  | "chart";
+  | "chart"
+  // social media (generic line versions)
+  | "facebookAlt"
+  | "youtubeAlt"
+  | "tiktokAlt"
+  | "instagramAlt"
+  | "twitterAlt"
+  | "whatsappAlt"
+  | "telegramAlt"
+  | "snapchatAlt"
+  | "linkedinAlt"
+  | "messenger"
+  | "pinterest"
+  | "reddit"
+  | "discord"
+  | "twitch"
+  | "spotify"
+  | "soundcloud"
+  | "vimeo"
+  | "tumblr"
+  | "github"
+  | "medium";
 
 const NEUTRAL = "#64748B";
 
