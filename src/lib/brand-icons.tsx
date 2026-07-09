@@ -92,6 +92,9 @@ export const GENERIC_BRANDS: BrandKey[] = [
   "clock","search","edit","trash","plus","check","cloud","folder","file","image",
   "book","gift","flag","tag","sun","moon","lock","bookmark","rocket","coffee",
   "wifi","mic","zap","trophy","target","compass","wallet","chart",
+  // social media (generic line versions)
+  "facebookAlt","youtubeAlt","tiktokAlt","instagramAlt","twitterAlt","whatsappAlt","telegramAlt","snapchatAlt","linkedinAlt",
+  "messenger","pinterest","reddit","discord","twitch","spotify","soundcloud","vimeo","tumblr","github","medium",
 ];
 
 export function isGeneric(b: BrandKey): boolean {
