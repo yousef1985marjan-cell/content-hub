@@ -781,11 +781,59 @@ function BrandPicker({
   value,
   detected,
   onChange,
+  currentIcon,
+  customIcons,
+  onPickCustomIcon,
+  onClearIcon,
+  onChangeIcons,
+  flash,
 }: {
   value: BrandKey | "";
   detected: BrandKey | null;
   onChange: (b: string) => void;
+  currentIcon?: string;
+  customIcons: CustomIcon[];
+  onPickCustomIcon: (dataUrl: string) => void;
+  onClearIcon: () => void;
+  onChangeIcons: (i: CustomIcon[]) => void;
+  flash: (m: string) => void;
 }) {
+  const addIcons = (files: FileList | null) => {
+    if (!files) return;
+    const list = Array.from(files).slice(0, 20);
+    Promise.all(
+      list.map(
+        (f) =>
+          new Promise<CustomIcon | null>((resolve) => {
+            if (f.size > 500 * 1024) {
+              alert(`${f.name}: يجب أن يكون أقل من 500 كيلوبايت`);
+              resolve(null);
+              return;
+            }
+            const r = new FileReader();
+            r.onload = () =>
+              resolve({
+                id: crypto.randomUUID(),
+                name: f.name.replace(/\.[^.]+$/, ""),
+                dataUrl: r.result as string,
+              });
+            r.onerror = () => resolve(null);
+            r.readAsDataURL(f);
+          })
+      )
+    ).then((results) => {
+      const ok = results.filter((r): r is CustomIcon => r !== null);
+      if (ok.length) {
+        onChangeIcons([...ok, ...customIcons]);
+        flash(`تمت إضافة ${ok.length} أيقونة`);
+      }
+    });
+  };
+  const removeIcon = (id: string) => {
+    if (confirm("حذف هذه الأيقونة من المكتبة؟")) {
+      onChangeIcons(customIcons.filter((i) => i.id !== id));
+    }
+  };
   const effective = (value || detected) as BrandKey | null;
   const brands = BRAND_OPTIONS.filter((o) => o.key !== "") as { key: BrandKey; label: string }[];
   const brandBrands = brands.filter((b) => !isGeneric(b.key));
