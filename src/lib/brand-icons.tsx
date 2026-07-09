@@ -13,6 +13,7 @@ export type BrandKey =
   | "android"
   | "apple"
   | "web"
+  // generic (line icons, single color, no background box)
   | "link"
   | "mail"
   | "phone"
@@ -26,9 +27,55 @@ export type BrandKey =
   | "map"
   | "camera"
   | "download"
-  | "share";
+  | "share"
+  | "home"
+  | "user"
+  | "users"
+  | "settings"
+  | "bell"
+  | "calendar"
+  | "clock"
+  | "search"
+  | "edit"
+  | "trash"
+  | "plus"
+  | "check"
+  | "cloud"
+  | "folder"
+  | "file"
+  | "image"
+  | "book"
+  | "gift"
+  | "flag"
+  | "tag"
+  | "sun"
+  | "moon"
+  | "lock"
+  | "bookmark"
+  | "rocket"
+  | "coffee"
+  | "wifi"
+  | "mic"
+  | "zap"
+  | "trophy"
+  | "target"
+  | "compass"
+  | "wallet"
+  | "chart";
 
 const NEUTRAL = "#64748B";
+
+export const GENERIC_BRANDS: BrandKey[] = [
+  "link","mail","phone","chat","shop","music","video","star","heart","news",
+  "map","camera","download","share","home","user","users","settings","bell","calendar",
+  "clock","search","edit","trash","plus","check","cloud","folder","file","image",
+  "book","gift","flag","tag","sun","moon","lock","bookmark","rocket","coffee",
+  "wifi","mic","zap","trophy","target","compass","wallet","chart",
+];
+
+export function isGeneric(b: BrandKey): boolean {
+  return GENERIC_BRANDS.includes(b);
+}
 
 export const BRAND_META: Record<BrandKey, { label: string; color: string }> = {
   facebook: { label: "Facebook", color: "#1877F2" },
@@ -57,6 +104,40 @@ export const BRAND_META: Record<BrandKey, { label: string; color: string }> = {
   camera: { label: "كاميرا", color: NEUTRAL },
   download: { label: "تحميل", color: NEUTRAL },
   share: { label: "مشاركة", color: NEUTRAL },
+  home: { label: "الرئيسية", color: NEUTRAL },
+  user: { label: "مستخدم", color: NEUTRAL },
+  users: { label: "مستخدمون", color: NEUTRAL },
+  settings: { label: "إعدادات", color: NEUTRAL },
+  bell: { label: "تنبيه", color: NEUTRAL },
+  calendar: { label: "تقويم", color: NEUTRAL },
+  clock: { label: "ساعة", color: NEUTRAL },
+  search: { label: "بحث", color: NEUTRAL },
+  edit: { label: "تعديل", color: NEUTRAL },
+  trash: { label: "حذف", color: NEUTRAL },
+  plus: { label: "إضافة", color: NEUTRAL },
+  check: { label: "تم", color: NEUTRAL },
+  cloud: { label: "سحابة", color: NEUTRAL },
+  folder: { label: "مجلد", color: NEUTRAL },
+  file: { label: "ملف", color: NEUTRAL },
+  image: { label: "صورة", color: NEUTRAL },
+  book: { label: "كتاب", color: NEUTRAL },
+  gift: { label: "هدية", color: NEUTRAL },
+  flag: { label: "علم", color: NEUTRAL },
+  tag: { label: "وسم", color: NEUTRAL },
+  sun: { label: "شمس", color: NEUTRAL },
+  moon: { label: "قمر", color: NEUTRAL },
+  lock: { label: "قفل", color: NEUTRAL },
+  bookmark: { label: "علامة", color: NEUTRAL },
+  rocket: { label: "صاروخ", color: NEUTRAL },
+  coffee: { label: "قهوة", color: NEUTRAL },
+  wifi: { label: "واي فاي", color: NEUTRAL },
+  mic: { label: "ميكروفون", color: NEUTRAL },
+  zap: { label: "طاقة", color: NEUTRAL },
+  trophy: { label: "كأس", color: NEUTRAL },
+  target: { label: "هدف", color: NEUTRAL },
+  compass: { label: "بوصلة", color: NEUTRAL },
+  wallet: { label: "محفظة", color: NEUTRAL },
+  chart: { label: "رسم بياني", color: NEUTRAL },
 };
 
 export function detectBrand(url?: string): BrandKey | null {
