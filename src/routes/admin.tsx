@@ -419,7 +419,7 @@ function PlatformsEditor({
                 </div>
               </div>
 
-              </div>
+
 
               {/* Labeled action bar */}
               <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border/60 bg-muted/30 px-3 py-2">
