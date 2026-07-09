@@ -12,7 +12,23 @@ export type BrandKey =
   | "linkedin"
   | "android"
   | "apple"
-  | "web";
+  | "web"
+  | "link"
+  | "mail"
+  | "phone"
+  | "chat"
+  | "shop"
+  | "music"
+  | "video"
+  | "star"
+  | "heart"
+  | "news"
+  | "map"
+  | "camera"
+  | "download"
+  | "share";
+
+const NEUTRAL = "#64748B";
 
 export const BRAND_META: Record<BrandKey, { label: string; color: string }> = {
   facebook: { label: "Facebook", color: "#1877F2" },
@@ -27,6 +43,20 @@ export const BRAND_META: Record<BrandKey, { label: string; color: string }> = {
   android: { label: "Android", color: "#3DDC84" },
   apple: { label: "iOS", color: "#000000" },
   web: { label: "موقع", color: "#0EA5E9" },
+  link: { label: "رابط", color: NEUTRAL },
+  mail: { label: "بريد", color: NEUTRAL },
+  phone: { label: "هاتف", color: NEUTRAL },
+  chat: { label: "محادثة", color: NEUTRAL },
+  shop: { label: "متجر", color: NEUTRAL },
+  music: { label: "موسيقى", color: NEUTRAL },
+  video: { label: "فيديو", color: NEUTRAL },
+  star: { label: "نجمة", color: NEUTRAL },
+  heart: { label: "قلب", color: NEUTRAL },
+  news: { label: "أخبار", color: NEUTRAL },
+  map: { label: "خريطة", color: NEUTRAL },
+  camera: { label: "كاميرا", color: NEUTRAL },
+  download: { label: "تحميل", color: NEUTRAL },
+  share: { label: "مشاركة", color: NEUTRAL },
 };
 
 export function detectBrand(url?: string): BrandKey | null {
@@ -121,6 +151,97 @@ export function BrandIcon({ brand, ...props }: { brand: BrandKey } & P) {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
           <circle cx="12" cy="12" r="10" />
           <path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />
+        </svg>
+      );
+    case "link":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 1 0-7.07-7.07L11 5" />
+          <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 1 0 7.07 7.07L13 19" />
+        </svg>
+      );
+    case "mail":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <path d="m22 7-10 6L2 7" />
+        </svg>
+      );
+    case "phone":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+          <path d="M20 15.5c-1.2 0-2.5-.2-3.6-.6a1 1 0 0 0-1 .2l-2.2 2.2a15 15 0 0 1-6.6-6.6l2.2-2.2a1 1 0 0 0 .2-1A11 11 0 0 1 8.5 4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1c0 9.4 7.6 17 17 17a1 1 0 0 0 1-1v-3.5a1 1 0 0 0-1-1z" />
+        </svg>
+      );
+    case "chat":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+          <path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" />
+        </svg>
+      );
+    case "shop":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+          <path d="M3 6h18M16 10a4 4 0 1 1-8 0" />
+        </svg>
+      );
+    case "music":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+          <path d="M20 3 8 5.5v10.1A3.5 3.5 0 1 0 10 19V9l10-2v6.6A3.5 3.5 0 1 0 22 17V3z" />
+        </svg>
+      );
+    case "video":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+          <path d="M17 10.5V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3.5l5 3.5V7z" />
+        </svg>
+      );
+    case "star":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+          <path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" />
+        </svg>
+      );
+    case "heart":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+          <path d="M12 21s-8-4.7-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.3-8 11-8 11z" transform="translate(-1 0)" />
+        </svg>
+      );
+    case "news":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M4 4h14v16H4zM18 8h2v10a2 2 0 0 1-4 0" />
+          <path d="M8 8h6M8 12h6M8 16h4" />
+        </svg>
+      );
+    case "map":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+          <path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />
+        </svg>
+      );
+    case "camera":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+          <path d="M9 3 7 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3l-2-2zm3 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" />
+        </svg>
+      );
+    case "download":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M12 3v13m0 0-5-5m5 5 5-5M4 21h16" />
+        </svg>
+      );
+    case "share":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <circle cx="18" cy="5" r="3" />
+          <circle cx="6" cy="12" r="3" />
+          <circle cx="18" cy="19" r="3" />
+          <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
         </svg>
       );
   }

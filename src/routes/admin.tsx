@@ -347,7 +347,7 @@ function PlatformsEditor({
                   return (
                     <div
                       className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl ring-1 ring-border"
-                      style={{ background: brand ? BRAND_META[brand].color : "var(--muted)" }}
+                      style={{ background: it.accent || (brand ? BRAND_META[brand].color : "var(--muted)") }}
                     >
                       {it.icon ? (
                         <img src={it.icon} alt="" className="h-full w-full object-cover" />
@@ -457,7 +457,7 @@ function PlatformsEditor({
                         return (
                           <label
                             className="grid h-24 w-24 place-items-center overflow-hidden rounded-xl border-2 border-dashed border-input bg-background hover:border-primary cursor-pointer transition-colors"
-                            style={!it.icon && brand ? { background: BRAND_META[brand].color, borderStyle: "solid" } : undefined}
+                            style={!it.icon && (brand || it.accent) ? { background: it.accent || BRAND_META[brand!].color, borderStyle: "solid" } : undefined}
                           >
                             {it.icon ? (
                               <img src={it.icon} alt="" className="h-full w-full object-cover" />
@@ -552,34 +552,54 @@ function PlatformsEditor({
                           onChange={(b) => patch(it.id, { brand: b })}
                         />
                       </Field>
-                      <Field label="لون مميز (اختياري)">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={
-                              typeof it.accent === "string" && it.accent.startsWith("#")
-                                ? it.accent
-                                : "#14b8a6"
-                            }
-                            onChange={(e) =>
-                              patch(it.id, {
-                                accent: `linear-gradient(135deg, ${e.target.value}, ${e.target.value}dd)`,
-                              })
-                            }
-                            className="h-10 w-14 cursor-pointer rounded-md border border-input"
-                          />
-                          {it.accent && (
-                            <button
-                              onClick={() => patch(it.id, { accent: "" })}
-                              className="text-xs text-destructive hover:underline"
-                            >
-                              إعادة
-                            </button>
-                          )}
+                      <Field label="لون الخلفية (اختياري)">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={
+                                typeof it.accent === "string" && it.accent.startsWith("#")
+                                  ? it.accent
+                                  : "#14B8A6"
+                              }
+                              onChange={(e) => patch(it.id, { accent: e.target.value })}
+                              className="h-10 w-14 cursor-pointer rounded-md border border-input"
+                            />
+                            <input
+                              dir="ltr"
+                              value={it.accent ?? ""}
+                              onChange={(e) => patch(it.id, { accent: e.target.value })}
+                              placeholder="#14B8A6"
+                              className="w-28 rounded-lg border border-input bg-background px-2 py-1.5 text-left text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                            {it.accent && (
+                              <button
+                                onClick={() => patch(it.id, { accent: "" })}
+                                className="text-xs text-destructive hover:underline"
+                              >
+                                إعادة
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {COLOR_PRESETS.map((c) => (
+                              <button
+                                key={c}
+                                type="button"
+                                aria-label={c}
+                                onClick={() => patch(it.id, { accent: c })}
+                                className={`h-6 w-6 rounded-full border transition-transform hover:scale-110 ${
+                                  it.accent === c ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : "border-input"
+                                }`}
+                                style={{ background: c }}
+                              />
+                            ))}
+                          </div>
                         </div>
                       </Field>
                     </div>
                   </div>
+
 
                   <div className="grid grid-cols-1 gap-3 border-t border-border pt-3 md:grid-cols-3">
                     <Field label={<><Globe className="inline h-3.5 w-3.5" /> موقع الويب</>}>
@@ -684,6 +704,25 @@ const BRAND_OPTIONS: { key: BrandKey | ""; label: string }[] = [
   { key: "android", label: "Android" },
   { key: "apple", label: "iOS" },
   { key: "web", label: "موقع ويب" },
+  { key: "link", label: "رابط" },
+  { key: "mail", label: "بريد" },
+  { key: "phone", label: "هاتف" },
+  { key: "chat", label: "محادثة" },
+  { key: "shop", label: "متجر" },
+  { key: "music", label: "موسيقى" },
+  { key: "video", label: "فيديو" },
+  { key: "star", label: "نجمة" },
+  { key: "heart", label: "قلب" },
+  { key: "news", label: "أخبار" },
+  { key: "map", label: "خريطة" },
+  { key: "camera", label: "كاميرا" },
+  { key: "download", label: "تحميل" },
+  { key: "share", label: "مشاركة" },
+];
+
+const COLOR_PRESETS = [
+  "#14B8A6", "#3B82F6", "#8B5CF6", "#EC4899", "#EF4444",
+  "#F97316", "#EAB308", "#22C55E", "#0EA5E9", "#0F172A",
 ];
 
 function BrandPicker({
