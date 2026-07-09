@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/page-shell";
 import { useContent, type PlatformLink } from "@/lib/content-store";
 import { useState } from "react";
-import { Trash2, Plus, Save, RotateCcw } from "lucide-react";
+import { Trash2, Plus, RotateCcw } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "لوحة التحكم — منصات شفاء" }, { name: "robots", content: "noindex" }] }),
@@ -74,9 +74,9 @@ function Admin() {
           key={activeTab}
           label={sections.find((s) => s.key === activeTab)!.label}
           value={state[activeTab as keyof typeof state] as string}
-          onSave={(v) => {
+          onChange={(v) => {
             update({ [activeTab]: v } as never);
-            flash("تم الحفظ بنجاح");
+            flash("تم الحفظ تلقائياً");
           }}
         />
       ) : (
@@ -84,7 +84,7 @@ function Admin() {
           platforms={state.platforms}
           onChange={(platforms) => {
             update({ platforms });
-            flash("تم تحديث المنصات");
+            flash("تم الحفظ تلقائياً");
           }}
         />
       )}
@@ -107,46 +107,32 @@ function Admin() {
   );
 }
 
-function TextEditor({ label, value, onSave }: { label: string; value: string; onSave: (v: string) => void }) {
-  const [draft, setDraft] = useState(value);
-  const dirty = draft !== value;
+function TextEditor({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="block text-sm font-bold mb-2">{label}</label>
       <textarea
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         rows={14}
         className="w-full rounded-xl border border-input bg-background p-4 leading-loose focus:outline-none focus:ring-2 focus:ring-ring"
       />
-      <div className="mt-3 flex items-center gap-3">
-        <button
-          disabled={!dirty}
-          onClick={() => onSave(draft)}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40 hover:opacity-90"
-        >
-          <Save className="h-4 w-4" /> حفظ التغييرات
-        </button>
-        {dirty && <span className="text-xs text-muted-foreground">لديك تغييرات غير محفوظة</span>}
-      </div>
+      <p className="mt-2 text-xs text-muted-foreground">التعديلات تُحفظ تلقائياً وتظهر مباشرة في الأقسام.</p>
     </div>
   );
 }
 
 function PlatformsEditor({ platforms, onChange }: { platforms: PlatformLink[]; onChange: (p: PlatformLink[]) => void }) {
-  const [items, setItems] = useState<PlatformLink[]>(platforms);
-  const dirty = JSON.stringify(items) !== JSON.stringify(platforms);
-
   const patch = (id: string, p: Partial<PlatformLink>) =>
-    setItems((s) => s.map((it) => (it.id === id ? { ...it, ...p } : it)));
+    onChange(platforms.map((it) => (it.id === id ? { ...it, ...p } : it)));
 
   const add = () =>
-    setItems((s) => [
-      ...s,
+    onChange([
+      ...platforms,
       { id: crypto.randomUUID(), name: "منصة جديدة", url: "https://", description: "" },
     ]);
 
-  const remove = (id: string) => setItems((s) => s.filter((it) => it.id !== id));
+  const remove = (id: string) => onChange(platforms.filter((it) => it.id !== id));
 
   return (
     <div>
@@ -161,7 +147,7 @@ function PlatformsEditor({ platforms, onChange }: { platforms: PlatformLink[]; o
       </div>
 
       <div className="space-y-4">
-        {items.map((it) => (
+        {platforms.map((it) => (
           <div key={it.id} className="rounded-xl border border-border bg-card p-4 grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3">
             <div>
               <label className="text-xs font-bold text-muted-foreground">الاسم</label>
@@ -196,21 +182,12 @@ function PlatformsEditor({ platforms, onChange }: { platforms: PlatformLink[]; o
             </div>
           </div>
         ))}
-        {items.length === 0 && (
+        {platforms.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-6">لا توجد منصات — أضف واحدة للبدء.</p>
         )}
       </div>
 
-      <div className="mt-6 flex items-center gap-3">
-        <button
-          disabled={!dirty}
-          onClick={() => onChange(items)}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40 hover:opacity-90"
-        >
-          <Save className="h-4 w-4" /> حفظ المنصات
-        </button>
-        {dirty && <span className="text-xs text-muted-foreground">لديك تغييرات غير محفوظة</span>}
-      </div>
+      <p className="mt-4 text-xs text-muted-foreground">جميع التعديلات تُحفظ تلقائياً وتظهر مباشرة في صفحة "منصات شفاء".</p>
     </div>
   );
 }
