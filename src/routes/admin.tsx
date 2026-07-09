@@ -23,6 +23,9 @@ import {
   ChevronDown,
   ChevronUp,
   Image as ImageIcon,
+  Pencil,
+  Save,
+  Check,
 } from "lucide-react";
 import { BRAND_META, BrandIcon, detectBrand, type BrandKey } from "@/lib/brand-icons";
 
@@ -339,13 +342,23 @@ function PlatformsEditor({
                   </button>
                 </div>
 
-                <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-muted ring-1 ring-border">
-                  {it.icon ? (
-                    <img src={it.icon} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <LinkIcon className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </div>
+                {(() => {
+                  const brand = (it.brand as BrandKey) || detectBrand(it.url);
+                  return (
+                    <div
+                      className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl ring-1 ring-border"
+                      style={{ background: brand ? BRAND_META[brand].color : "var(--muted)" }}
+                    >
+                      {it.icon ? (
+                        <img src={it.icon} alt="" className="h-full w-full object-cover" />
+                      ) : brand ? (
+                        <BrandIcon brand={brand} className="h-6 w-6 text-white" />
+                      ) : (
+                        <LinkIcon className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -404,6 +417,33 @@ function PlatformsEditor({
                     {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </IconBtn>
                 </div>
+              </div>
+
+
+
+              {/* Labeled action bar */}
+              <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border/60 bg-muted/30 px-3 py-2">
+                <button
+                  onClick={() => setExpanded((e) => ({ ...e, [it.id]: !isOpen }))}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> {isOpen ? "إغلاق" : "تعديل"}
+                </button>
+                <button
+                  onClick={() => {
+                    onChange(platforms);
+                    flash("تم الحفظ");
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90"
+                >
+                  <Save className="h-3.5 w-3.5" /> حفظ
+                </button>
+                <button
+                  onClick={() => remove(it.id)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> حذف
+                </button>
               </div>
 
               {/* Expanded details */}
