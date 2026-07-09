@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/page-shell";
-import { useContent, type PlatformLink } from "@/lib/content-store";
+import { useContent, type PlatformLink, type CustomIcon } from "@/lib/content-store";
 import { useMemo, useRef, useState } from "react";
 import {
   Trash2,
@@ -107,9 +107,13 @@ function Admin() {
       ) : (
         <PlatformsEditor
           platforms={state.platforms}
+          customIcons={state.customIcons ?? []}
           onChange={(platforms) => {
             update({ platforms });
             flash("تم الحفظ");
+          }}
+          onChangeIcons={(customIcons) => {
+            update({ customIcons });
           }}
           flash={flash}
         />
@@ -150,11 +154,15 @@ function TextEditor({ label, value, onChange }: { label: string; value: string; 
 
 function PlatformsEditor({
   platforms,
+  customIcons,
   onChange,
+  onChangeIcons,
   flash,
 }: {
   platforms: PlatformLink[];
+  customIcons: CustomIcon[];
   onChange: (p: PlatformLink[]) => void;
+  onChangeIcons: (i: CustomIcon[]) => void;
   flash: (m: string) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -553,7 +561,13 @@ function PlatformsEditor({
                         <BrandPicker
                           value={(it.brand as BrandKey) || ""}
                           detected={detectBrand(it.url)}
+                          currentIcon={it.icon}
+                          customIcons={customIcons}
                           onChange={(b) => patch(it.id, { brand: b })}
+                          onPickCustomIcon={(dataUrl) => patch(it.id, { icon: dataUrl, brand: "" })}
+                          onClearIcon={() => patch(it.id, { icon: "" })}
+                          onChangeIcons={onChangeIcons}
+                          flash={flash}
                         />
                       </Field>
                       <Field label="لون الخلفية (اختياري)">
@@ -767,11 +781,59 @@ function BrandPicker({
   value,
   detected,
   onChange,
+  currentIcon,
+  customIcons,
+  onPickCustomIcon,
+  onClearIcon,
+  onChangeIcons,
+  flash,
 }: {
   value: BrandKey | "";
   detected: BrandKey | null;
   onChange: (b: string) => void;
+  currentIcon?: string;
+  customIcons: CustomIcon[];
+  onPickCustomIcon: (dataUrl: string) => void;
+  onClearIcon: () => void;
+  onChangeIcons: (i: CustomIcon[]) => void;
+  flash: (m: string) => void;
 }) {
+  const addIcons = (files: FileList | null) => {
+    if (!files) return;
+    const list = Array.from(files).slice(0, 20);
+    Promise.all(
+      list.map(
+        (f) =>
+          new Promise<CustomIcon | null>((resolve) => {
+            if (f.size > 500 * 1024) {
+              alert(`${f.name}: يجب أن يكون أقل من 500 كيلوبايت`);
+              resolve(null);
+              return;
+            }
+            const r = new FileReader();
+            r.onload = () =>
+              resolve({
+                id: crypto.randomUUID(),
+                name: f.name.replace(/\.[^.]+$/, ""),
+                dataUrl: r.result as string,
+              });
+            r.onerror = () => resolve(null);
+            r.readAsDataURL(f);
+          })
+      )
+    ).then((results) => {
+      const ok = results.filter((r): r is CustomIcon => r !== null);
+      if (ok.length) {
+        onChangeIcons([...ok, ...customIcons]);
+        flash(`تمت إضافة ${ok.length} أيقونة`);
+      }
+    });
+  };
+  const removeIcon = (id: string) => {
+    if (confirm("حذف هذه الأيقونة من المكتبة؟")) {
+      onChangeIcons(customIcons.filter((i) => i.id !== id));
+    }
+  };
   const effective = (value || detected) as BrandKey | null;
   const brands = BRAND_OPTIONS.filter((o) => o.key !== "") as { key: BrandKey; label: string }[];
   const brandBrands = brands.filter((b) => !isGeneric(b.key));
@@ -853,6 +915,80 @@ function BrandPicker({
             );
           })}
         </div>
+      </div>
+
+      <div>
+        <div className="mb-1.5 flex items-center justify-between">
+          <div className="text-[10px] font-bold text-muted-foreground">
+            مكتبة أيقوناتي ({customIcons.length})
+          </div>
+          <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-[10px] font-bold hover:bg-muted">
+            <Upload className="h-3 w-3" /> رفع أيقونات
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                addIcons(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
+        {customIcons.length === 0 ? (
+          <label className="grid cursor-pointer place-items-center rounded-lg border-2 border-dashed border-input bg-background/50 px-3 py-4 text-center text-[11px] text-muted-foreground hover:border-primary hover:text-primary">
+            اسحب أو ارفع صور PNG/SVG (حتى 500KB لكل واحدة)
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                addIcons(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        ) : (
+          <div className="grid grid-cols-8 gap-1.5 sm:grid-cols-10">
+            {customIcons.map((ic) => {
+              const selected = currentIcon === ic.dataUrl;
+              return (
+                <div key={ic.id} className="group relative">
+                  <button
+                    type="button"
+                    title={ic.name}
+                    aria-label={ic.name}
+                    onClick={() => onPickCustomIcon(ic.dataUrl)}
+                    className={`grid aspect-square w-full place-items-center overflow-hidden rounded-lg border bg-background p-1 transition-all hover:-translate-y-0.5 hover:border-primary ${
+                      selected ? "border-primary ring-2 ring-primary/40" : "border-input"
+                    }`}
+                  >
+                    <img src={ic.dataUrl} alt={ic.name} className="h-full w-full object-contain" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeIcon(ic.id)}
+                    aria-label="حذف"
+                    className="absolute -right-1 -top-1 hidden h-4 w-4 place-items-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground group-hover:grid"
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {currentIcon && (
+          <button
+            type="button"
+            onClick={onClearIcon}
+            className="mt-2 text-[10px] text-destructive hover:underline"
+          >
+            إزالة الأيقونة المخصّصة من هذه المنصة
+          </button>
+        )}
       </div>
     </div>
   );
