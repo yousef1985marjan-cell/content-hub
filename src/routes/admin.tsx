@@ -22,7 +22,9 @@ import {
   Apple,
   ChevronDown,
   ChevronUp,
+  Image as ImageIcon,
 } from "lucide-react";
+import { BRAND_META, BrandIcon, detectBrand, type BrandKey } from "@/lib/brand-icons";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "لوحة التحكم — منصات شفاء" }, { name: "robots", content: "noindex" }] }),
