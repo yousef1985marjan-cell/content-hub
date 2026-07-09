@@ -123,19 +123,16 @@ function TextEditor({ label, value, onChange }: { label: string; value: string; 
 }
 
 function PlatformsEditor({ platforms, onChange }: { platforms: PlatformLink[]; onChange: (p: PlatformLink[]) => void }) {
-  const [items, setItems] = useState<PlatformLink[]>(platforms);
-  const dirty = JSON.stringify(items) !== JSON.stringify(platforms);
-
   const patch = (id: string, p: Partial<PlatformLink>) =>
-    setItems((s) => s.map((it) => (it.id === id ? { ...it, ...p } : it)));
+    onChange(platforms.map((it) => (it.id === id ? { ...it, ...p } : it)));
 
   const add = () =>
-    setItems((s) => [
-      ...s,
+    onChange([
+      ...platforms,
       { id: crypto.randomUUID(), name: "منصة جديدة", url: "https://", description: "" },
     ]);
 
-  const remove = (id: string) => setItems((s) => s.filter((it) => it.id !== id));
+  const remove = (id: string) => onChange(platforms.filter((it) => it.id !== id));
 
   return (
     <div>
@@ -150,7 +147,7 @@ function PlatformsEditor({ platforms, onChange }: { platforms: PlatformLink[]; o
       </div>
 
       <div className="space-y-4">
-        {items.map((it) => (
+        {platforms.map((it) => (
           <div key={it.id} className="rounded-xl border border-border bg-card p-4 grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3">
             <div>
               <label className="text-xs font-bold text-muted-foreground">الاسم</label>
@@ -185,21 +182,12 @@ function PlatformsEditor({ platforms, onChange }: { platforms: PlatformLink[]; o
             </div>
           </div>
         ))}
-        {items.length === 0 && (
+        {platforms.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-6">لا توجد منصات — أضف واحدة للبدء.</p>
         )}
       </div>
 
-      <div className="mt-6 flex items-center gap-3">
-        <button
-          disabled={!dirty}
-          onClick={() => onChange(items)}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40 hover:opacity-90"
-        >
-          <Save className="h-4 w-4" /> حفظ المنصات
-        </button>
-        {dirty && <span className="text-xs text-muted-foreground">لديك تغييرات غير محفوظة</span>}
-      </div>
+      <p className="mt-4 text-xs text-muted-foreground">جميع التعديلات تُحفظ تلقائياً وتظهر مباشرة في صفحة "منصات شفاء".</p>
     </div>
   );
 }
