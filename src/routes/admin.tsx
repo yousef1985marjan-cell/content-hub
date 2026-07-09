@@ -494,11 +494,21 @@ function PlatformsEditor({
                         {it.icon ? "صورة مخصّصة" : "الأيقونة الافتراضية — ارفع صورة لاستبدالها"}
                       </p>
                       {it.icon && (
+                        <div className="mt-2 flex gap-1">
+                          <button
+                            onClick={() => patch(it.id, { icon: "" })}
+                            className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-destructive/10 px-2 py-1 text-xs font-bold text-destructive hover:bg-destructive/20"
+                          >
+                            <Trash2 className="h-3 w-3" /> حذف الأيقونة
+                          </button>
+                        </div>
+                      )}
+                      {it.brand && !it.icon && (
                         <button
-                          onClick={() => patch(it.id, { icon: "" })}
-                          className="mt-1 w-full text-center text-xs text-destructive hover:underline"
+                          onClick={() => patch(it.id, { brand: "" })}
+                          className="mt-2 w-full text-center text-xs text-destructive hover:underline"
                         >
-                          إزالة
+                          إزالة أيقونة المنصة
                         </button>
                       )}
                     </div>
