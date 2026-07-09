@@ -200,15 +200,17 @@ function PlatformsEditor({
     onChange(next);
   };
 
-  const uploadIcon = (id: string, file: File) => {
-    if (file.size > 500 * 1024) {
-      alert("حجم الأيقونة يجب أن يكون أقل من 500 كيلوبايت");
+  const uploadImage = (id: string, file: File, field: "icon" | "cover") => {
+    const max = field === "cover" ? 1024 * 1024 : 500 * 1024;
+    if (file.size > max) {
+      alert(`حجم الصورة يجب أن يكون أقل من ${field === "cover" ? "1 ميغا" : "500 كيلوبايت"}`);
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => patch(id, { icon: reader.result as string });
+    reader.onload = () => patch(id, { [field]: reader.result as string } as Partial<PlatformLink>);
     reader.readAsDataURL(file);
   };
+  const uploadIcon = (id: string, file: File) => uploadImage(id, file, "icon");
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(platforms, null, 2)], { type: "application/json" });
