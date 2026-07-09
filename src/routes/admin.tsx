@@ -107,9 +107,13 @@ function Admin() {
       ) : (
         <PlatformsEditor
           platforms={state.platforms}
+          customIcons={state.customIcons ?? []}
           onChange={(platforms) => {
             update({ platforms });
             flash("تم الحفظ");
+          }}
+          onChangeIcons={(customIcons) => {
+            update({ customIcons });
           }}
           flash={flash}
         />
