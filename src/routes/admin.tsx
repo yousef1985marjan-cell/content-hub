@@ -452,22 +452,35 @@ function PlatformsEditor({
                   <div className="flex flex-wrap items-start gap-4">
                     <div className="shrink-0">
                       <label className="mb-1 block text-xs font-bold text-muted-foreground">الأيقونة</label>
-                      <label className="grid h-24 w-24 place-items-center overflow-hidden rounded-xl border-2 border-dashed border-input bg-background hover:border-primary cursor-pointer transition-colors">
-                        {it.icon ? (
-                          <img src={it.icon} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="px-1 text-center text-xs text-muted-foreground">تحميل أيقونة</span>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) uploadIcon(it.id, f);
-                          }}
-                        />
-                      </label>
+                      {(() => {
+                        const brand = (it.brand as BrandKey) || detectBrand(it.url);
+                        return (
+                          <label
+                            className="grid h-24 w-24 place-items-center overflow-hidden rounded-xl border-2 border-dashed border-input bg-background hover:border-primary cursor-pointer transition-colors"
+                            style={!it.icon && brand ? { background: BRAND_META[brand].color, borderStyle: "solid" } : undefined}
+                          >
+                            {it.icon ? (
+                              <img src={it.icon} alt="" className="h-full w-full object-cover" />
+                            ) : brand ? (
+                              <BrandIcon brand={brand} className="h-10 w-10 text-white" />
+                            ) : (
+                              <span className="px-1 text-center text-xs text-muted-foreground">تحميل أيقونة</span>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) uploadIcon(it.id, f);
+                              }}
+                            />
+                          </label>
+                        );
+                      })()}
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {it.icon ? "صورة مخصّصة" : "الأيقونة الافتراضية — ارفع صورة لاستبدالها"}
+                      </p>
                       {it.icon && (
                         <button
                           onClick={() => patch(it.id, { icon: "" })}
@@ -683,26 +696,57 @@ function BrandPicker({
   onChange: (b: string) => void;
 }) {
   const effective = (value || detected) as BrandKey | null;
+  const brands = BRAND_OPTIONS.filter((o) => o.key !== "") as { key: BrandKey; label: string }[];
   return (
-    <div className="flex items-center gap-2">
-      <div
-        className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-white"
-        style={{ background: effective ? BRAND_META[effective].color : "var(--muted)" }}
-      >
-        {effective ? <BrandIcon brand={effective} className="h-5 w-5" /> : <span className="text-xs text-muted-foreground">؟</span>}
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 rounded-lg border border-input bg-background/60 p-2">
+        <div
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-white"
+          style={{ background: effective ? BRAND_META[effective].color : "var(--muted)" }}
+        >
+          {effective ? (
+            <BrandIcon brand={effective} className="h-5 w-5" />
+          ) : (
+            <span className="text-xs text-muted-foreground">؟</span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1 text-xs">
+          <div className="font-bold">
+            {effective ? BRAND_META[effective].label : "بدون أيقونة"}
+          </div>
+          <div className="text-[10px] text-muted-foreground">
+            {value ? "أيقونة مختارة يدوياً" : detected ? `تلقائي: ${BRAND_META[detected].label}` : "اختر أيقونة من الأسفل"}
+          </div>
+        </div>
+        {value && (
+          <button
+            onClick={() => onChange("")}
+            className="rounded-md border border-input px-2 py-1 text-[10px] font-bold hover:bg-muted"
+          >
+            تلقائي
+          </button>
+        )}
       </div>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {BRAND_OPTIONS.map((o) => (
-          <option key={o.key} value={o.key}>
-            {o.label}
-            {o.key === "" && detected ? ` (${BRAND_META[detected].label})` : ""}
-          </option>
-        ))}
-      </select>
+      <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
+        {brands.map((b) => {
+          const selected = value === b.key;
+          return (
+            <button
+              key={b.key}
+              type="button"
+              title={b.label}
+              aria-label={b.label}
+              onClick={() => onChange(b.key)}
+              className={`group grid aspect-square place-items-center rounded-lg border text-white transition-all hover:-translate-y-0.5 hover:shadow-md ${
+                selected ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : "border-input"
+              }`}
+              style={{ background: BRAND_META[b.key].color }}
+            >
+              <BrandIcon brand={b.key} className="h-5 w-5" />
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
