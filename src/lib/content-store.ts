@@ -18,6 +18,12 @@ export type PlatformLink = {
 };
 
 
+export type CustomIcon = {
+  id: string;
+  name: string;
+  dataUrl: string;
+};
+
 export type ContentState = {
   about: string;
   privacy: string;
@@ -25,6 +31,7 @@ export type ContentState = {
   disclaimer: string;
   publisherIntro: string;
   platforms: PlatformLink[];
+  customIcons: CustomIcon[];
 };
 
 const STORAGE_KEY = "shifa-content-v2";
@@ -39,6 +46,7 @@ const DEFAULTS: ContentState = {
   disclaimer:
     "المحتوى المقدم في هذه المنصة لأغراض معلوماتية فقط، ولا يُعد بديلاً عن الاستشارة المتخصصة. لا نتحمل أي مسؤولية عن نتائج استخدام المعلومات.",
   publisherIntro: "",
+  customIcons: [],
   platforms: [
     { id: "tg", name: "تلغرام", url: "https://t.me/", brand: "telegram" },
     { id: "wa", name: "واتساب", url: "https://wa.me/", brand: "whatsapp" },
