@@ -5,7 +5,12 @@ export type PlatformLink = {
   name: string;
   url: string;
   description?: string;
+  icon?: string;
+  androidUrl?: string;
+  iosUrl?: string;
+  webUrl?: string;
 };
+
 
 export type ContentState = {
   about: string;
