@@ -347,7 +347,7 @@ function PlatformsEditor({
                   return (
                     <div
                       className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl ring-1 ring-border"
-                      style={{ background: brand ? BRAND_META[brand].color : "var(--muted)" }}
+                      style={{ background: it.accent || (brand ? BRAND_META[brand].color : "var(--muted)") }}
                     >
                       {it.icon ? (
                         <img src={it.icon} alt="" className="h-full w-full object-cover" />
