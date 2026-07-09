@@ -12,7 +12,23 @@ export type BrandKey =
   | "linkedin"
   | "android"
   | "apple"
-  | "web";
+  | "web"
+  | "link"
+  | "mail"
+  | "phone"
+  | "chat"
+  | "shop"
+  | "music"
+  | "video"
+  | "star"
+  | "heart"
+  | "news"
+  | "map"
+  | "camera"
+  | "download"
+  | "share";
+
+const NEUTRAL = "#64748B";
 
 export const BRAND_META: Record<BrandKey, { label: string; color: string }> = {
   facebook: { label: "Facebook", color: "#1877F2" },
@@ -27,6 +43,20 @@ export const BRAND_META: Record<BrandKey, { label: string; color: string }> = {
   android: { label: "Android", color: "#3DDC84" },
   apple: { label: "iOS", color: "#000000" },
   web: { label: "موقع", color: "#0EA5E9" },
+  link: { label: "رابط", color: NEUTRAL },
+  mail: { label: "بريد", color: NEUTRAL },
+  phone: { label: "هاتف", color: NEUTRAL },
+  chat: { label: "محادثة", color: NEUTRAL },
+  shop: { label: "متجر", color: NEUTRAL },
+  music: { label: "موسيقى", color: NEUTRAL },
+  video: { label: "فيديو", color: NEUTRAL },
+  star: { label: "نجمة", color: NEUTRAL },
+  heart: { label: "قلب", color: NEUTRAL },
+  news: { label: "أخبار", color: NEUTRAL },
+  map: { label: "خريطة", color: NEUTRAL },
+  camera: { label: "كاميرا", color: NEUTRAL },
+  download: { label: "تحميل", color: NEUTRAL },
+  share: { label: "مشاركة", color: NEUTRAL },
 };
 
 export function detectBrand(url?: string): BrandKey | null {
