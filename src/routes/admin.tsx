@@ -616,3 +616,53 @@ function Field({ label, children }: { label: React.ReactNode; children: React.Re
     </div>
   );
 }
+
+const BRAND_OPTIONS: { key: BrandKey | ""; label: string }[] = [
+  { key: "", label: "تلقائي" },
+  { key: "facebook", label: "Facebook" },
+  { key: "youtube", label: "YouTube" },
+  { key: "tiktok", label: "TikTok" },
+  { key: "instagram", label: "Instagram" },
+  { key: "twitter", label: "X / Twitter" },
+  { key: "whatsapp", label: "WhatsApp" },
+  { key: "telegram", label: "Telegram" },
+  { key: "snapchat", label: "Snapchat" },
+  { key: "linkedin", label: "LinkedIn" },
+  { key: "android", label: "Android" },
+  { key: "apple", label: "iOS" },
+  { key: "web", label: "موقع ويب" },
+];
+
+function BrandPicker({
+  value,
+  detected,
+  onChange,
+}: {
+  value: BrandKey | "";
+  detected: BrandKey | null;
+  onChange: (b: string) => void;
+}) {
+  const effective = (value || detected) as BrandKey | null;
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-white"
+        style={{ background: effective ? BRAND_META[effective].color : "var(--muted)" }}
+      >
+        {effective ? <BrandIcon brand={effective} className="h-5 w-5" /> : <span className="text-xs text-muted-foreground">؟</span>}
+      </div>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        {BRAND_OPTIONS.map((o) => (
+          <option key={o.key} value={o.key}>
+            {o.label}
+            {o.key === "" && detected ? ` (${BRAND_META[detected].label})` : ""}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
