@@ -61,7 +61,28 @@ export type BrandKey =
   | "target"
   | "compass"
   | "wallet"
-  | "chart";
+  | "chart"
+  // social media (generic line versions)
+  | "facebookAlt"
+  | "youtubeAlt"
+  | "tiktokAlt"
+  | "instagramAlt"
+  | "twitterAlt"
+  | "whatsappAlt"
+  | "telegramAlt"
+  | "snapchatAlt"
+  | "linkedinAlt"
+  | "messenger"
+  | "pinterest"
+  | "reddit"
+  | "discord"
+  | "twitch"
+  | "spotify"
+  | "soundcloud"
+  | "vimeo"
+  | "tumblr"
+  | "github"
+  | "medium";
 
 const NEUTRAL = "#64748B";
 
@@ -71,6 +92,9 @@ export const GENERIC_BRANDS: BrandKey[] = [
   "clock","search","edit","trash","plus","check","cloud","folder","file","image",
   "book","gift","flag","tag","sun","moon","lock","bookmark","rocket","coffee",
   "wifi","mic","zap","trophy","target","compass","wallet","chart",
+  // social media (generic line versions)
+  "facebookAlt","youtubeAlt","tiktokAlt","instagramAlt","twitterAlt","whatsappAlt","telegramAlt","snapchatAlt","linkedinAlt",
+  "messenger","pinterest","reddit","discord","twitch","spotify","soundcloud","vimeo","tumblr","github","medium",
 ];
 
 export function isGeneric(b: BrandKey): boolean {
@@ -138,6 +162,26 @@ export const BRAND_META: Record<BrandKey, { label: string; color: string }> = {
   compass: { label: "بوصلة", color: NEUTRAL },
   wallet: { label: "محفظة", color: NEUTRAL },
   chart: { label: "رسم بياني", color: NEUTRAL },
+  facebookAlt: { label: "فيسبوك", color: NEUTRAL },
+  youtubeAlt: { label: "يوتيوب", color: NEUTRAL },
+  tiktokAlt: { label: "تيك توك", color: NEUTRAL },
+  instagramAlt: { label: "إنستغرام", color: NEUTRAL },
+  twitterAlt: { label: "تويتر / إكس", color: NEUTRAL },
+  whatsappAlt: { label: "واتساب", color: NEUTRAL },
+  telegramAlt: { label: "تلغرام", color: NEUTRAL },
+  snapchatAlt: { label: "سناب شات", color: NEUTRAL },
+  linkedinAlt: { label: "لينكد إن", color: NEUTRAL },
+  messenger: { label: "ماسنجر", color: NEUTRAL },
+  pinterest: { label: "بينتيرست", color: NEUTRAL },
+  reddit: { label: "ريديت", color: NEUTRAL },
+  discord: { label: "ديسكورد", color: NEUTRAL },
+  twitch: { label: "تويتش", color: NEUTRAL },
+  spotify: { label: "سبوتيفاي", color: NEUTRAL },
+  soundcloud: { label: "ساوند كلاود", color: NEUTRAL },
+  vimeo: { label: "فيميو", color: NEUTRAL },
+  tumblr: { label: "تمبلر", color: NEUTRAL },
+  github: { label: "جيت هاب", color: NEUTRAL },
+  medium: { label: "ميديوم", color: NEUTRAL },
 };
 
 export function detectBrand(url?: string): BrandKey | null {
@@ -393,5 +437,46 @@ export function BrandIcon({ brand, ...props }: { brand: BrandKey } & P) {
       return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 7v12a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3M17 13h4v4h-4a2 2 0 1 1 0-4z"/></svg>;
     case "chart":
       return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>;
+    // social media generic icons
+    case "facebookAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>;
+    case "youtubeAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M22 8.5a42 42 0 0 0 0 7 2.5 2.5 0 0 1-2 2.5c-1.8.5-9 .5-9 .5s-7.2 0-9-.5a2.5 2.5 0 0 1-2-2.5 42 42 0 0 0 0-7 2.5 2.5 0 0 1 2-2.5c1.8-.5 9-.5 9-.5s7.2 0 9 .5a2.5 2.5 0 0 1 2 2.5z"/><path d="m10 15 5-3-5-3z"/></svg>;
+    case "tiktokAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 8a5 5 0 0 1-3-1 5 5 0 0 1-2-3h-3v11a3 3 0 1 1-3-3c.3 0 .5 0 .8.1V8a7 7 0 1 0 6 6.9V8.2a9 9 0 0 0 5 1.8V7.8"/></svg>;
+    case "instagramAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1"/></svg>;
+    case "twitterAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 6 6 18M6 6l12 12"/></svg>;
+    case "whatsappAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.3A10 10 0 1 0 12 2z"/><path d="M9 12c1.7 3 4 3 5 3s3-1 3-2-1.5-1.5-2.5-1.5-1.5.5-2.5 1.5c-1 1-2 1-2.5 1s-.5-1.5.5-2.5"/></svg>;
+    case "telegramAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 3 2 10.5l6.5 2 2.5 7.5 3-4 5.5 4L21 3z"/><path d="M17 7 7.5 13.5"/></svg>;
+    case "snapchatAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a7 7 0 0 0-7 7c0 4 2 5 3 6s1 2 2 3 1 2 2 2 1.5 0 2-1 1-2 2-3 3-2 3-6a7 7 0 0 0-7-7z"/><path d="M9 8h6M9 11h6"/></svg>;
+    case "linkedinAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M8 8v8M8 11v5M8 8a2 2 0 1 0 0-1"/><path d="M16 11v5M16 8v2a2 2 0 0 1-2 2"/></svg>;
+    case "messenger":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a10 10 0 0 0-9 13.5L2 22l5.5-1.5A10 10 0 1 0 12 2z"/><path d="m8 14 4-4 3 3 3-3"/></svg>;
+    case "pinterest":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="9"/><path d="M10 8c2 0 4 1 4 4 0 2-1 4-2 5l-1 5-1-5c-1 1-3 0-3-2 0-3 2-5 4-5z"/></svg>;
+    case "reddit":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="9"/><circle cx="9" cy="11" r="1"/><circle cx="15" cy="11" r="1"/><path d="M7 12c1 2 5 2 5 2s4 0 5-2"/><path d="M16 5l1 2M8 5 7 7"/></svg>;
+    case "discord":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M7 5A11 11 0 0 0 3 17a11 11 0 0 0 4-2c.5.3 1.5 1 2.5 1s2-.7 2.5-1c.5.3 1.5 1 2.5 1s2-.7 2.5-1a11 11 0 0 0 4 2A11 11 0 0 0 17 5c-1-1-2-1.5-3-2"/><circle cx="9" cy="11" r="1.5"/><circle cx="15" cy="11" r="1.5"/></svg>;
+    case "twitch":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 3v13h4l2 3 2-3h4l3-4V3H4z"/><path d="M12 7v4M16 7v4"/></svg>;
+    case "spotify":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="9"/><path d="M7 10c4-1 8-1 10 1"/><path d="M7 14c3-1 6-1 8 1"/></svg>;
+    case "soundcloud":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 15v4M7 12v7M10 10v9M13 7v12M16 4v15c3 0 5-2 5-5s-2-5-5-5z"/></svg>;
+    case "vimeo":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 3s-3 0-5 3-2 5-2 5 1-3 3-3 3 2 3 5-2 6-5 6-5-2-7-5S4 4 8 4s5 3 5 3z"/></svg>;
+    case "tumblr":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M6 4h6v5h4v4h-4v4c0 3 2 4 4 4v4c-5 0-8-2-8-7V9H6V4z"/></svg>;
+    case "github":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-1-2.6c3.3-.4 6.8-1.6 6.8-7.5 0-1.5-.5-2.7-1.4-3.7.4-1 .4-2.2 0-3.3 0 0-1.1-.3-3.4 1.3a11.8 11.8 0 0 0-6.2 0C5.3 1.7 4.2 2 4.2 2c-.4 1.1-.4 2.3 0 3.3-.9 1-1.4 2.3-1.4 3.7 0 5.9 3.5 7.1 6.8 7.5a3.4 3.4 0 0 0-1 2.6V22"/></svg>;
+    case "medium":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="6" cy="12" r="4"/><path d="M13 8h6v8h-6M13 12h6"/></svg>;
   }
 }
