@@ -231,21 +231,33 @@ function LogoCardView({
         <label className="text-xs font-bold text-muted-foreground shrink-0">الحجم (px)</label>
         <input
           type="number"
-          min={8}
-          max={512}
-          value={card.width}
-          onChange={(e) => onChange({ width: Math.max(8, Math.min(512, Number(e.target.value) || 0)) })}
-          className="w-16 rounded-md border border-input bg-background px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-ring"
+          inputMode="numeric"
+          value={card.width || ""}
+          onChange={(e) => {
+            const raw = e.target.value;
+            onChange({ width: raw === "" ? 0 : Number(raw) });
+          }}
+          onBlur={(e) => {
+            const n = Number(e.target.value) || 0;
+            onChange({ width: Math.max(1, Math.min(2048, n || 40)) });
+          }}
+          className="w-20 rounded-md border border-input bg-background px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-ring"
           aria-label="العرض"
         />
         <span className="text-muted-foreground">×</span>
         <input
           type="number"
-          min={8}
-          max={512}
-          value={card.height}
-          onChange={(e) => onChange({ height: Math.max(8, Math.min(512, Number(e.target.value) || 0)) })}
-          className="w-16 rounded-md border border-input bg-background px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-ring"
+          inputMode="numeric"
+          value={card.height || ""}
+          onChange={(e) => {
+            const raw = e.target.value;
+            onChange({ height: raw === "" ? 0 : Number(raw) });
+          }}
+          onBlur={(e) => {
+            const n = Number(e.target.value) || 0;
+            onChange({ height: Math.max(1, Math.min(2048, n || 40)) });
+          }}
+          className="w-20 rounded-md border border-input bg-background px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-ring"
           aria-label="الارتفاع"
         />
         <button
