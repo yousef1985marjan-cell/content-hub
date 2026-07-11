@@ -158,6 +158,10 @@ function AuthPage() {
                 <>
                   <LogIn className="h-4 w-4" /> {loading ? "جاري الدخول..." : "دخول"}
                 </>
+              ) : mode === "signup" ? (
+                <>
+                  <LogIn className="h-4 w-4" /> {loading ? "جاري الإنشاء..." : "إنشاء الحساب"}
+                </>
               ) : (
                 <>
                   <KeyRound className="h-4 w-4" /> {loading ? "جاري الإرسال..." : "إرسال رابط الاسترجاع"}
@@ -170,11 +174,11 @@ function AuthPage() {
               onClick={() => {
                 setError(null);
                 setNotice(null);
-                setMode(mode === "signin" ? "forgot" : "signin");
+                setMode(mode === "forgot" ? "signin" : "forgot");
               }}
               className="w-full text-center text-xs text-muted-foreground hover:text-primary"
             >
-              {mode === "signin" ? "نسيت كلمة السر؟" : "العودة لتسجيل الدخول"}
+              {mode === "forgot" ? "العودة لتسجيل الدخول" : "نسيت كلمة السر؟"}
             </button>
           </form>
         </div>
