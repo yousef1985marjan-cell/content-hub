@@ -496,7 +496,20 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
       <div className="rounded-2xl border border-border bg-card p-4">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-black text-primary">إدارة فلاتر الأزرار</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-black text-primary">{panelTitle}</h2>
+            <button
+              onClick={() =>
+                renameSection(panelTitle, setPanelTitle, PANEL_TITLE_KEY, "اسم القسم:")
+              }
+              className="rounded-md border border-input bg-background p-1 hover:bg-muted"
+              title="تعديل اسم القسم"
+              aria-label="تعديل اسم القسم"
+            >
+              <Pencil className="h-3 w-3" />
+            </button>
+          </div>
+
             <p className="text-xs text-muted-foreground">
               تحكم عن بُعد بسلوك أزرار البحث في تطبيق الجوال دون تحديث من المتاجر.
             </p>
