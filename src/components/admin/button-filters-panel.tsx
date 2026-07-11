@@ -143,6 +143,7 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
         setCustomFilters(s.customFilters || []);
         setState(s);
         setSaved(s);
+        setPublished(readPublished());
       } catch (e) {
         flash((e as Error).message || "فشل تحميل الإعدادات");
       }
@@ -150,6 +151,18 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!anyDirty) return;
+      e.preventDefault();
+      e.returnValue = "لديك تعديلات غير محفوظة، هل تريد حفظها؟";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  });
 
 
   const orderedIds = state.order;
