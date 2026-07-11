@@ -1,6 +1,7 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Heart, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { useFirstPublishedLogo } from "@/lib/use-published-logo";
 
 const links = [
   { to: "/about", label: "من نحن" },
