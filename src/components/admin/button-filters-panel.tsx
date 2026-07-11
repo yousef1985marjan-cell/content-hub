@@ -712,6 +712,7 @@ function ButtonCard({
 }) {
   const [addFid, setAddFid] = useState<FilterId | "">("");
   const [openSettings, setOpenSettings] = useState<string | null>(null);
+  const [pendingRemove, setPendingRemove] = useState<FilterId | null>(null);
 
   const used = new Set(cfg.filters.map((f) => f.id));
 
@@ -732,8 +733,13 @@ function ButtonCard({
       alert(`الفلتر "${fm.label}" مثبت لهذا الزر ولا يمكن إزالته.`);
       return;
     }
-    if (!window.confirm(`هل أنت متأكد بأنك ستحذف فلتر "${fm.label}" من هذه البطاقة؟`)) return;
-    onChange({ ...cfg, filters: cfg.filters.filter((f) => f.id !== fid) });
+    setPendingRemove(fid);
+  };
+
+  const doRemove = () => {
+    if (!pendingRemove) return;
+    onChange({ ...cfg, filters: cfg.filters.filter((f) => f.id !== pendingRemove) });
+    setPendingRemove(null);
   };
 
   const add = () => {
