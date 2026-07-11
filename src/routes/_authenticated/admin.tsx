@@ -79,6 +79,8 @@ function Admin() {
 
       {activeTab === "__pharmacies" ? (
         <PharmaciesPanel />
+      ) : activeTab === "__button_filters" ? (
+        <ButtonFiltersPanel flash={flash} />
       ) : activeTab === "__media" ? (
         <MediaPanel flash={flash} />
       ) : activeTab === "__settings" ? (
