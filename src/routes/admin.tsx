@@ -658,6 +658,11 @@ function PlatformsEditor({
                       />
                     </Field>
                   </div>
+
+                  <ExtraLinksEditor
+                    platform={it}
+                    onChange={(extraLinks) => patch(it.id, { extraLinks })}
+                  />
                 </div>
               )}
             </div>
