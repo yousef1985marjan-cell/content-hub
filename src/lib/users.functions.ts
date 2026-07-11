@@ -60,6 +60,7 @@ export const createUser = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const admin = await assertAdminOrBootstrap(context.userId);
+    const { data: actor } = await admin.auth.admin.getUserById(context.userId);
     const { data: created, error } = await admin.auth.admin.createUser({
       email: data.email,
       password: data.password,
@@ -77,6 +78,15 @@ export const createUser = createServerFn({ method: "POST" })
       id: uid,
       full_name: data.full_name ?? "",
       description: data.description ?? "",
+    });
+    const { logSecurityEvent } = await import("./security-log.server");
+    await logSecurityEvent({
+      event: "user.created",
+      actorId: context.userId,
+      actorEmail: actor.user?.email ?? null,
+      targetId: uid,
+      targetEmail: data.email,
+      details: { role: data.role },
     });
     return { ok: true, id: uid };
   });
