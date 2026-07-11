@@ -387,6 +387,11 @@ function PlatformsEditor({
                         {it.badge}
                       </span>
                     )}
+                    {(it.extraLinks?.length ?? 0) > 0 && (
+                      <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">
+                        {it.extraLinks!.length} روابط
+                      </span>
+                    )}
                   </div>
                   <p className="truncate text-[11px] text-muted-foreground" dir="ltr">
                     {it.url}
@@ -765,12 +770,18 @@ function ExtraLinksEditor({
   };
 
   return (
-    <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+    <div className="rounded-xl border-2 border-primary/40 bg-primary/5 p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h4 className="text-sm font-black">روابط إضافية داخل «{platform.name}»</h4>
-          <p className="text-[11px] text-muted-foreground">
-            تظهر هذه الروابط ضمن حاوية خاصة بهذه المنصة مع صورة مصغّرة لكل رابط.
+          <h4 className="flex items-center gap-2 text-base font-black text-primary">
+            <LinkIcon className="h-4 w-4" />
+            روابط متعددة داخل «{platform.name}»
+            <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-bold text-primary">
+              {links.length}
+            </span>
+          </h4>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            أضِف عدة روابط لهذه المنصة — كل رابط له اسم وصورة مصغّرة تظهر تلقائياً من واجهة الموقع.
           </p>
         </div>
         <button
