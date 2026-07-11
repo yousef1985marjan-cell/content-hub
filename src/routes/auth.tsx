@@ -86,7 +86,28 @@ function AuthPage() {
             </Link>
           </div>
 
-          <form onSubmit={mode === "signin" ? signIn : forgot} className="space-y-4">
+          <div className="mb-4 grid grid-cols-2 gap-2 rounded-lg bg-muted p-1">
+            <button
+              type="button"
+              onClick={() => { setMode("signin"); setError(null); setNotice(null); }}
+              className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${mode === "signin" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
+              تسجيل الدخول
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode("signup"); setError(null); setNotice(null); }}
+              className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${mode === "signup" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
+              إنشاء حساب
+            </button>
+          </div>
+
+          <h2 className="mb-4 text-center text-lg font-black text-primary">
+            {mode === "signin" ? "دخول المدير" : mode === "signup" ? "إنشاء حساب مدير" : "استرجاع كلمة السر"}
+          </h2>
+
+          <form onSubmit={mode === "signin" ? signIn : mode === "signup" ? signUp : forgot} className="space-y-4">
             <div>
               <label className="mb-1 flex items-center gap-1 text-xs font-bold text-muted-foreground">
                 <Mail className="h-3 w-3" /> البريد الإلكتروني
