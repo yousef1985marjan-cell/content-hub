@@ -28,8 +28,11 @@ import {
   Save,
   X,
   Upload,
+  Languages,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { LANGS, LANG_LABELS, type Lang } from "@/lib/content-store";
+import { translateSection } from "@/lib/translate.functions";
 import {
   PUB_GROUP_KEYS,
   PUB_GROUP_LABELS,
