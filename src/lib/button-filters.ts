@@ -514,7 +514,9 @@ export async function loadButtonFilters(): Promise<ButtonFiltersState> {
     order: data.order && data.order.length > 0 ? data.order : Object.keys(merged),
     presets: data.presets || [],
     customFilters: data.customFilters || [],
+    filterOverrides: data.filterOverrides || {},
     updated_at: data.updated_at || base.updated_at,
+
   };
 }
 
