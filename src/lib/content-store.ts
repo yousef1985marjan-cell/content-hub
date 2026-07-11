@@ -1,5 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 
+export type ExtraLink = {
+  id: string;
+  title: string;
+  url: string;
+  thumbnail?: string;
+};
+
 export type PlatformLink = {
   id: string;
   name: string;
@@ -15,6 +22,7 @@ export type PlatformLink = {
   featured?: boolean;
   badge?: string;
   accent?: string;
+  extraLinks?: ExtraLink[];
 };
 
 
