@@ -522,7 +522,9 @@ export async function loadButtonFilters(): Promise<ButtonFiltersState> {
     presets: data.presets || [],
     customFilters: data.customFilters || [],
     filterOverrides: data.filterOverrides || {},
+    hiddenFilters: data.hiddenFilters || [],
     updated_at: data.updated_at || base.updated_at,
+
 
   };
 }
