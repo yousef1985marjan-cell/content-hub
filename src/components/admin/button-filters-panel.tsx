@@ -627,6 +627,7 @@ function ButtonCard({
   canMoveUp,
   canMoveDown,
   hasFiltersClip,
+  allFiltersList,
   onChange,
   onSave,
   onCopy,
@@ -644,6 +645,7 @@ function ButtonCard({
   canMoveUp: boolean;
   canMoveDown: boolean;
   hasFiltersClip: boolean;
+  allFiltersList: FilterMeta[];
   onChange: (c: ButtonConfig) => void;
   onSave: () => void;
   onCopy: () => void;
@@ -659,7 +661,7 @@ function ButtonCard({
 
   const used = new Set(cfg.filters.map((f) => f.id));
 
-  const available = allFilters().filter((f) => !used.has(f.id));
+  const available = allFiltersList.filter((f) => !used.has(f.id));
 
 
   const move = (idx: number, dir: -1 | 1) => {
