@@ -128,12 +128,45 @@ export type BrandKey =
   | "primevideo"
   | "disneyplus"
   // more social (branded)
+  // more social (branded)
   | "quora"
   | "mastodon"
   | "bluesky"
   | "threema"
   | "xbox"
-  | "playstation";
+  | "playstation"
+  // monochrome / line versions of messengers, socials & app stores
+  | "threadsAlt"
+  | "wechatAlt"
+  | "lineAlt"
+  | "kakaoAlt"
+  | "viberAlt"
+  | "signalAlt"
+  | "skypeAlt"
+  | "zoomAlt"
+  | "teamsAlt"
+  | "slackAlt"
+  | "gmailAlt"
+  | "outlookAlt"
+  | "quoraAlt"
+  | "mastodonAlt"
+  | "blueskyAlt"
+  | "threemaAlt"
+  | "playstoreAlt"
+  | "appstoreAlt"
+  | "appgalleryAlt"
+  | "galaxystoreAlt"
+  | "amazonAppstoreAlt"
+  | "microsoftStoreAlt"
+  | "macAppstoreAlt"
+  | "huaweiAlt"
+  | "steamAlt"
+  | "epicgamesAlt"
+  | "xboxAlt"
+  | "playstationAlt"
+  | "androidAlt"
+  | "appleAlt";
+
 
 const NEUTRAL = "#64748B";
 
