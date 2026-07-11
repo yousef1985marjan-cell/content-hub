@@ -195,6 +195,74 @@ export const FILTER_LIBRARY: FilterMeta[] = [
     description: "الصيدليات التي تبقى مفتوحة بعد 18:00.",
     hasSettings: false,
   },
+  {
+    id: "filter_open_late",
+    label: "الدوام المسائي",
+    description: "الصيدليات التي تبقى مفتوحة بعد 18:00.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_favorites",
+    label: "المفضلة فقط",
+    description: "يقصر النتائج على الصيدليات المضافة إلى مفضلة المستخدم.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_24h",
+    label: "مفتوحة 24 ساعة",
+    description: "الصيدليات التي تعمل على مدار الساعة.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_night_duty",
+    label: "المناوبة الليلية",
+    description: "الصيدليات المناوبة بعد الساعة 20:00.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_delivery",
+    label: "توصيل للمنزل",
+    description: "الصيدليات التي توفر خدمة التوصيل.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_parking",
+    label: "موقف سيارات",
+    description: "الصيدليات التي يتوفر بجوارها موقف سيارات.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_arabic_speaker",
+    label: "يتحدث العربية",
+    description: "الصيدليات التي فيها موظف يتحدث العربية.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_state_only",
+    label: "مقاطعة محددة فقط",
+    description: "يقصر النتائج على المقاطعة المختارة يدوياً بدون GPS.",
+    hasSettings: false,
+    conflicts: ["filter_gps_state_detect"],
+  },
+  {
+    id: "filter_search_text",
+    label: "بحث نصي",
+    description: "يفعّل حقل بحث بالاسم أو العنوان.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_min_rating",
+    label: "حد أدنى للتقييم",
+    description: "يستبعد الصيدليات ذات التقييم المنخفض.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_sort_alpha",
+    label: "ترتيب أبجدي",
+    description: "يرتب النتائج أبجدياً حسب اسم الصيدلية.",
+    hasSettings: false,
+    conflicts: ["filter_sort_nearest"],
+  },
 ];
 
 export function getFilterMeta(id: FilterId): FilterMeta {
