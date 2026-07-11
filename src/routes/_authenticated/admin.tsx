@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
 });
 
-type TabKey = SectionKey | "__logo" | "__settings" | "__pharmacies" | "__media" | "__button_filters";
+type TabKey = SectionKey | "__logo" | "__settings" | "__pharmacies" | "__media" | "__button_filters" | "__users";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "__pharmacies", label: "الصيدليات" },
@@ -34,6 +34,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "__media", label: "الإعلام / الإعلانات" },
   ...SECTION_KEYS.map((k) => ({ key: k as TabKey, label: SECTION_LABELS[k] })),
   { key: "__logo", label: "إدارة الشعار" },
+  { key: "__users", label: "المستخدمون والصلاحيات" },
   { key: "__settings", label: "الإعدادات" },
 ];
 
