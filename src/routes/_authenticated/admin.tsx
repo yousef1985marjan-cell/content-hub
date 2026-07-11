@@ -74,22 +74,12 @@ function Admin() {
         ))}
       </div>
 
-      {activeTab === "__pharmacies" ? (
-        <PharmaciesPanel />
-      ) : activeTab === "__button_filters" ? (
+      {activeTab === "__button_filters" ? (
         <ButtonFiltersPanel flash={flash} />
-      ) : activeTab === "__media" ? (
-        <MediaPanel flash={flash} />
       ) : activeTab === "__users" ? (
         <UsersPanel flash={flash} />
       ) : activeTab === "__settings" ? (
         <SettingsPanel flash={flash} />
-      ) : activeTab === "__logo" ? (
-        <LogoManager
-          logoUrl={state.logoUrl}
-          onChange={(logoUrl) => update({ logoUrl })}
-          flash={flash}
-        />
       ) : (
         <SectionEditor
           key={activeTab}
