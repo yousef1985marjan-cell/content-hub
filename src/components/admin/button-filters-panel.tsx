@@ -135,6 +135,25 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 
   const [filterMgrOpen, setFilterMgrOpen] = useState(false);
 
+  const FILTERS_BTN_LABEL_KEY = "shifa-filters-btn-label-v1";
+  const [filtersBtnLabel, setFiltersBtnLabel] = useState<string>(() => {
+    if (typeof window === "undefined") return "الفلاتر";
+    return window.localStorage.getItem(FILTERS_BTN_LABEL_KEY) || "الفلاتر";
+  });
+  const renameFiltersBtn = () => {
+    const next = prompt("اسم زر الفلاتر:", filtersBtnLabel);
+    if (!next) return;
+    const trimmed = next.trim();
+    if (!trimmed) return;
+    setFiltersBtnLabel(trimmed);
+    try {
+      window.localStorage.setItem(FILTERS_BTN_LABEL_KEY, trimmed);
+    } catch {
+      /* ignore */
+    }
+    flash(`تم تغيير اسم الزر إلى "${trimmed}"`);
+  };
+
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -530,11 +549,20 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
               className="inline-flex items-center gap-1 rounded-lg border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent-foreground hover:bg-accent/20"
               title="إدارة جميع الفلاتر"
             >
-              <SettingsIcon className="h-3 w-3" /> الفلاتر
+              <SettingsIcon className="h-3 w-3" /> {filtersBtnLabel}
               <span className="rounded-full bg-accent/30 px-1.5 text-[10px]">
                 {allFilters().length}
               </span>
             </button>
+            <button
+              onClick={renameFiltersBtn}
+              className="inline-flex items-center gap-1 rounded-lg border border-input bg-background p-1.5 text-xs hover:bg-muted"
+              title="تغيير اسم زر الفلاتر"
+              aria-label="تغيير اسم زر الفلاتر"
+            >
+              <Pencil className="h-3 w-3" />
+            </button>
+
 
             <button
               onClick={addCustomButton}
