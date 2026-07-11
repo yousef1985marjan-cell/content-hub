@@ -5,6 +5,8 @@ export type ExtraLink = {
   title: string;
   url: string;
   thumbnail?: string;
+  icon?: string;
+  description?: string;
 };
 
 export type PlatformLink = {
