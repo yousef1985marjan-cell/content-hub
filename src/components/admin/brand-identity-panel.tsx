@@ -204,6 +204,60 @@ function ColorEditor({
   );
 }
 
+/* ================= Mini preview (color swatch demo) ================= */
+
+function MiniPreview({ colors }: { colors: ColorMap }) {
+  const c = { ...DEFAULT_LIGHT, ...colors };
+  return (
+    <div
+      className="mt-4 overflow-hidden rounded-xl border"
+      style={{ background: c.background, borderColor: c.border, color: c.foreground }}
+    >
+      <div
+        className="flex items-center gap-2 px-4 py-3"
+        style={{ background: c.header, color: "#FFFFFF" }}
+      >
+        <div className="grid h-7 w-7 place-items-center rounded-md" style={{ background: "#ffffff22" }}>
+          <Sparkles className="h-4 w-4" style={{ color: "#FFFFFF" }} />
+        </div>
+        <span className="text-sm font-black">هيدر الموقع</span>
+        <div className="ml-auto h-2 w-8 rounded-full" style={{ background: c.accent }} />
+      </div>
+      <div className="grid gap-3 p-4 sm:grid-cols-2">
+        <div
+          className="rounded-lg border p-3"
+          style={{ background: c.card, borderColor: c.border }}
+        >
+          <div className="flex items-center gap-2">
+            <Palette className="h-4 w-4" style={{ color: c.icon }} />
+            <span className="text-sm font-bold" style={{ color: c.foreground }}>بطاقة</span>
+          </div>
+          <p className="mt-1 text-xs" style={{ color: c.mutedForeground }}>نص ثانوي داخل بطاقة.</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <button
+            className="rounded-lg px-3 py-2 text-xs font-bold"
+            style={{ background: c.btnPrimary, color: "#FFFFFF" }}
+          >
+            زر أساسي
+          </button>
+          <button
+            className="rounded-lg border px-3 py-2 text-xs font-bold"
+            style={{ background: c.btnSecondary, borderColor: c.border, color: c.foreground }}
+          >
+            زر ثانوي
+          </button>
+          <div className="flex gap-2">
+            <span className="rounded-md px-2 py-1 text-[10px] font-bold text-white" style={{ background: c.success }}>نجاح</span>
+            <span className="rounded-md px-2 py-1 text-[10px] font-bold text-white" style={{ background: c.destructive }}>خطأ</span>
+            <span className="rounded-md px-2 py-1 text-[10px] font-bold" style={{ background: c.accent, color: "#24332F" }}>إبراز</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ================= Live preview iframe ================= */
 
 function LivePreview() {
@@ -232,6 +286,7 @@ function LivePreview() {
     </div>
   );
 }
+
 
 /* ================= Theme mode section ================= */
 
@@ -732,15 +787,15 @@ export function BrandIdentityPanel({ flash }: { flash: Flash }) {
 
       <Section title="ألوان المظهر النهاري" icon={Sun} count={lightCount ? `${lightCount} لون` : "افتراضي"}>
         <ColorEditor value={local.light} defaults={DEFAULT_LIGHT} onChange={patchColors("light")} />
+        <MiniPreview colors={local.light} />
         <ActionBar
           dirty={dirty}
           onSaveDraft={() => commit(local, "draft")}
           onPublish={() => commit(local, "publish")}
           onReset={() => setLocal((l) => ({ ...l, light: DEFAULT_LIGHT }))}
-          resetLabel="استعادة ألوان النهاري"
+          resetLabel="استعادة الألوان الافتراضية"
           flash={flash}
         />
-        <LivePreview />
       </Section>
 
       <Section title="ألوان المظهر الليلي" icon={Moon} count={darkCount ? `${darkCount} لون` : "افتراضي"}>
@@ -748,6 +803,8 @@ export function BrandIdentityPanel({ flash }: { flash: Flash }) {
           يُطبَّق تحت الوضع الليلي فقط، مستقل تمامًا عن ألوان النهاري.
         </div>
         <ColorEditor value={local.dark} defaults={DEFAULT_DARK} onChange={patchColors("dark")} />
+        <MiniPreview colors={local.dark} />
+
         <ActionBar
           dirty={dirty}
           onSaveDraft={() => commit(local, "draft")}

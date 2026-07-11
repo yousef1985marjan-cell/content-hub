@@ -35,14 +35,17 @@
   --color-gold: var(--gold);
   --color-header: var(--header);
   --color-dashboard-bg: var(--dashboard-bg);
-  --gradient-hero: linear-gradient(135deg, var(--header), var(--primary));
+  --color-icon: var(--icon);
+  --color-btn-primary: var(--btn-primary);
+  --color-btn-secondary: var(--btn-secondary);
   --shadow-card: 0 8px 24px -12px var(--shadow-color, #0000001a);
+
 }
 
 :root {
   --radius: 0.75rem;
 
-  /* Light palette — exact hex values from spec */
+  /* Light palette — 14 core tokens */
   --background: #F2F4F3;
   --foreground: #24332F;
   --dashboard-bg: #F7F9F8;
@@ -51,15 +54,18 @@
   --popover: #FFFFFF;
   --popover-foreground: #24332F;
   --header: #064C32;
+  --header-foreground: #FFFFFF;
   --primary: #0C4B34;
   --primary-foreground: #FFFFFF;
-  --primary-dark: #063C2B;
-  --secondary: #F7F9F9;
+  --secondary: #E8F1EE;
   --secondary-foreground: #24332F;
   --muted: #E8F1EE;
   --muted-foreground: #697773;
   --accent: #D6B672;
-  --accent-foreground: #24332F;
+  --accent-foreground: #0C4B34;
+  --icon: #0C4B34;
+  --btn-primary: #0C4B34;
+  --btn-secondary: #F7F9F9;
   --destructive: #C94B4B;
   --destructive-foreground: #FFFFFF;
   --success: #2F8F5B;
@@ -72,6 +78,7 @@
   --info-card: #F7FBFC;
   --info-icon-bg: #E8F1EE;
   --shadow-color: #0000001a;
+
 }
 
 .dark {
@@ -82,16 +89,19 @@
   --card-foreground: #F1F4F2;
   --popover: #0D2B26;
   --popover-foreground: #F1F4F2;
-  --header: #064C32;
-  --primary: #CFB675;
-  --primary-foreground: #123A2D;
-  --primary-dark: #052A20;
+  --header: #05382C;
+  --header-foreground: #FFFFFF;
+  --primary: #0C4B34;
+  --primary-foreground: #FFFFFF;
   --secondary: #11342D;
   --secondary-foreground: #F1F4F2;
   --muted: #0D2B26;
   --muted-foreground: #B6C1BD;
   --accent: #D6B672;
-  --accent-foreground: #123A2D;
+  --accent-foreground: #D6B672;
+  --icon: #D6B672;
+  --btn-primary: #CFB675;
+  --btn-secondary: #11342D;
   --destructive: #E06A6A;
   --destructive-foreground: #FFFFFF;
   --success: #56B88A;
@@ -105,6 +115,7 @@
   --info-icon-bg: #183C34;
   --shadow-color: #00000040;
 }
+
 
 @layer base {
   * {

@@ -2,44 +2,33 @@ import { useCallback, useEffect, useState } from "react";
 
 /* ============================================================
  * Brand Identity — theme mode, colors, icons, fonts
+ * Simplified color model: 14 core tokens per theme.
  * ============================================================ */
 
 export const THEME_MODE_KEY = "shifa-theme-mode-v1";
-export const BRAND_DRAFT_KEY = "shifa-brand-identity-draft-v1";
-export const BRAND_PUBLISHED_KEY = "shifa-brand-identity-published-v1";
+export const BRAND_DRAFT_KEY = "shifa-brand-identity-draft-v2";
+export const BRAND_PUBLISHED_KEY = "shifa-brand-identity-published-v2";
 export const BRAND_UPDATED_EVENT = "shifa:brand-identity-updated";
 
 export type ThemeMode = "light" | "dark" | "auto";
 
-/* -------- color tokens (extended) -------- */
+/* -------- color tokens (simplified to 14 core) -------- */
 
 export const COLOR_TOKENS = [
-  { key: "background", label: "خلفية الصفحة", cssVar: "--background" },
-  { key: "dashboardBg", label: "خلفية لوحة التحكم", cssVar: "--dashboard-bg" },
-  { key: "card", label: "خلفية البطاقات", cssVar: "--card" },
-  { key: "input", label: "خلفية الحقول", cssVar: "--input" },
+  { key: "background", label: "لون الصفحة", cssVar: "--background" },
+  { key: "card", label: "لون البطاقات", cssVar: "--card" },
   { key: "header", label: "لون الهيدر", cssVar: "--header" },
-  { key: "primary", label: "الأخضر الأساسي", cssVar: "--primary" },
-  { key: "primaryDark", label: "الأخضر الداكن", cssVar: "--primary-dark" },
+  { key: "primary", label: "اللون الأساسي", cssVar: "--primary" },
   { key: "secondary", label: "اللون الثانوي", cssVar: "--secondary" },
-  { key: "primaryForeground", label: "نص الزر الأساسي", cssVar: "--primary-foreground" },
-  { key: "secondaryForeground", label: "نص الأزرار الثانوية", cssVar: "--secondary-foreground" },
   { key: "foreground", label: "لون النص الأساسي", cssVar: "--foreground" },
   { key: "mutedForeground", label: "لون النص الثانوي", cssVar: "--muted-foreground" },
-  { key: "heading", label: "لون العناوين", cssVar: "--ring" },
-  { key: "icon", label: "لون الأيقونات", cssVar: "--accent-foreground" },
+  { key: "icon", label: "لون الأيقونات", cssVar: "--icon" },
   { key: "border", label: "لون الحدود", cssVar: "--border" },
-  { key: "link", label: "لون الروابط", cssVar: "--link" },
-  { key: "gold", label: "اللون الذهبي", cssVar: "--gold" },
-  { key: "accent", label: "لون التمييز", cssVar: "--accent" },
-  { key: "infoCard", label: "خلفية بطاقة المعلومات", cssVar: "--info-card" },
-  { key: "infoIconBg", label: "خلفية أيقونة المعلومات", cssVar: "--info-icon-bg" },
+  { key: "btnPrimary", label: "لون الأزرار الأساسية", cssVar: "--btn-primary" },
+  { key: "btnSecondary", label: "لون الأزرار الثانوية", cssVar: "--btn-secondary" },
+  { key: "accent", label: "لون الإبراز", cssVar: "--accent" },
   { key: "success", label: "لون النجاح", cssVar: "--success" },
-  { key: "warning", label: "لون التحذير", cssVar: "--warning" },
   { key: "destructive", label: "لون الخطأ", cssVar: "--destructive" },
-  { key: "muted", label: "خلفية الحقول الصامتة", cssVar: "--muted" },
-  { key: "ring", label: "لون التركيز", cssVar: "--ring" },
-  { key: "shadowColor", label: "لون الظلال", cssVar: "--shadow-color" },
 ] as const;
 
 export type ColorTokenKey = (typeof COLOR_TOKENS)[number]["key"];
@@ -47,60 +36,36 @@ export type ColorMap = Partial<Record<ColorTokenKey, string>>;
 
 export const DEFAULT_LIGHT: ColorMap = {
   background: "#F2F4F3",
-  dashboardBg: "#F7F9F8",
   card: "#FFFFFF",
-  input: "#FFFFFF",
   header: "#064C32",
   primary: "#0C4B34",
-  primaryDark: "#063C2B",
   secondary: "#E8F1EE",
-  primaryForeground: "#FFFFFF",
-  secondaryForeground: "#24332F",
   foreground: "#24332F",
   mutedForeground: "#697773",
-  heading: "#0C4B34",
   icon: "#0C4B34",
   border: "#D9E0DD",
-  link: "#0C4B34",
-  gold: "#D6B672",
+  btnPrimary: "#0C4B34",
+  btnSecondary: "#F7F9F9",
   accent: "#D6B672",
-  infoCard: "#F7FBFC",
-  infoIconBg: "#E8F1EE",
   success: "#2F8F5B",
-  warning: "#D6B672",
   destructive: "#C94B4B",
-  muted: "#E8F1EE",
-  ring: "#0C4B34",
-  shadowColor: "#0000001A",
 };
 
 export const DEFAULT_DARK: ColorMap = {
   background: "#061A16",
-  dashboardBg: "#071F1A",
   card: "#0A2421",
-  input: "#073028",
-  header: "#064C32",
-  primary: "#CFB675",
-  primaryDark: "#052A20",
+  header: "#05382C",
+  primary: "#0C4B34",
   secondary: "#11342D",
-  primaryForeground: "#123A2D",
-  secondaryForeground: "#F1F4F2",
   foreground: "#F1F4F2",
   mutedForeground: "#B6C1BD",
-  heading: "#FFFFFF",
   icon: "#D6B672",
   border: "#17483D",
-  link: "#D6B672",
-  gold: "#D6B672",
+  btnPrimary: "#CFB675",
+  btnSecondary: "#11342D",
   accent: "#D6B672",
-  infoCard: "#122725",
-  infoIconBg: "#183C34",
   success: "#56B88A",
-  warning: "#D6B672",
   destructive: "#E06A6A",
-  muted: "#0D2B26",
-  ring: "#D6B672",
-  shadowColor: "#00000040",
 };
 
 /* -------- fonts -------- */
@@ -132,11 +97,11 @@ export type IconBgShape = "circle" | "square" | "rounded";
 export type IconScope = "local" | "global";
 
 export type IconOverride = {
-  iconId: string; // registry id OR brand key
-  lucideName?: string; // if replaced from library
-  customDataUrl?: string; // uploaded replacement
-  isMonochrome?: boolean; // for SVG uploads
-  color?: string; // day
+  iconId: string;
+  lucideName?: string;
+  customDataUrl?: string;
+  isMonochrome?: boolean;
+  color?: string;
   colorDark?: string;
   size?: number;
   strokeWidth?: number;
@@ -239,6 +204,12 @@ function colorRule(map: ColorMap): string {
     const v = map[t.key];
     if (v && v.trim()) lines.push(`  ${t.cssVar}: ${v};`);
   }
+  // Derive a few companion vars so buttons/icons stay consistent.
+  if (map.card) lines.push(`  --popover: ${map.card};`);
+  if (map.foreground) lines.push(`  --card-foreground: ${map.foreground};`);
+  if (map.foreground) lines.push(`  --popover-foreground: ${map.foreground};`);
+  if (map.accent) lines.push(`  --accent-foreground: ${map.foreground ?? "#24332F"};`);
+  if (map.icon) lines.push(`  --accent-foreground: ${map.icon};`);
   return lines.join("\n");
 }
 
