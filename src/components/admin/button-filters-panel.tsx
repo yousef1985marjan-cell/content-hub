@@ -551,7 +551,7 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
             >
               <SettingsIcon className="h-3 w-3" /> {filtersBtnLabel}
               <span className="rounded-full bg-accent/30 px-1.5 text-[10px]">
-                {allFilters().length}
+                {orderedIds.length}
               </span>
             </button>
             <button
