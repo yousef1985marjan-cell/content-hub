@@ -80,6 +80,16 @@ function Admin() {
         >
           🚀 روابط المنصات
         </button>
+        <button
+          onClick={() => setActiveTab("admin")}
+          className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+            activeTab === "admin"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-secondary"
+          }`}
+        >
+          🔐 معلومات المدير
+        </button>
         {sections.map((s) => (
           <button
             key={s.key}
