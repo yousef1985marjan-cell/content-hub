@@ -1,5 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
 import { PageShell } from "@/components/page-shell";
 import {
   useContent,
@@ -14,7 +17,7 @@ import {
 } from "@/lib/content-store";
 import { translateSection } from "@/lib/translate.functions";
 import { useMemo, useState } from "react";
-import { Save, Plus, Trash2, Languages } from "lucide-react";
+import { Save, Plus, Trash2, Languages, LogOut } from "lucide-react";
 import { SettingsPanel } from "@/components/admin/settings-panel";
 import { ButtonFiltersPanel } from "@/components/admin/button-filters-panel";
 import { UsersPanel } from "@/components/admin/users-panel";
@@ -43,9 +46,26 @@ function Admin() {
   const { state, update, hydrated } = useContent();
   const [activeTab, setActiveTab] = useState<TabKey>("__button_filters");
   const [flashMsg, setFlashMsg] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [signingOut, setSigningOut] = useState(false);
   const flash = (m: string) => {
     setFlashMsg(m);
     setTimeout(() => setFlashMsg(null), 1800);
+  };
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    if (!confirm("هل تريد تسجيل الخروج من لوحة التحكم؟")) return;
+    setSigningOut(true);
+    try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      await supabase.auth.signOut();
+      navigate({ to: "/auth", replace: true });
+    } catch {
+      setSigningOut(false);
+    }
   };
 
   if (!hydrated) {
@@ -64,7 +84,7 @@ function Admin() {
         </div>
       )}
 
-      <div className="mb-6 flex flex-wrap gap-2 border-b border-border pb-3">
+      <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-border pb-3">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -78,7 +98,16 @@ function Admin() {
             {t.label}
           </button>
         ))}
+        <button
+          onClick={handleSignOut}
+          disabled={signingOut}
+          className="ms-auto inline-flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm font-bold text-destructive hover:bg-destructive/20 disabled:opacity-50"
+        >
+          <LogOut className="h-4 w-4" />
+          {signingOut ? "جاري الخروج..." : "تسجيل الخروج"}
+        </button>
       </div>
+
 
       {activeTab === "__button_filters" ? (
         <ButtonFiltersPanel flash={flash} />
