@@ -167,6 +167,7 @@ export function PublisherManagerPanel({ flash }: { flash: Flash }) {
 
                   {editing?.group === key && (
                     <ItemEditor
+                      flash={flash}
                       groupKey={key}
                       value={editing.item}
                       onChange={(it) => setEditing({ group: key, item: it })}
