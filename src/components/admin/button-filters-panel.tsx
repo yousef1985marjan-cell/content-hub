@@ -983,7 +983,19 @@ function ButtonCard({
         </button>
       </div>
 
-
+      {pendingRemove && (
+        <ConfirmDialog
+          open
+          title="تأكيد الحذف"
+          confirmLabel="حذف"
+          cancelLabel="إلغاء"
+          variant="danger"
+          onConfirm={doRemove}
+          onCancel={() => setPendingRemove(null)}
+        >
+          هل أنت متأكد بأنك ستحذف فلتر &quot;{getFilterMeta(pendingRemove).label}&quot; من هذه البطاقة؟
+        </ConfirmDialog>
+      )}
     </div>
   );
 }
