@@ -13,6 +13,9 @@ import {
   ChevronUp,
   ChevronDown,
   Pencil,
+  Copy,
+  ClipboardPaste,
+
 } from "lucide-react";
 import {
   BUILTIN_BUTTON_IDS,
