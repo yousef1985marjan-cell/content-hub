@@ -588,6 +588,7 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
                 canMoveUp={idx > 0}
                 canMoveDown={idx < orderedIds.length - 1}
                 hasFiltersClip={!!filtersClip}
+                allFiltersList={allFilters().filter((f) => !state.hiddenFilters.includes(String(f.id)))}
                 onChange={(c) => patchButton(id, c)}
                 onSave={() => saveButton(id)}
                 onCopy={() => copyFilters(id)}
@@ -626,6 +627,7 @@ function ButtonCard({
   canMoveUp,
   canMoveDown,
   hasFiltersClip,
+  allFiltersList,
   onChange,
   onSave,
   onCopy,
@@ -643,6 +645,7 @@ function ButtonCard({
   canMoveUp: boolean;
   canMoveDown: boolean;
   hasFiltersClip: boolean;
+  allFiltersList: FilterMeta[];
   onChange: (c: ButtonConfig) => void;
   onSave: () => void;
   onCopy: () => void;
@@ -658,7 +661,7 @@ function ButtonCard({
 
   const used = new Set(cfg.filters.map((f) => f.id));
 
-  const available = allFilters().filter((f) => !used.has(f.id));
+  const available = allFiltersList.filter((f) => !used.has(f.id));
 
 
   const move = (idx: number, dir: -1 | 1) => {
@@ -675,6 +678,7 @@ function ButtonCard({
       alert(`الفلتر "${fm.label}" مثبت لهذا الزر ولا يمكن إزالته.`);
       return;
     }
+    if (!window.confirm(`هل أنت متأكد بأنك ستحذف فلتر "${fm.label}" من هذه البطاقة؟`)) return;
     onChange({ ...cfg, filters: cfg.filters.filter((f) => f.id !== fid) });
   };
 
