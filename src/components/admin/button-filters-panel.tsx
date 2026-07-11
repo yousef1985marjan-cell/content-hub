@@ -1309,6 +1309,7 @@ function CustomFiltersManager({
   const [editingId, setEditingId] = useState<FilterId | null>(null);
   const [editLabel, setEditLabel] = useState("");
   const [editDesc, setEditDesc] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState<FilterId | null>(null);
 
   const submit = () => {
     if (!label.trim()) return;
