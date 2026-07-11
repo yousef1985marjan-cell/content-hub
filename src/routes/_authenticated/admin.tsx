@@ -105,7 +105,9 @@ function Admin() {
         ))}
       </div>
 
-      {activeTab !== "platforms" ? (
+      {activeTab === "admin" ? (
+        <AdminInfo flash={flash} />
+      ) : activeTab !== "platforms" ? (
         <TextEditor
           key={activeTab}
           label={sections.find((s) => s.key === activeTab)!.label}
