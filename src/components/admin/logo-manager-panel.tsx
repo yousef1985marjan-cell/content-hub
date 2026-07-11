@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Upload, Trash2, Save, Eraser, Plus, Pencil, ImageIcon } from "lucide-react";
+import { Upload, Trash2, Save, Eraser, Plus, Pencil, ImageIcon, Radio, RadioTower } from "lucide-react";
+import { LOGO_STORAGE_KEY, LOGO_UPDATED_EVENT } from "@/lib/use-published-logo";
 
 type LogoCard = {
   id: string;
@@ -8,34 +9,42 @@ type LogoCard = {
   saved: string;
   /** in-memory draft not yet saved */
   draft: string;
+  /** if true, this logo is broadcast to the site section matching `id` */
+  published: boolean;
 };
 
-const STORAGE_KEY = "shifa-logo-manager-v1";
+type StoredCard = Omit<LogoCard, "draft">;
 
-const DEFAULT_CARDS: Omit<LogoCard, "draft">[] = [
-  { id: "app-default", label: "الصورة الافتراضية للتطبيق", saved: "" },
-  { id: "welcome", label: "لوكو بطاقة الترحيب", saved: "" },
-  { id: "header", label: "لوكو الهيدر", saved: "" },
-  { id: "menu", label: "لوكو القائمة", saved: "" },
-  { id: "dashboard", label: "لوكو لوحة التحكم", saved: "" },
+const DEFAULT_CARDS: StoredCard[] = [
+  { id: "app-default", label: "الصورة الافتراضية للتطبيق", saved: "", published: false },
+  { id: "welcome", label: "لوكو بطاقة الترحيب", saved: "", published: false },
+  { id: "header", label: "لوكو الهيدر", saved: "", published: false },
+  { id: "menu", label: "لوكو القائمة", saved: "", published: false },
+  { id: "dashboard", label: "لوكو لوحة التحكم", saved: "", published: false },
 ];
 
-function readStore(): Omit<LogoCard, "draft">[] {
+function readStore(): StoredCard[] {
   if (typeof window === "undefined") return DEFAULT_CARDS;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(LOGO_STORAGE_KEY);
     if (!raw) return DEFAULT_CARDS;
-    const parsed = JSON.parse(raw) as Omit<LogoCard, "draft">[];
+    const parsed = JSON.parse(raw) as Partial<StoredCard>[];
     if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_CARDS;
-    return parsed;
+    return parsed.map((c) => ({
+      id: String(c.id ?? crypto.randomUUID()),
+      label: String(c.label ?? ""),
+      saved: String(c.saved ?? ""),
+      published: Boolean(c.published),
+    }));
   } catch {
     return DEFAULT_CARDS;
   }
 }
 
-function writeStore(cards: Omit<LogoCard, "draft">[]) {
+function writeStore(cards: StoredCard[]) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+    window.localStorage.setItem(LOGO_STORAGE_KEY, JSON.stringify(cards));
+    window.dispatchEvent(new Event(LOGO_UPDATED_EVENT));
   } catch {
     /* quota */
   }
@@ -47,7 +56,7 @@ export function LogoManagerPanel({ flash }: { flash: (m: string) => void }) {
   );
 
   useEffect(() => {
-    writeStore(cards.map(({ id, label, saved }) => ({ id, label, saved })));
+    writeStore(cards.map(({ id, label, saved, published }) => ({ id, label, saved, published })));
   }, [cards]);
 
   const patch = (id: string, p: Partial<LogoCard>) =>
