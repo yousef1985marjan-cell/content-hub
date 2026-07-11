@@ -473,6 +473,8 @@ function readLocal(): ButtonFiltersState {
     }
     if (!Array.isArray(p.presets)) p.presets = [];
     if (!Array.isArray(p.customFilters)) p.customFilters = [];
+    if (!p.filterOverrides || typeof p.filterOverrides !== "object") p.filterOverrides = {};
+
 
     return p;
   } catch {
