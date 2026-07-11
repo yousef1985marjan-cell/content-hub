@@ -498,7 +498,8 @@ function ButtonCard({
   const [openSettings, setOpenSettings] = useState<string | null>(null);
 
   const used = new Set(cfg.filters.map((f) => f.id));
-  const available = FILTER_LIBRARY.filter((f) => !used.has(f.id));
+  const available = allFilters().filter((f) => !used.has(f.id));
+
 
   const move = (idx: number, dir: -1 | 1) => {
     const j = idx + dir;
