@@ -81,6 +81,9 @@ export type ButtonFiltersState = {
   customFilters: FilterMeta[];
   /** rename/description overrides for any filter (built-in or custom) */
   filterOverrides: Record<string, FilterOverride>;
+  /** built-in filter ids that were hidden by the admin */
+  hiddenFilters: string[];
+
   updated_at: string;
 };
 
@@ -393,7 +396,9 @@ export function defaultState(): ButtonFiltersState {
     presets: [],
     customFilters: [],
     filterOverrides: {},
+    hiddenFilters: [],
     updated_at: new Date().toISOString(),
+
 
   };
 }
@@ -474,6 +479,8 @@ function readLocal(): ButtonFiltersState {
     if (!Array.isArray(p.presets)) p.presets = [];
     if (!Array.isArray(p.customFilters)) p.customFilters = [];
     if (!p.filterOverrides || typeof p.filterOverrides !== "object") p.filterOverrides = {};
+    if (!Array.isArray(p.hiddenFilters)) p.hiddenFilters = [];
+
 
 
     return p;
@@ -515,7 +522,9 @@ export async function loadButtonFilters(): Promise<ButtonFiltersState> {
     presets: data.presets || [],
     customFilters: data.customFilters || [],
     filterOverrides: data.filterOverrides || {},
+    hiddenFilters: data.hiddenFilters || [],
     updated_at: data.updated_at || base.updated_at,
+
 
   };
 }

@@ -297,15 +297,23 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     setState((s) => ({ ...s, filterOverrides: rest }));
   };
 
-  // Delete only custom filters (built-ins can't be deleted)
-  const deleteCustomFilter = (id: FilterId) => {
-    const meta = state.customFilters.find((f) => f.id === id);
-    if (!meta) {
-      alert("لا يمكن حذف فلتر أساسي — يمكنك إعادة تسميته فقط.");
-      return;
-    }
-    if (!confirm(`حذف الفلتر "${meta.label}"؟ سيُزال من جميع الأزرار والمجموعات.`)) return;
-    const nextCustom = state.customFilters.filter((f) => f.id !== id);
+  // Delete any filter — custom filters are removed; built-ins are hidden
+  const deleteAnyFilter = (id: FilterId) => {
+    const custom = state.customFilters.find((f) => f.id === id);
+    const label = custom?.label || getFilterMeta(id).label;
+    const isBuiltin = !custom;
+    const msg = isBuiltin
+      ? `إخفاء الفلتر الأساسي "${label}"؟ سيُزال من الأزرار والمجموعات ويختفي من القائمة (يمكن إظهاره لاحقاً).`
+      : `حذف الفلتر "${label}"؟ سيُزال من جميع الأزرار والمجموعات.`;
+    if (!confirm(msg)) return;
+
+    const nextCustom = custom
+      ? state.customFilters.filter((f) => f.id !== id)
+      : state.customFilters;
+    const nextHidden = isBuiltin
+      ? Array.from(new Set([...state.hiddenFilters, String(id)]))
+      : state.hiddenFilters;
+
     const nextButtons: Record<ButtonId, ButtonConfig> = {};
     for (const bid of Object.keys(state.buttons)) {
       const b = state.buttons[bid];
@@ -315,10 +323,22 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
       ...p,
       filters: p.filters.filter((f) => f.id !== id),
     }));
-    setCustomFilters(nextCustom);
-    setState((s) => ({ ...s, customFilters: nextCustom, buttons: nextButtons, presets: nextPresets }));
-    flash(`تم حذف الفلتر "${meta.label}"`);
+    if (custom) setCustomFilters(nextCustom);
+    setState((s) => ({
+      ...s,
+      customFilters: nextCustom,
+      hiddenFilters: nextHidden,
+      buttons: nextButtons,
+      presets: nextPresets,
+    }));
+    flash(isBuiltin ? `تم إخفاء "${label}"` : `تم حذف "${label}"`);
   };
+
+  const restoreHiddenFilter = (id: FilterId) => {
+    const nextHidden = state.hiddenFilters.filter((x) => x !== id);
+    setState((s) => ({ ...s, hiddenFilters: nextHidden }));
+  };
+
 
   const saveFiltersLibrary = async () => {
     await persist(state, "تم حفظ الفلاتر");
@@ -445,17 +465,20 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 
       {filterMgrOpen && (
         <CustomFiltersManager
-          allList={allFilters()}
+          allList={allFilters().filter((f) => !state.hiddenFilters.includes(String(f.id)))}
           customIds={new Set(state.customFilters.map((f) => f.id))}
           overrides={state.filterOverrides}
+          hiddenIds={state.hiddenFilters}
           onAdd={addCustomFilter}
           onRename={renameFilter}
           onResetOverride={resetFilterOverride}
-          onDelete={deleteCustomFilter}
+          onDelete={deleteAnyFilter}
+          onRestore={restoreHiddenFilter}
           onSave={saveFiltersLibrary}
           onClose={() => setFilterMgrOpen(false)}
         />
       )}
+
 
 
 
@@ -1053,23 +1076,28 @@ function CustomFiltersManager({
   allList,
   customIds,
   overrides,
+  hiddenIds,
   onAdd,
   onRename,
   onResetOverride,
   onDelete,
+  onRestore,
   onSave,
   onClose,
 }: {
   allList: FilterMeta[];
   customIds: Set<FilterId>;
   overrides: Record<string, { label?: string; description?: string }>;
+  hiddenIds: string[];
   onAdd: (label: string, description: string) => void;
   onRename: (id: FilterId, label: string, description: string) => void;
   onResetOverride: (id: FilterId) => void;
   onDelete: (id: FilterId) => void;
+  onRestore: (id: FilterId) => void;
   onSave: () => void;
   onClose: () => void;
 }) {
+
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
   const [editingId, setEditingId] = useState<FilterId | null>(null);
@@ -1236,23 +1264,45 @@ function CustomFiltersManager({
                         <RotateCcw className="h-3 w-3" />
                       </button>
                     )}
-                    {isCustom && (
-                      <button
-                        onClick={() => onDelete(f.id)}
-                        className="rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20"
-                        title="حذف"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => onDelete(f.id)}
+                      className="rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20"
+                      title={isCustom ? "حذف" : "إخفاء الفلتر الأساسي"}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
                   </div>
                 )}
               </li>
             );
           })}
         </ul>
+
+        {hiddenIds.length > 0 && (
+          <div className="mt-4 rounded-xl border border-border bg-muted/10 p-3">
+            <h4 className="mb-2 text-sm font-bold text-muted-foreground">
+              فلاتر مخفية ({hiddenIds.length})
+            </h4>
+            <ul className="space-y-1">
+              {hiddenIds.map((id) => (
+                <li key={id} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="truncate" dir="ltr">
+                    {id}
+                  </span>
+                  <button
+                    onClick={() => onRestore(id)}
+                    className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-[11px] font-bold hover:bg-muted"
+                  >
+                    <RotateCcw className="h-3 w-3" /> استعادة
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
 
