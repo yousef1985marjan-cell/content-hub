@@ -200,7 +200,12 @@ function LogoCardView({
 
       <div className="relative grid aspect-video w-full place-items-center overflow-hidden rounded-lg border border-dashed border-border bg-muted/40">
         {card.draft ? (
-          <img src={card.draft} alt={card.label} className="max-h-full max-w-full object-contain" />
+          <img
+            src={card.draft}
+            alt={card.label}
+            style={{ width: `${card.width}px`, height: `${card.height}px` }}
+            className="max-h-full max-w-full object-contain"
+          />
         ) : (
           <div className="flex flex-col items-center gap-1 text-muted-foreground text-xs">
             <ImageIcon className="h-6 w-6" />
@@ -217,6 +222,40 @@ function LogoCardView({
             منشور
           </span>
         )}
+        <span className="absolute bottom-2 end-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-mono text-white">
+          {card.width}×{card.height}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <label className="text-xs font-bold text-muted-foreground shrink-0">الحجم (px)</label>
+        <input
+          type="number"
+          min={8}
+          max={512}
+          value={card.width}
+          onChange={(e) => onChange({ width: Math.max(8, Math.min(512, Number(e.target.value) || 0)) })}
+          className="w-16 rounded-md border border-input bg-background px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-ring"
+          aria-label="العرض"
+        />
+        <span className="text-muted-foreground">×</span>
+        <input
+          type="number"
+          min={8}
+          max={512}
+          value={card.height}
+          onChange={(e) => onChange({ height: Math.max(8, Math.min(512, Number(e.target.value) || 0)) })}
+          className="w-16 rounded-md border border-input bg-background px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-ring"
+          aria-label="الارتفاع"
+        />
+        <button
+          type="button"
+          onClick={() => onChange({ height: card.width })}
+          className="ms-auto rounded-md border border-input bg-background px-2 py-1 text-[10px] font-bold hover:bg-muted"
+          title="مربّع"
+        >
+          مربّع
+        </button>
       </div>
 
       <input
