@@ -154,6 +154,43 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     flash(`تم تغيير اسم الزر إلى "${trimmed}"`);
   };
 
+  // Editable section labels (panel title + tabs)
+  const PANEL_TITLE_KEY = "shifa-filters-panel-title-v1";
+  const TAB_BUTTONS_KEY = "shifa-filters-tab-buttons-v1";
+  const TAB_PRESETS_KEY = "shifa-filters-tab-presets-v1";
+  const readLS = (k: string, d: string) => {
+    if (typeof window === "undefined") return d;
+    return window.localStorage.getItem(k) || d;
+  };
+  const [panelTitle, setPanelTitle] = useState<string>(() =>
+    readLS(PANEL_TITLE_KEY, "إدارة فلاتر الأزرار"),
+  );
+  const [tabButtonsLabel, setTabButtonsLabel] = useState<string>(() =>
+    readLS(TAB_BUTTONS_KEY, "الفلاتر"),
+  );
+  const [tabPresetsLabel, setTabPresetsLabel] = useState<string>(() =>
+    readLS(TAB_PRESETS_KEY, "المجموعات المحفوظة"),
+  );
+  const renameSection = (
+    current: string,
+    setter: (v: string) => void,
+    key: string,
+    promptLabel: string,
+  ) => {
+    const next = prompt(promptLabel, current);
+    if (!next) return;
+    const trimmed = next.trim();
+    if (!trimmed) return;
+    setter(trimmed);
+    try {
+      window.localStorage.setItem(key, trimmed);
+    } catch {
+      /* ignore */
+    }
+    flash(`تم تغيير الاسم إلى "${trimmed}"`);
+  };
+
+
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -459,7 +496,20 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
       <div className="rounded-2xl border border-border bg-card p-4">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-black text-primary">إدارة فلاتر الأزرار</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-black text-primary">{panelTitle}</h2>
+            <button
+              onClick={() =>
+                renameSection(panelTitle, setPanelTitle, PANEL_TITLE_KEY, "اسم القسم:")
+              }
+              className="rounded-md border border-input bg-background p-1 hover:bg-muted"
+              title="تعديل اسم القسم"
+              aria-label="تعديل اسم القسم"
+            >
+              <Pencil className="h-3 w-3" />
+            </button>
+          </div>
+
             <p className="text-xs text-muted-foreground">
               تحكم عن بُعد بسلوك أزرار البحث في تطبيق الجوال دون تحديث من المتاجر.
             </p>
@@ -522,26 +572,51 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 
       {/* Sub-tabs */}
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => setTab("buttons")}
-          className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
-            tab === "buttons"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-secondary"
-          }`}
-        >
-          الفلاتر ({orderedIds.length})
-        </button>
-        <button
-          onClick={() => setTab("presets")}
-          className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
-            tab === "presets"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-secondary"
-          }`}
-        >
-          المجموعات المحفوظة ({state.presets.length})
-        </button>
+        <div className="inline-flex items-center gap-1">
+          <button
+            onClick={() => setTab("buttons")}
+            className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+              tab === "buttons"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            {tabButtonsLabel} ({orderedIds.length})
+          </button>
+          <button
+            onClick={() =>
+              renameSection(tabButtonsLabel, setTabButtonsLabel, TAB_BUTTONS_KEY, "اسم القسم:")
+            }
+            className="rounded-md border border-input bg-background p-1 hover:bg-muted"
+            title="تعديل اسم القسم"
+            aria-label="تعديل اسم القسم"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        </div>
+        <div className="inline-flex items-center gap-1">
+          <button
+            onClick={() => setTab("presets")}
+            className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+              tab === "presets"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            {tabPresetsLabel} ({state.presets.length})
+          </button>
+          <button
+            onClick={() =>
+              renameSection(tabPresetsLabel, setTabPresetsLabel, TAB_PRESETS_KEY, "اسم القسم:")
+            }
+            className="rounded-md border border-input bg-background p-1 hover:bg-muted"
+            title="تعديل اسم القسم"
+            aria-label="تعديل اسم القسم"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        </div>
+
         {tab === "buttons" && (
           <div className="ms-auto flex items-center gap-2">
             <button
