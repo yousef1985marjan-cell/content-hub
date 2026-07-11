@@ -270,17 +270,38 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     flash(`تمت إضافة فلتر "${meta.label}" — لا تنسَ الحفظ`);
   };
 
-  const renameCustomFilter = (id: FilterId, label: string, description: string) => {
-    const nextCustom = state.customFilters.map((f) =>
-      f.id === id ? { ...f, label: label.trim() || f.label, description: description.trim() } : f,
-    );
-    setCustomFilters(nextCustom);
-    setState((s) => ({ ...s, customFilters: nextCustom }));
+  // Rename any filter (built-in via override, custom directly)
+  const renameFilter = (id: FilterId, label: string, description: string) => {
+    const isCustom = state.customFilters.some((f) => f.id === id);
+    if (isCustom) {
+      const nextCustom = state.customFilters.map((f) =>
+        f.id === id ? { ...f, label: label.trim() || f.label, description: description.trim() } : f,
+      );
+      setCustomFilters(nextCustom);
+      setState((s) => ({ ...s, customFilters: nextCustom }));
+    } else {
+      const nextOv = { ...state.filterOverrides, [id]: { label: label.trim(), description: description.trim() } };
+      setFilterOverrides(nextOv);
+      setState((s) => ({ ...s, filterOverrides: nextOv }));
+    }
   };
 
+  // Reset a built-in filter override to its original label/description
+  const resetFilterOverride = (id: FilterId) => {
+    if (!state.filterOverrides[id]) return;
+    const { [id]: _drop, ...rest } = state.filterOverrides;
+    void _drop;
+    setFilterOverrides(rest);
+    setState((s) => ({ ...s, filterOverrides: rest }));
+  };
+
+  // Delete only custom filters (built-ins can't be deleted)
   const deleteCustomFilter = (id: FilterId) => {
     const meta = state.customFilters.find((f) => f.id === id);
-    if (!meta) return;
+    if (!meta) {
+      alert("لا يمكن حذف فلتر أساسي — يمكنك إعادة تسميته فقط.");
+      return;
+    }
     if (!confirm(`حذف الفلتر "${meta.label}"؟ سيُزال من جميع الأزرار والمجموعات.`)) return;
     const nextCustom = state.customFilters.filter((f) => f.id !== id);
     const nextButtons: Record<ButtonId, ButtonConfig> = {};
@@ -296,6 +317,12 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     setState((s) => ({ ...s, customFilters: nextCustom, buttons: nextButtons, presets: nextPresets }));
     flash(`تم حذف الفلتر "${meta.label}"`);
   };
+
+  const saveFiltersLibrary = async () => {
+    await persist(state, "تم حفظ الفلاتر");
+  };
+
+
 
   if (loading) {
     return <p className="text-muted-foreground">جاري التحميل...</p>;
