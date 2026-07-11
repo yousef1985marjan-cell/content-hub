@@ -452,6 +452,8 @@ function readLocal(): ButtonFiltersState {
       p.order = [...BUILTIN_BUTTON_IDS, ...Object.keys(p.buttons).filter((k) => !BUILTIN_BUTTON_IDS.includes(k as BuiltinButtonId))];
     }
     if (!Array.isArray(p.presets)) p.presets = [];
+    if (!Array.isArray(p.customFilters)) p.customFilters = [];
+
     return p;
   } catch {
     return defaultState();
