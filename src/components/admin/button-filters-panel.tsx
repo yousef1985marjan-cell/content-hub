@@ -68,18 +68,22 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const orderedIds = state.order;
+
   const dirtyButtons = useMemo(() => {
-    const out: Record<ButtonId, boolean> = {} as any;
-    for (const id of BUTTON_IDS) {
+    const out: Record<ButtonId, boolean> = {};
+    for (const id of orderedIds) {
       out[id] = JSON.stringify(state.buttons[id]) !== JSON.stringify(saved.buttons[id]);
     }
     return out;
-  }, [state, saved]);
+  }, [state, saved, orderedIds]);
 
   const anyDirty = useMemo(
-    () => Object.values(dirtyButtons).some(Boolean) ||
+    () =>
+      Object.values(dirtyButtons).some(Boolean) ||
+      JSON.stringify(state.order) !== JSON.stringify(saved.order) ||
       JSON.stringify(state.presets) !== JSON.stringify(saved.presets),
-    [dirtyButtons, state.presets, saved.presets],
+    [dirtyButtons, state.order, saved.order, state.presets, saved.presets],
   );
 
   const patchButton = (id: ButtonId, next: ButtonConfig) => {
@@ -99,22 +103,26 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 
   const saveButton = async (id: ButtonId) => {
     const cfg = state.buttons[id];
+    if (!cfg) return;
     if (cfg.filters.length === 0) {
-      flash(`لا يمكن حفظ زر "${BUTTON_META[id].label}" بلا فلاتر`);
+      flash(`لا يمكن حفظ زر "${buttonLabel(cfg)}" بلا فلاتر`);
       return;
     }
     const next: ButtonFiltersState = {
       ...saved,
       buttons: { ...saved.buttons, [id]: cfg },
+      order: state.order,
       presets: state.presets,
     };
-    await persist(next, `تم حفظ زر "${BUTTON_META[id].label}"`);
+    await persist(next, `تم حفظ زر "${buttonLabel(cfg)}"`);
   };
 
   const saveAll = async () => {
-    for (const id of BUTTON_IDS) {
-      if (state.buttons[id].filters.length === 0) {
-        flash(`لا يمكن الحفظ: زر "${BUTTON_META[id].label}" بلا فلاتر`);
+    for (const id of orderedIds) {
+      const cfg = state.buttons[id];
+      if (!cfg) continue;
+      if (cfg.filters.length === 0) {
+        flash(`لا يمكن الحفظ: زر "${buttonLabel(cfg)}" بلا فلاتر`);
         return;
       }
     }
@@ -122,8 +130,64 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
   };
 
   const resetButton = (id: ButtonId) => {
-    if (!confirm(`استعادة الإعداد الافتراضي لزر "${BUTTON_META[id].label}"؟`)) return;
-    patchButton(id, structuredClone(DEFAULT_BUTTONS[id]));
+    const cfg = state.buttons[id];
+    if (!cfg) return;
+    if (!confirm(`استعادة الإعداد الافتراضي لزر "${buttonLabel(cfg)}"؟`)) return;
+    if (cfg.builtin && BUILTIN_BUTTON_IDS.includes(id as BuiltinButtonId)) {
+      patchButton(id, structuredClone(DEFAULT_BUTTONS[id as BuiltinButtonId]));
+    } else {
+      patchButton(id, { ...cfg, filters: [makeApplied("filter_result_limit")] });
+    }
+  };
+
+  const addCustomButton = () => {
+    const label = prompt("اسم الزر الجديد:", "زر مخصص");
+    if (!label) return;
+    const icon = prompt("رمز (إيموجي) للزر:", "🔘") || "🔘";
+    const btn = createCustomButton(label, icon);
+    const next: ButtonFiltersState = {
+      ...state,
+      buttons: { ...state.buttons, [btn.id]: btn },
+      order: [...state.order, btn.id],
+    };
+    setState(next);
+    flash(`تمت إضافة زر "${btn.label}" — لا تنسَ الحفظ`);
+  };
+
+  const renameButton = (id: ButtonId) => {
+    const cfg = state.buttons[id];
+    if (!cfg) return;
+    const label = prompt("اسم الزر:", cfg.label);
+    if (!label) return;
+    const icon = prompt("رمز (إيموجي):", cfg.icon) || cfg.icon;
+    patchButton(id, { ...cfg, label, icon });
+  };
+
+  const deleteButton = (id: ButtonId) => {
+    const cfg = state.buttons[id];
+    if (!cfg) return;
+    if (cfg.builtin) {
+      alert("لا يمكن حذف زر أساسي — يمكنك إخفاؤه بدلاً من ذلك.");
+      return;
+    }
+    if (!confirm(`حذف زر "${cfg.label}" نهائياً؟`)) return;
+    const { [id]: _removed, ...rest } = state.buttons;
+    void _removed;
+    const next: ButtonFiltersState = {
+      ...state,
+      buttons: rest,
+      order: state.order.filter((x) => x !== id),
+    };
+    void persist(next, "تم حذف الزر");
+  };
+
+  const moveButton = (id: ButtonId, dir: -1 | 1) => {
+    const idx = state.order.indexOf(id);
+    const j = idx + dir;
+    if (idx < 0 || j < 0 || j >= state.order.length) return;
+    const nextOrder = [...state.order];
+    [nextOrder[idx], nextOrder[j]] = [nextOrder[j], nextOrder[idx]];
+    setState((s) => ({ ...s, order: nextOrder }));
   };
 
   const saveAsPreset = (buttonId: ButtonId) => {
@@ -142,18 +206,19 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     };
     const next = { ...state, presets: [...state.presets, preset] };
     setState(next);
-    // auto-persist presets
     void persist(next, `تم حفظ المجموعة "${name}"`);
   };
 
   const applyPreset = (preset: FilterPreset, target: ButtonId | "__all") => {
-    const targets = target === "__all" ? BUTTON_IDS : [target];
+    const targets = target === "__all" ? orderedIds : [target];
     let diffMsg = "";
     const nextButtons = { ...state.buttons };
     for (const id of targets) {
-      const { next, added, removed } = applyPresetToButton(nextButtons[id], preset);
+      const btn = nextButtons[id];
+      if (!btn) continue;
+      const { next, added, removed } = applyPresetToButton(btn, preset);
       nextButtons[id] = next;
-      diffMsg += `\n• ${BUTTON_META[id].label}: +${added.length}/-${removed.length}`;
+      diffMsg += `\n• ${buttonLabel(btn)}: +${added.length}/-${removed.length}`;
     }
     if (!confirm(`تطبيق "${preset.name}"؟${diffMsg}`)) return;
     setState((s) => ({ ...s, buttons: nextButtons }));
