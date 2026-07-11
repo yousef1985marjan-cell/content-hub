@@ -1,6 +1,6 @@
 import { fetchWithTimeout, getSettings } from "./app-settings";
 
-export type FilterId =
+export type KnownFilterId =
   | "filter_time_auto"
   | "filter_on_duty"
   | "filter_on_duty_by_state"
@@ -23,6 +23,10 @@ export type FilterId =
   | "filter_search_text"
   | "filter_min_rating"
   | "filter_sort_alpha";
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type FilterId = KnownFilterId | (string & {});
+
 
 /** Built-in button ids kept for sticky/conflict rules; custom buttons use uuid strings. */
 export type BuiltinButtonId = "nearby" | "on_duty" | "open_now" | "all";
