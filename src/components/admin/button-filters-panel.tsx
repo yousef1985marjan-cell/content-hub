@@ -839,12 +839,16 @@ function PresetsList({
 
 function PresetCard({
   preset,
+  buttons,
+  order,
   onApply,
   onRename,
   onEdit,
   onDelete,
 }: {
   preset: FilterPreset;
+  buttons: Record<ButtonId, ButtonConfig>;
+  order: ButtonId[];
   onApply: (p: FilterPreset, target: ButtonId | "__all") => void;
   onRename: (p: FilterPreset) => void;
   onEdit: (p: FilterPreset) => void;
@@ -907,11 +911,15 @@ function PresetCard({
           className="rounded-lg border border-input bg-background px-2 py-1.5 text-xs"
         >
           <option value="">تطبيق على زر...</option>
-          {BUTTON_IDS.map((id) => (
-            <option key={id} value={id}>
-              {BUTTON_META[id].label}
-            </option>
-          ))}
+          {order.map((id) => {
+            const b = buttons[id];
+            if (!b) return null;
+            return (
+              <option key={id} value={id}>
+                {buttonLabel(b)}
+              </option>
+            );
+          })}
         </select>
         <button
           onClick={() => {
