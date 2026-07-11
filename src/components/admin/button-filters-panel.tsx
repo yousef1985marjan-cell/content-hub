@@ -572,26 +572,51 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 
       {/* Sub-tabs */}
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => setTab("buttons")}
-          className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
-            tab === "buttons"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-secondary"
-          }`}
-        >
-          الفلاتر ({orderedIds.length})
-        </button>
-        <button
-          onClick={() => setTab("presets")}
-          className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
-            tab === "presets"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-secondary"
-          }`}
-        >
-          المجموعات المحفوظة ({state.presets.length})
-        </button>
+        <div className="inline-flex items-center gap-1">
+          <button
+            onClick={() => setTab("buttons")}
+            className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+              tab === "buttons"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            {tabButtonsLabel} ({orderedIds.length})
+          </button>
+          <button
+            onClick={() =>
+              renameSection(tabButtonsLabel, setTabButtonsLabel, TAB_BUTTONS_KEY, "اسم القسم:")
+            }
+            className="rounded-md border border-input bg-background p-1 hover:bg-muted"
+            title="تعديل اسم القسم"
+            aria-label="تعديل اسم القسم"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        </div>
+        <div className="inline-flex items-center gap-1">
+          <button
+            onClick={() => setTab("presets")}
+            className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+              tab === "presets"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            {tabPresetsLabel} ({state.presets.length})
+          </button>
+          <button
+            onClick={() =>
+              renameSection(tabPresetsLabel, setTabPresetsLabel, TAB_PRESETS_KEY, "اسم القسم:")
+            }
+            className="rounded-md border border-input bg-background p-1 hover:bg-muted"
+            title="تعديل اسم القسم"
+            aria-label="تعديل اسم القسم"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        </div>
+
         {tab === "buttons" && (
           <div className="ms-auto flex items-center gap-2">
             <button
