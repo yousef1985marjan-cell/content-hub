@@ -787,15 +787,15 @@ export function BrandIdentityPanel({ flash }: { flash: Flash }) {
 
       <Section title="ألوان المظهر النهاري" icon={Sun} count={lightCount ? `${lightCount} لون` : "افتراضي"}>
         <ColorEditor value={local.light} defaults={DEFAULT_LIGHT} onChange={patchColors("light")} />
+        <MiniPreview colors={local.light} />
         <ActionBar
           dirty={dirty}
           onSaveDraft={() => commit(local, "draft")}
           onPublish={() => commit(local, "publish")}
           onReset={() => setLocal((l) => ({ ...l, light: DEFAULT_LIGHT }))}
-          resetLabel="استعادة ألوان النهاري"
+          resetLabel="استعادة الألوان الافتراضية"
           flash={flash}
         />
-        <LivePreview />
       </Section>
 
       <Section title="ألوان المظهر الليلي" icon={Moon} count={darkCount ? `${darkCount} لون` : "افتراضي"}>
@@ -803,6 +803,8 @@ export function BrandIdentityPanel({ flash }: { flash: Flash }) {
           يُطبَّق تحت الوضع الليلي فقط، مستقل تمامًا عن ألوان النهاري.
         </div>
         <ColorEditor value={local.dark} defaults={DEFAULT_DARK} onChange={patchColors("dark")} />
+        <MiniPreview colors={local.dark} />
+
         <ActionBar
           dirty={dirty}
           onSaveDraft={() => commit(local, "draft")}
