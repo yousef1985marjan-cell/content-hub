@@ -617,6 +617,60 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
   );
 }
 
+function ConfirmDialog({
+  open,
+  title,
+  children,
+  confirmLabel = "تأكيد",
+  cancelLabel = "إلغاء",
+  variant = "danger",
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  title: string;
+  children: ReactNode;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  variant?: "danger" | "warning";
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h4 className="mb-2 text-base font-black text-primary">{title}</h4>
+        <div className="mb-4 text-sm leading-relaxed text-foreground">{children}</div>
+        <div className="flex flex-wrap justify-end gap-2">
+          <button
+            onClick={onCancel}
+            className="rounded-lg border border-input bg-background px-4 py-2 text-xs font-bold hover:bg-muted"
+          >
+            {cancelLabel}
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`rounded-lg px-4 py-2 text-xs font-bold text-white ${
+              variant === "danger"
+                ? "bg-destructive hover:bg-destructive/90"
+                : "bg-amber-600 hover:bg-amber-700"
+            }`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Button Card ----------
 
 function ButtonCard({
