@@ -1,72 +1,79 @@
+Fix and extend the existing "البصمة البصرية" section — no new tab, no new page.
 
-هذا طلب كبير مقسّم لجزئين. سأنفّذه على مرحلتين متتاليتين بعد موافقتك حتى لا يتحول التنفيذ لدفعة واحدة ضخمة تصعب مراجعتها.
+## 1. Theme toggle (sun/moon) — everywhere
 
-## المرحلة الأولى — إعادة تصميم صفحة «منصات شفاء» (`/publisher`)
+- New `ThemeToggle` component (`src/components/theme-toggle.tsx`) using `useBrandIdentity`. Icons: `Sun` / `Moon` from lucide, with smooth transition (`transition-colors duration-300`), tooltip showing active mode, click cycles light → dark → auto or accepts explicit mode.
+- Mount it inside the admin `PageShell` header area (top of `/admin` and top of "البصمة البصرية" panel).
+- Toggle writes to `localStorage` (`THEME_MODE_KEY`) via existing `writeThemeMode` — already persists across reload.
+- Add "المظهر الافتراضي" segmented control (نهاري / ليلي / تلقائي) inside brand-identity panel — separate from the quick toggle.
+- Ensure `applyThemeMode` fires on `matchMedia` change in auto mode (already wired in `__root.tsx` — verify).
 
-الهدف: تحويل الصفحة الحالية إلى مركز محتوى منظّم مبني على بيانات `publisher-manager` (localStorage) التي أدخلناها سابقًا من لوحة التحكم، بدلًا من الاعتماد فقط على `content-store` القديم.
+## 2. Default palettes (light + dark)
 
-### التغييرات على `src/routes/publisher.tsx`
-- استبدال `PageShell` بهيدر مدمج داخل الصفحة نفسها (ارتفاع أقل، بدون قسم Hero العملاق):
-  - العنوان: «منصات شفاء»
-  - الوصف: «تابع شفاء، حمّل التطبيق، واكتشف محتوى وتطبيقات قد تهمك»
-  - يستخدم اللون الأخضر الأساسي مع لمسة ذهبية خفيفة (border/underline).
-- قراءة البيانات من `usePublisherManager()` (الأقسام الخمسة: social / download / videos / apps / media) بدل `useContent().state.platforms`.
-- عرض العناصر التي `published === true && hidden === false` فقط، مع الالتزام بترتيب السحب والإفلات المحفوظ.
-- كل قسم يُخفى تلقائيًا إذا كان `group.active === false` أو لا يحتوي على عناصر منشورة.
+Update `DEFAULT_BRAND` in `src/lib/brand-identity.ts` to seed the user-specified light + dark palettes as `DEFAULT_LIGHT` / `DEFAULT_DARK` constants. Expose:
+- `resetLight()` / `resetDark()` — independent restore buttons.
+- All 25+ color tokens (background, dashboard-bg, card, input, header, primary, primary-dark, secondary, primary-btn, primary-btn-fg, secondary-btn, secondary-btn-fg, foreground, muted-fg, heading, icon, border, link, gold, info-card, info-icon-bg, success, warning, destructive, shadow).
+- Since the app already uses HSL-based tokens in `src/styles.css`, values must be converted to the existing token format on write. Approach: extend `COLOR_TOKENS` to cover the new keys and map to their `--css-var` names, allowing HEX input; runtime CSS injection uses raw values (browsers accept both hex and hsl on custom props).
+- Add missing CSS variables to `src/styles.css` (`--dashboard-bg`, `--header`, `--primary-dark`, `--gold`, `--info-card`, `--info-icon-bg`, `--success`, `--warning`, `--link`, `--shadow-color`) with defaults matching user-specified values, and mirrored `.dark` overrides.
+- Header keeps green in BOTH modes: use `--header: #064C32` in both light and dark — set as a fixed token, not remapped.
 
-### الأقسام (كلها Card مع حواف ناعمة `rounded-3xl` وظل `shadow-card`)
-1. **تابع شفاء** — شبكة `grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8`، كل عنصر دائرة أيقونة + اسم، `hover:-translate-y-1` + `transition`.
-2. **حمّل تطبيق شفاء** — بطاقتان (أو أكثر) بعرض متساوٍ `grid md:grid-cols-2`: أيقونة المتجر + اسمه + وصف مختصر + زر تحميل بارز.
-3. **فيديوهات قد تعجبك** — شبكة `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`: صورة مصغرة (16/10) + شارة المنصة (YouTube/Facebook مكتشفة من الرابط) + عنوان + زر «مشاهدة». لا تشغيل تلقائي.
-4. **تطبيقات قد تعجبك** — شبكة مماثلة: شعار + اسم + وصف + زر «تحميل»، مع أزرار Android/iOS إن توفرت في نفس العنصر (نضيف حقلي `androidUrl`/`iosUrl` اختياريين في `PubItem`).
-5. **اكتشف المزيد** — يستبدل «روابط أخرى»؛ يعرض عناصر قسم `media` أو أي بقايا كشبكة بطاقات مدمجة.
+Per-color editor row: label + native color picker (`<input type="color">`) + HEX text input, with live preview via `applyPreview`.
 
-### تفاصيل التصميم
-- container عام: `max-w-6xl mx-auto px-4 py-6 space-y-6` (فراغات مضغوطة).
-- كل عنوان قسم: `text-xl md:text-2xl font-black text-primary` مع شريط ذهبي صغير تحته (`bg-accent w-10 h-1 rounded`).
-- زر «عرض المزيد» يظهر تلقائيًا حين تتجاوز عناصر القسم عتبة (فيديوهات/تطبيقات: 6، تابع: 12) — يتوسّع محليًا بحالة `useState`.
-- استخدام tokens موجودة (`--primary`, `--accent`, `--gradient-hero`, `--shadow-card`) — بدون ألوان hardcoded.
-- دعم RTL كامل (الاتجاه معرّف عالميًا في `styles.css`).
+## 3. Icons section — rewrite
 
-### إبقاء التوافق
-- الاحتفاظ بعرض `state.publisherIntro` من `content-store` كنص تمهيدي أعلى الأقسام إن وُجد.
-- إبقاء fallback على `state.platforms` القديم في قسم «تابع شفاء» إذا كان `publisher-manager` فارغًا (حتى لا تتعطل المشاريع القائمة).
+Rewrite the "إدارة الأيقونات" sub-panel in `brand-identity-panel.tsx`.
 
----
+**Registry** (new `src/lib/icon-registry.ts`): declare every icon actually used across the app with metadata:
+```
+{ id, name (ar), lucideName, usedIn: string[], category: IconCategory }
+```
+Categories (collapsible groups): navigation, header-footer, dashboard, pages, search-filter, location, time, pharmacy, forms, actions, crud, share, users, settings, alerts, theme, social, appstore, media, info. Populate ~80+ entries by scanning current imports (a one-time hand-authored list — no dynamic import scan needed).
 
-## المرحلة الثانية — قسم «البصمة البصرية» في لوحة التحكم
+For each icon row show: preview, ar name, usage list, day color, night color, size, stroke, bg color, bg size, bg shape (circle/square/rounded), radius, "استبدال" button, "استعادة" button.
 
-نضيف تبويبًا/قسمًا رئيسيًا جديدًا اسمه **«البصمة البصرية»** في `src/routes/_authenticated/admin.tsx`. لا نغيّر تصميم لوحة التحكم، فقط نضيف القسم ونحرّك «إدارة اللوكو» داخله.
+## 4. Icon library modal (new)
 
-### الهيكل — Accordion (كلها مطوية افتراضيًا)
-مكوّن جديد: `src/components/admin/brand-identity-panel.tsx` يحتوي 6 أقسام فرعية:
+New `src/components/admin/icon-library-modal.tsx`. Uses `lucide-react`'s `icons` map and a curated categorized list (~300 icons across the 19 categories). Features:
+- Search box (ar + en aliases via a small alias map).
+- Category chips.
+- Grid preview (name below).
+- Click selects; "استخدام هذه الأيقونة" confirms, "إلغاء" closes.
 
-1. **إدارة اللوكو** — يعيد استخدام `LogoManagerPanel` الحالي كما هو (بدون فقدان أي وظيفة). نُبقي التبويب القديم لللوكو مخفيًا أو نحوّل الوصول عبر البصمة البصرية فقط.
-2. **إعدادات المظهر** — زر تبديل نهاري/ليلي حي (يبدّل class `dark` على `<html>`)، + خيار المظهر الافتراضي: نهاري/ليلي/تلقائي (`prefers-color-scheme`). يُحفظ في `localStorage` ويُطبَّق فورًا.
-3. **ألوان المظهر النهاري** — 20 لون (خلفية/أساسي/ثانوي/عناوين/نصوص/أزرار/بطاقات/حدود/حقول/أيقونات/روابط/هيدر/فوتر/نجاح/تحذير/خطأ/ظل...). كل لون: color picker + حقل HEX + معاينة. يُطبَّق عبر كتابة CSS variables على `:root`.
-4. **ألوان المظهر الليلي** — نفس الحقول لكنها تُكتب تحت selector `.dark` (متغيرات مستقلة). لا نسخ تلقائي من النهاري.
-5. **إدارة الأيقونات** — قائمة الأيقونات المسجّلة (نبني registry أوّلي من `brand-icons.tsx` + أيقونات lucide المستخدمة في التنقّل)، مع: استبدال / رفع SVG-PNG-WebP / لون نهاري / لون ليلي / حجم / سماكة (stroke) / خلفية / زر استعادة الافتراضي. يُحفظ في `localStorage` ويُقرأ من hook مركزي.
-6. **إدارة الخطوط** — رفع WOFF2/WOFF/TTF/OTF (تخزين كـ data URL في localStorage ومعاينة عبر `FontFace` API)، اختيار خط عربي/لاتيني/عناوين/نصوص/أزرار، تحكم بالوزن/الحجم/ارتفاع السطر/تباعد الحروف، خط مختلف للنهاري/الليلي إن رغبت.
+## 5. Icon replace flow
 
-### الحفظ والنشر
-- لكل قسم فرعي 4 أزرار: **حفظ التغييرات** / **حفظ كمسودة** / **حفظ ونشر** / **استعادة الافتراضي**.
-- نموذج التخزين: `draft` (يُطبَّق محليًا للمعاينة فقط داخل الأدمن) و`published` (يُطبَّق على الموقع العام).
-- نافذة تأكيد قبل حذف أي لوكو/أيقونة/خط مستخدم، مع قائمة أماكن الاستخدام (نستنتجها من registry الأيقونات/الخطوط).
+Replace button opens a small chooser popover with 3 options:
+1. اختيار من مكتبة الأيقونات → opens modal above.
+2. رفع من الجهاز → file input (SVG/PNG/WebP → dataURL). SVG monochrome detection = allow tint; else disable color pickers.
+3. استعادة الأيقونة الافتراضية.
 
-### المعاينة المباشرة
-شريط أعلى القسم لتبديل عرض الأدمن نفسه بين Desktop/Tablet/Mobile عبر تغيير عرض `<iframe src="/">` مدمج (اختياري — تظهر معاينة مصغرة للموقع الحقيقي).
+After selection, show a mini editor with size/stroke/bg/radius/day-color/night-color + "تطبيق هنا فقط" / "تطبيق على كل الأماكن" radio (scope stored per-override in `IconOverride`).
 
-### التخزين والتطبيق
-- ملف جديد `src/lib/brand-identity.ts`: تعريف الأنواع + hook `useBrandIdentity()` + دوال `applyPublished()` التي تحقن `<style id="brand-identity">` في `document.head` بمتغيرات CSS للمظهرين.
-- يُستدعى `applyPublished()` مرة عند تحميل التطبيق (من `__root.tsx`) ليعكس آخر إعدادات منشورة على الموقع العام.
-- كل شيء client-side (localStorage) — لا تغييرات على قاعدة البيانات في هذه المرحلة.
+**Confirmation dialog** before replace/delete listing every place from `usedIn`.
 
----
+## 6. Save / publish buttons per sub-section
 
-## ملاحظات مهمة قبل البدء
+Each of colors-light, colors-dark, icons, fonts, theme gets its own row:
+- حفظ التغييرات → `saveDraft`
+- حفظ كمسودة → same, explicit label
+- حفظ ونشر → `publish` (writes `BRAND_PUBLISHED_KEY`, triggers global re-apply)
+- استعادة الإعدادات الافتراضية → resets that sub-section only (light-only, dark-only, icons-only, fonts-only)
 
-- **الحجم**: المرحلة الثانية وحدها ملف واحد كبير (~1500 سطر) لأن الأقسام الستة مترابطة تحت Accordion واحد. سأبنيها بتقسيم داخلي (ملف `brand-identity.ts` + ملف `brand-identity-panel.tsx` + مكوّنات فرعية `ColorPickerRow`, `IconRegistryRow`, `FontRow`).
-- **الأيقونات**: registry الأولي سيغطي أيقونات التنقل الأساسية وأيقونات المنصات الحالية. توسيعه لكل أيقونة داخل الموقع يمكن أن يتم لاحقًا (لا يمكن مسح كل استعمال lucide تلقائيًا).
-- **الترتيب المقترح**: أنفّذ المرحلة الأولى أولًا وأتحقق منها، ثم أبدأ المرحلة الثانية في ردّ لاحق حتى لا يخرج التغيير ضخمًا لا يمكن مراجعته.
+Nothing hits the live site until "حفظ ونشر".
 
-هل توافق على هذا التقسيم والبدء بالمرحلة الأولى (إعادة تصميم صفحة `/publisher`) الآن؟
+## 7. Live preview
+
+Keep existing `applyPreview` scoped to `[data-brand-preview-root]`. Add a device switcher (desktop/tablet/mobile) rendering an iframe-like preview of `/` inside the panel; the frame gets `data-brand-preview-root` so draft css only affects it.
+
+## 8. File changes
+
+- edit `src/lib/brand-identity.ts` — add default palettes, new color tokens, per-scope reset, extended `IconOverride` (bgSize, bgShape, radius, padding, scope).
+- new `src/components/theme-toggle.tsx`.
+- new `src/lib/icon-registry.ts`.
+- new `src/components/admin/icon-library-modal.tsx`.
+- new `src/components/admin/icon-replace-popover.tsx`.
+- edit `src/components/admin/brand-identity-panel.tsx` — split icons sub-panel into grouped accordion, add per-section save/publish/reset rows, wire theme toggle at top, color picker rows with HEX field, device preview.
+- edit `src/styles.css` — add missing CSS variables + `.dark` overrides matching the user's specified defaults.
+- edit `src/components/page-shell.tsx` — mount `ThemeToggle` in the admin header slot.
+- edit `src/routes/__root.tsx` — verify `applyThemeMode` fires on system-preference change (already added; keep).
+
+No new admin tab, no new route. Existing layout and other tabs untouched.
