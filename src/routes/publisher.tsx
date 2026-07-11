@@ -56,7 +56,7 @@ function platformLabel(i: PubItem): string {
   const b = resolveBrand(i);
   if (!b) return "";
   const meta = BRAND_META[b];
-  return meta?.name ?? "";
+  return meta?.label ?? "";
 }
 
 /* ---------------- primitives ---------------- */
