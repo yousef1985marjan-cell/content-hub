@@ -1,14 +1,18 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { Plus, Trash2, RotateCcw, Copy } from "lucide-react";
+import { Plus, Trash2, RotateCcw, Copy, Pencil, Mail, ShieldCheck, ShieldOff } from "lucide-react";
 import {
   listUsers,
   createUser,
   updateUserRole,
+  updateUserProfile,
   deleteUser,
   claimBootstrapAdmin,
   resetUserPassword,
+  sendPasswordResetLink,
+  adminDisableUserMfa,
 } from "@/lib/users.functions";
+import { MfaSelfEnroll } from "./mfa-self-enroll";
 
 type UserRole = "super_admin" | "admin" | "editor";
 
@@ -30,6 +34,9 @@ type AdminUser = {
   created_at: string;
   last_sign_in_at: string | null;
   roles: UserRole[];
+  full_name: string;
+  description: string;
+  mfa_enabled: boolean;
 };
 
 function KeyRoundIcon() {
@@ -43,13 +50,29 @@ function KeyRoundIcon() {
   );
 }
 
+function timeAgo(iso: string | null): string {
+  if (!iso) return "لم يسجّل الدخول بعد";
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "الآن";
+  if (m < 60) return `منذ ${m} دقيقة`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `منذ ${h} ساعة`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `منذ ${d} يوم`;
+  return new Date(iso).toLocaleDateString("ar");
+}
+
 export function UsersPanel({ flash }: { flash: (m: string) => void }) {
   const fetchList = useServerFn(listUsers);
   const doCreate = useServerFn(createUser);
   const doUpdateRole = useServerFn(updateUserRole);
+  const doUpdateProfile = useServerFn(updateUserProfile);
   const doDelete = useServerFn(deleteUser);
   const doClaim = useServerFn(claimBootstrapAdmin);
   const doReset = useServerFn(resetUserPassword);
+  const doSendLink = useServerFn(sendPasswordResetLink);
+  const doDisableMfa = useServerFn(adminDisableUserMfa);
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -59,12 +82,19 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("editor");
+  const [fullName, setFullName] = useState("");
+  const [description, setDescription] = useState("");
   const [creating, setCreating] = useState(false);
 
   const [resetTarget, setResetTarget] = useState<AdminUser | null>(null);
   const [resetPass, setResetPass] = useState("");
   const [resetting, setResetting] = useState(false);
   const [resetDone, setResetDone] = useState<{ email: string; password: string } | null>(null);
+  const [editTarget, setEditTarget] = useState<AdminUser | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [sentLink, setSentLink] = useState<{ email: string; link: string } | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -107,12 +137,14 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
     setError(null);
     setCreating(true);
     try {
-      await doCreate({ data: { email, password, role } });
+      await doCreate({ data: { email, password, role, full_name: fullName, description } });
       const newEmail = email;
       const newPassword = password;
       setEmail("");
       setPassword("");
       setRole("editor");
+      setFullName("");
+      setDescription("");
       flash("تمت إضافة المستخدم");
       setResetDone({ email: newEmail, password: newPassword });
       await load();
@@ -143,6 +175,53 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
     } catch (err) {
       setError((err as Error).message);
     }
+  };
+
+  const onSendResetLink = async (u: AdminUser) => {
+    if (!confirm(`إرسال رابط إعادة تعيين كلمة السر إلى ${u.email}؟`)) return;
+    try {
+      const res = await doSendLink({
+        data: { userId: u.id, redirectTo: `${window.location.origin}/reset-password` },
+      });
+      flash("تم توليد رابط الاستعادة");
+      setSentLink({ email: res.email, link: res.actionLink });
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+  const onDisableMfa = async (u: AdminUser) => {
+    if (!confirm(`تعطيل المصادقة الثنائية للمستخدم ${u.email}؟`)) return;
+    try {
+      await doDisableMfa({ data: { userId: u.id } });
+      flash("تم تعطيل المصادقة الثنائية");
+      await load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+  const openEdit = (u: AdminUser) => {
+    setEditTarget(u);
+    setEditName(u.full_name);
+    setEditDesc(u.description);
+  };
+
+  const submitEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget) return;
+    setSavingEdit(true);
+    try {
+      await doUpdateProfile({
+        data: { userId: editTarget.id, full_name: editName, description: editDesc },
+      });
+      flash("تم حفظ البيانات");
+      setEditTarget(null);
+      await load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+    setSavingEdit(false);
   };
 
   const openReset = (u: AdminUser) => {
@@ -178,8 +257,10 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
 
   return (
     <div className="space-y-6">
+      <MfaSelfEnroll flash={flash} />
+
       <section className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-xs leading-relaxed">
-        <b className="text-amber-700 dark:text-amber-400">ملاحظة أمنية:</b> كلمات السر مُشفّرة في القاعدة ولا يمكن استعراضها. عند إنشاء مستخدم أو إعادة تعيين كلمة سره ستُعرض لك مرة واحدة فقط لتسليمها له.
+        <b className="text-amber-700 dark:text-amber-400">ملاحظة أمنية:</b> كلمات السر مُشفّرة في القاعدة ولا يمكن استعراضها. عند إنشاء مستخدم أو إعادة تعيين كلمة سره ستُعرض لك مرة واحدة فقط لتسليمها له. لاستعادة ذاتية بواسطة المستخدم، استخدم زر «إرسال رابط الاستعادة».
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-6">
@@ -188,6 +269,28 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
           الصلاحيات: <b>مدير عام</b> (كل شيء) — <b>مدير</b> (إدارة المستخدمين والمحتوى) — <b>محرّر</b> (تعديل المحتوى فقط).
         </p>
         <form onSubmit={onCreate} className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-bold text-muted-foreground">الاسم الكامل</label>
+            <input
+              type="text"
+              maxLength={200}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="مثال: أحمد محمد"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-bold text-muted-foreground">المسمى الوظيفي / الوصف</label>
+            <input
+              type="text"
+              maxLength={500}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="مثال: مدير المحتوى"
+            />
+          </div>
           <div className="sm:col-span-2">
             <label className="mb-1 block text-xs font-bold text-muted-foreground">البريد الإلكتروني</label>
             <input
@@ -279,50 +382,132 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
               return (
                 <div
                   key={u.id}
-                  className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 bg-muted/20 p-3"
+                  className="rounded-lg border border-border/60 bg-muted/20 p-3"
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="truncate font-mono text-sm" dir="ltr">{u.email}</span>
-                      <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${ROLE_COLOR[currentRole]}`}>
-                        {ROLE_LABEL[currentRole]}
-                      </span>
-                      {isMe && <span className="rounded bg-primary/20 px-2 py-0.5 text-[10px] text-primary">أنت</span>}
+                  <div className="flex flex-wrap items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-bold text-sm">
+                          {u.full_name || <span className="text-muted-foreground font-normal">(بدون اسم)</span>}
+                        </span>
+                        <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${ROLE_COLOR[currentRole]}`}>
+                          {ROLE_LABEL[currentRole]}
+                        </span>
+                        {u.mfa_enabled && (
+                          <span className="inline-flex items-center gap-1 rounded bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                            <ShieldCheck className="h-3 w-3" /> 2FA
+                          </span>
+                        )}
+                        {isMe && <span className="rounded bg-primary/20 px-2 py-0.5 text-[10px] text-primary">أنت</span>}
+                      </div>
+                      {u.description && (
+                        <div className="mt-1 text-xs text-muted-foreground">{u.description}</div>
+                      )}
+                      <div className="mt-1 truncate font-mono text-[11px] text-muted-foreground" dir="ltr">{u.email}</div>
+                      <div className="mt-1 text-[10px] text-muted-foreground">
+                        أُنشئ: {new Date(u.created_at).toLocaleDateString("ar")} • آخر استخدام: {timeAgo(u.last_sign_in_at)}
+                      </div>
                     </div>
-                    <div className="mt-1 text-[10px] text-muted-foreground">
-                      أُنشئ: {new Date(u.created_at).toLocaleDateString("ar")}
-                      {u.last_sign_in_at && ` • آخر دخول: ${new Date(u.last_sign_in_at).toLocaleDateString("ar")}`}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select
+                        value={currentRole}
+                        onChange={(e) => onChangeRole(u.id, e.target.value as UserRole)}
+                        disabled={isMe}
+                        className="rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                      >
+                        <option value="editor">محرّر</option>
+                        <option value="admin">مدير</option>
+                        <option value="super_admin">مدير عام</option>
+                      </select>
+                      <button
+                        onClick={() => openEdit(u)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
+                      >
+                        <Pencil className="h-3 w-3" /> تعديل
+                      </button>
+                      <button
+                        onClick={() => onSendResetLink(u)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
+                      >
+                        <Mail className="h-3 w-3" /> رابط استعادة
+                      </button>
+                      <button
+                        onClick={() => openReset(u)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
+                      >
+                        <KeyRoundIcon /> تعيين كلمة سر
+                      </button>
+                      {u.mfa_enabled && (
+                        <button
+                          onClick={() => onDisableMfa(u)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
+                          title="تعطيل المصادقة الثنائية"
+                        >
+                          <ShieldOff className="h-3 w-3" /> تعطيل 2FA
+                        </button>
+                      )}
+                      <button
+                        onClick={() => onDelete(u.id, u.email)}
+                        disabled={isMe}
+                        className="inline-flex items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20 disabled:opacity-30"
+                      >
+                        <Trash2 className="h-3 w-3" /> حذف
+                      </button>
                     </div>
                   </div>
-                  <select
-                    value={currentRole}
-                    onChange={(e) => onChangeRole(u.id, e.target.value as UserRole)}
-                    disabled={isMe}
-                    className="rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-                  >
-                    <option value="editor">محرّر</option>
-                    <option value="admin">مدير</option>
-                    <option value="super_admin">مدير عام</option>
-                  </select>
-                  <button
-                    onClick={() => openReset(u)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
-                  >
-                    <KeyRoundIcon /> تعيين كلمة سر
-                  </button>
-                  <button
-                    onClick={() => onDelete(u.id, u.email)}
-                    disabled={isMe}
-                    className="inline-flex items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20 disabled:opacity-30"
-                  >
-                    <Trash2 className="h-3 w-3" /> حذف
-                  </button>
                 </div>
               );
             })}
           </div>
         )}
       </section>
+
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEditTarget(null)}>
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mb-1 text-lg font-black text-primary">تعديل بيانات المستخدم</h3>
+            <p className="mb-4 text-xs text-muted-foreground" dir="ltr">{editTarget.email}</p>
+            <form onSubmit={submitEdit} className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-bold text-muted-foreground">الاسم الكامل</label>
+                <input
+                  type="text"
+                  maxLength={200}
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold text-muted-foreground">المسمى الوظيفي / الوصف</label>
+                <textarea
+                  maxLength={500}
+                  rows={3}
+                  value={editDesc}
+                  onChange={(e) => setEditDesc(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                >
+                  {savingEdit ? "جاري الحفظ..." : "حفظ"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditTarget(null)}
+                  className="rounded-lg border border-input bg-background px-4 py-2 text-sm font-bold hover:bg-muted"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {resetTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setResetTarget(null)}>
@@ -366,6 +551,40 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {sentLink && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setSentLink(null)}>
+          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mb-1 text-lg font-black text-primary">رابط إعادة تعيين كلمة السر</h3>
+            <p className="mb-4 text-xs text-muted-foreground">
+              أرسل هذا الرابط إلى المستخدم <b dir="ltr">{sentLink.email}</b>. الرابط صالح لمدة محدودة ويسمح له بتعيين كلمة سر جديدة بنفسه.
+            </p>
+            <div className="flex items-start gap-2">
+              <textarea
+                readOnly
+                value={sentLink.link}
+                rows={3}
+                className="flex-1 rounded-lg border border-input bg-muted/40 px-3 py-2 font-mono text-[11px]"
+                dir="ltr"
+              />
+              <button
+                type="button"
+                onClick={() => navigator.clipboard?.writeText(sentLink.link)}
+                className="rounded-lg border border-input bg-background px-3 py-2 text-xs font-bold hover:bg-muted"
+              >
+                <Copy className="h-3 w-3" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSentLink(null)}
+              className="mt-4 w-full rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90"
+            >
+              إغلاق
+            </button>
           </div>
         </div>
       )}
