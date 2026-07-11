@@ -887,44 +887,35 @@ function ButtonCard({
           onClick={onSave}
           disabled={!dirty}
           className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
-          title="حفظ التعديلات على هذه البطاقة (الاسم، الرمز، الحالة، الفلاتر)"
+          title="حفظ التعديلات على هذه البطاقة كمسودة"
         >
           <Save className="h-3 w-3" />
-          حفظ التغييرات
+          حفظ التعديلات
         </button>
         <button
-          onClick={onCopyFilters}
+          onClick={onCopy}
           className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
-          title="نسخ قائمة فلاتر هذه البطاقة فقط إلى الحافظة"
+          title="نسخ جميع فلاتر هذه البطاقة (الفلاتر، ترتيبها، إعداداتها، حد النتائج، وGPS)"
         >
           <Copy className="h-3 w-3" />
-          نسخ الفلاتر
+          نسخ جميع فلاتر البطاقة
         </button>
         <button
-          onClick={onPasteFilters}
+          onClick={onPaste}
           disabled={!hasFiltersClip}
           className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted disabled:opacity-40"
-          title="لصق الفلاتر المنسوخة هنا مع الإبقاء على الفلاتر المثبتة وتجاوز المتعارض"
+          title="لصق الفلاتر المنسوخة في هذه البطاقة (استبدال أو إضافة)"
         >
           <ClipboardPaste className="h-3 w-3" />
           لصق الفلاتر
         </button>
         <button
-          onClick={onCopyCard}
-          className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
-          title="نسخ محتوى البطاقة كاملاً (الاسم + الرمز + التفعيل + الفلاتر)"
+          onClick={onPublish}
+          disabled={dirty || isPublished}
+          className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-40"
+          title={dirty ? "احفظ التعديلات قبل النشر" : isPublished ? "لا توجد تغييرات جديدة للنشر" : "نشر النسخة المحفوظة"}
         >
-          <Copy className="h-3 w-3" />
-          نسخ البطاقة
-        </button>
-        <button
-          onClick={onPasteCard}
-          disabled={!hasCardClip}
-          className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 disabled:opacity-40"
-          title="استبدال هذه البطاقة بالمحتوى المنسوخ سابقاً"
-        >
-          <ClipboardPaste className="h-3 w-3" />
-          استبدال بالمنسوخة
+          نشر
         </button>
       </div>
 
