@@ -323,9 +323,25 @@ function readLocal(): ButtonFiltersState {
     const raw = window.localStorage.getItem(LOCAL_KEY);
     if (!raw) return defaultState();
     const p = JSON.parse(raw) as ButtonFiltersState;
-    // ensure all buttons exist
-    for (const id of BUTTON_IDS) {
+    // ensure all built-in buttons exist and migrate legacy shape
+    for (const id of BUILTIN_BUTTON_IDS) {
       if (!p.buttons[id]) p.buttons[id] = structuredClone(DEFAULT_BUTTONS[id]);
+      else {
+        const b = p.buttons[id];
+        if (!b.label) b.label = BUTTON_META[id].label;
+        if (!b.icon) b.icon = BUTTON_META[id].icon;
+        if (typeof b.builtin !== "boolean") b.builtin = true;
+      }
+    }
+    // migrate custom buttons missing new fields
+    for (const key of Object.keys(p.buttons)) {
+      const b = p.buttons[key];
+      if (!b.label) b.label = key;
+      if (!b.icon) b.icon = "🔘";
+      if (typeof b.builtin !== "boolean") b.builtin = BUILTIN_BUTTON_IDS.includes(key as BuiltinButtonId);
+    }
+    if (!Array.isArray(p.order) || p.order.length === 0) {
+      p.order = [...BUILTIN_BUTTON_IDS, ...Object.keys(p.buttons).filter((k) => !BUILTIN_BUTTON_IDS.includes(k as BuiltinButtonId))];
     }
     if (!Array.isArray(p.presets)) p.presets = [];
     return p;
