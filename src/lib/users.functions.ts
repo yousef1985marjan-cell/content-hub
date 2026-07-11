@@ -64,7 +64,7 @@ export const updateUserRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { userId: string; role: Role }) => {
     if (!data.userId) throw new Error("مستخدم غير محدد");
-    if (data.role !== "admin" && data.role !== "editor") throw new Error("صلاحية غير صالحة");
+    if (!ROLES.includes(data.role)) throw new Error("صلاحية غير صالحة");
     return data;
   })
   .handler(async ({ data, context }) => {
