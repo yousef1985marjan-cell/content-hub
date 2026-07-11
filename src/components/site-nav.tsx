@@ -14,12 +14,21 @@ const links = [
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const onAdmin = pathname.startsWith("/admin");
+  // Priority: on admin → dashboard logo first, then header. Otherwise header first, then app-default.
+  const logoIds = onAdmin ? ["dashboard", "header", "app-default"] : ["header", "app-default"];
+  const logoUrl = useFirstPublishedLogo(logoIds);
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <Link to="/" className="flex items-center gap-2 font-black text-lg">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <Heart className="h-5 w-5" />
+          <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary text-primary-foreground">
+            {logoUrl ? (
+              <img src={logoUrl} alt="شفاء" className="h-full w-full object-cover" />
+            ) : (
+              <Heart className="h-5 w-5" />
+            )}
           </span>
           <span>شفاء</span>
         </Link>
