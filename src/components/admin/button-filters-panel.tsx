@@ -19,7 +19,7 @@ import {
   BUTTON_META,
   DEFAULT_BUTTONS,
   allFilters,
-  allFilters,
+
   applyPresetToButton,
   buttonIcon,
   buttonLabel,
