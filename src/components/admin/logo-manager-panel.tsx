@@ -230,8 +230,25 @@ function LogoCardView({
         </button>
         <button
           onClick={() => {
+            const next = !card.published;
+            onChange({ published: next });
+            flash(next ? "تم نشر اللوكو" : "تم إلغاء النشر");
+          }}
+          disabled={!card.saved}
+          className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-bold disabled:opacity-40 ${
+            card.published
+              ? "bg-emerald-500 text-white hover:opacity-90"
+              : "border border-input bg-background hover:bg-muted"
+          }`}
+          title={card.published ? "إلغاء النشر" : "نشر اللوكو"}
+        >
+          {card.published ? <RadioTower className="h-3 w-3" /> : <Radio className="h-3 w-3" />}
+          {card.published ? "إلغاء النشر" : "نشر"}
+        </button>
+        <button
+          onClick={() => {
             if (!window.confirm("حذف اللوكو المحفوظ؟")) return;
-            onChange({ draft: "", saved: "" });
+            onChange({ draft: "", saved: "", published: false });
             flash("تم حذف اللوكو");
           }}
           disabled={!card.saved && !card.draft}
