@@ -1483,7 +1483,7 @@ function CustomFiltersManager({
                       </button>
                     )}
                     <button
-                      onClick={() => onDelete(f.id)}
+                      onClick={() => setPendingDeleteId(f.id)}
                       className="rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20"
                       title={isCustom ? "حذف" : "إخفاء الفلتر الأساسي"}
                     >
