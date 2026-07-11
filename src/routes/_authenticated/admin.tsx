@@ -17,7 +17,7 @@ import {
 } from "@/lib/content-store";
 import { translateSection } from "@/lib/translate.functions";
 import { useMemo, useState } from "react";
-import { Save, Plus, Trash2, Languages } from "lucide-react";
+import { Save, Plus, Trash2, Languages, LogOut } from "lucide-react";
 import { SettingsPanel } from "@/components/admin/settings-panel";
 import { ButtonFiltersPanel } from "@/components/admin/button-filters-panel";
 import { UsersPanel } from "@/components/admin/users-panel";
