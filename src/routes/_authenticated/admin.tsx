@@ -90,6 +90,16 @@ function Admin() {
         >
           🔐 معلومات المدير
         </button>
+        <button
+          onClick={() => setActiveTab("users")}
+          className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+            activeTab === "users"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-secondary"
+          }`}
+        >
+          👥 المستخدمون والصلاحيات
+        </button>
         {sections.map((s) => (
           <button
             key={s.key}
