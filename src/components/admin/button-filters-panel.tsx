@@ -297,15 +297,23 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     setState((s) => ({ ...s, filterOverrides: rest }));
   };
 
-  // Delete only custom filters (built-ins can't be deleted)
-  const deleteCustomFilter = (id: FilterId) => {
-    const meta = state.customFilters.find((f) => f.id === id);
-    if (!meta) {
-      alert("لا يمكن حذف فلتر أساسي — يمكنك إعادة تسميته فقط.");
-      return;
-    }
-    if (!confirm(`حذف الفلتر "${meta.label}"؟ سيُزال من جميع الأزرار والمجموعات.`)) return;
-    const nextCustom = state.customFilters.filter((f) => f.id !== id);
+  // Delete any filter — custom filters are removed; built-ins are hidden
+  const deleteAnyFilter = (id: FilterId) => {
+    const custom = state.customFilters.find((f) => f.id === id);
+    const label = custom?.label || getFilterMeta(id).label;
+    const isBuiltin = !custom;
+    const msg = isBuiltin
+      ? `إخفاء الفلتر الأساسي "${label}"؟ سيُزال من الأزرار والمجموعات ويختفي من القائمة (يمكن إظهاره لاحقاً).`
+      : `حذف الفلتر "${label}"؟ سيُزال من جميع الأزرار والمجموعات.`;
+    if (!confirm(msg)) return;
+
+    const nextCustom = custom
+      ? state.customFilters.filter((f) => f.id !== id)
+      : state.customFilters;
+    const nextHidden = isBuiltin
+      ? Array.from(new Set([...state.hiddenFilters, String(id)]))
+      : state.hiddenFilters;
+
     const nextButtons: Record<ButtonId, ButtonConfig> = {};
     for (const bid of Object.keys(state.buttons)) {
       const b = state.buttons[bid];
@@ -315,10 +323,22 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
       ...p,
       filters: p.filters.filter((f) => f.id !== id),
     }));
-    setCustomFilters(nextCustom);
-    setState((s) => ({ ...s, customFilters: nextCustom, buttons: nextButtons, presets: nextPresets }));
-    flash(`تم حذف الفلتر "${meta.label}"`);
+    if (custom) setCustomFilters(nextCustom);
+    setState((s) => ({
+      ...s,
+      customFilters: nextCustom,
+      hiddenFilters: nextHidden,
+      buttons: nextButtons,
+      presets: nextPresets,
+    }));
+    flash(isBuiltin ? `تم إخفاء "${label}"` : `تم حذف "${label}"`);
   };
+
+  const restoreHiddenFilter = (id: FilterId) => {
+    const nextHidden = state.hiddenFilters.filter((x) => x !== id);
+    setState((s) => ({ ...s, hiddenFilters: nextHidden }));
+  };
+
 
   const saveFiltersLibrary = async () => {
     await persist(state, "تم حفظ الفلاتر");
