@@ -536,8 +536,8 @@ function ItemEditor({
         </button>
       </div>
 
-      {/* language tabs */}
-      <div className="flex flex-wrap gap-1">
+      {/* language tabs + translate */}
+      <div className="flex flex-wrap items-center gap-1">
         {LANGS.map((l) => (
           <button
             key={l}
@@ -549,6 +549,15 @@ function ItemEditor({
             {LANG_LABELS[l]}
           </button>
         ))}
+        <button
+          onClick={runTranslate}
+          disabled={translating}
+          className="ms-auto inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[11px] font-bold text-accent-foreground hover:opacity-90 disabled:opacity-50"
+          title="ترجمة الاسم والوصف من العربية إلى باقي اللغات"
+        >
+          <Languages className="h-3 w-3" />
+          {translating ? "جاري الترجمة..." : "ترجمة إلى جميع اللغات"}
+        </button>
       </div>
 
       <div dir={isRTL ? "rtl" : "ltr"} className="grid gap-3 md:grid-cols-2">
