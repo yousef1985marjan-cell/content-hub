@@ -19,6 +19,7 @@ import { SettingsPanel } from "@/components/admin/settings-panel";
 import { PharmaciesPanel } from "@/components/admin/pharmacies-panel";
 import { MediaPanel } from "@/components/admin/media-panel";
 import { ButtonFiltersPanel } from "@/components/admin/button-filters-panel";
+import { UsersPanel } from "@/components/admin/users-panel";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "لوحة التحكم — منصات شفاء" }, { name: "robots", content: "noindex" }] }),
