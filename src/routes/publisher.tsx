@@ -150,7 +150,7 @@ function SocialTile({ item }: { item: PubItem }) {
 
 function StoreCard({ item }: { item: PubItem }) {
   const brand = resolveBrand(item);
-  const name = itemName(item) || (brand ? BRAND_META[brand].name : "تحميل");
+  const name = itemName(item) || (brand ? BRAND_META[brand].label : "تحميل");
   const desc = itemDesc(item) || (brand === "apple" ? "لأجهزة آيفون" : brand === "android" ? "لأجهزة أندرويد" : "متجر التطبيقات");
   const color = brand ? BRAND_META[brand]?.color : "var(--primary)";
   return (
