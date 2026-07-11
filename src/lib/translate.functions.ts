@@ -32,8 +32,8 @@ export const translateSection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => InputSchema.parse(data))
   .handler(async ({ data }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
 
     const results: Translated[] = [];
     for (const lang of data.targets) {
@@ -42,25 +42,26 @@ export const translateSection = createServerFn({ method: "POST" })
       const system = `You are a professional translator. Translate from Arabic to ${targetName}. Preserve line breaks. Keep URLs untouched. Reply with ONLY valid JSON matching the schema {"title": string, "content": string, "links": [{"id": string, "title": string}]}. Do not add commentary.`;
       const user = `Arabic title:\n${data.title}\n\nArabic content:\n${data.content}\n\nLinks to translate titles for (keep id exactly, translate title only):\n${linksJson}`;
 
-      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "gpt-4o-mini",
           messages: [
             { role: "system", content: system },
             { role: "user", content: user },
           ],
           response_format: { type: "json_object" },
+          temperature: 0.2,
         }),
       });
 
       if (!resp.ok) {
         const errorBody = await resp.text();
-        console.error(`Gateway request failed [${resp.status}]: ${errorBody}`);
+        console.error(`OpenAI request failed [${resp.status}]: ${errorBody}`);
         throw new Error(`Translation failed [${resp.status}]: ${errorBody}`);
       }
       const json = await resp.json();
