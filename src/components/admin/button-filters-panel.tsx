@@ -135,6 +135,25 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 
   const [filterMgrOpen, setFilterMgrOpen] = useState(false);
 
+  const FILTERS_BTN_LABEL_KEY = "shifa-filters-btn-label-v1";
+  const [filtersBtnLabel, setFiltersBtnLabel] = useState<string>(() => {
+    if (typeof window === "undefined") return "الفلاتر";
+    return window.localStorage.getItem(FILTERS_BTN_LABEL_KEY) || "الفلاتر";
+  });
+  const renameFiltersBtn = () => {
+    const next = prompt("اسم زر الفلاتر:", filtersBtnLabel);
+    if (!next) return;
+    const trimmed = next.trim();
+    if (!trimmed) return;
+    setFiltersBtnLabel(trimmed);
+    try {
+      window.localStorage.setItem(FILTERS_BTN_LABEL_KEY, trimmed);
+    } catch {
+      /* ignore */
+    }
+    flash(`تم تغيير اسم الزر إلى "${trimmed}"`);
+  };
+
   useEffect(() => {
     (async () => {
       setLoading(true);
