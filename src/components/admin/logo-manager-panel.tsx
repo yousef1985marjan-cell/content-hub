@@ -11,16 +11,28 @@ type LogoCard = {
   draft: string;
   /** if true, this logo is broadcast to the site section matching `id` */
   published: boolean;
+  /** display width in px */
+  width: number;
+  /** display height in px */
+  height: number;
 };
 
 type StoredCard = Omit<LogoCard, "draft">;
 
+const DEFAULT_SIZES: Record<string, { width: number; height: number }> = {
+  "app-default": { width: 96, height: 96 },
+  welcome: { width: 80, height: 80 },
+  header: { width: 36, height: 36 },
+  menu: { width: 40, height: 40 },
+  dashboard: { width: 50, height: 50 },
+};
+
 const DEFAULT_CARDS: StoredCard[] = [
-  { id: "app-default", label: "الصورة الافتراضية للتطبيق", saved: "", published: false },
-  { id: "welcome", label: "لوكو بطاقة الترحيب", saved: "", published: false },
-  { id: "header", label: "لوكو الهيدر", saved: "", published: false },
-  { id: "menu", label: "لوكو القائمة", saved: "", published: false },
-  { id: "dashboard", label: "لوكو لوحة التحكم", saved: "", published: false },
+  { id: "app-default", label: "الصورة الافتراضية للتطبيق", saved: "", published: false, ...DEFAULT_SIZES["app-default"] },
+  { id: "welcome", label: "لوكو بطاقة الترحيب", saved: "", published: false, ...DEFAULT_SIZES.welcome },
+  { id: "header", label: "لوكو الهيدر", saved: "", published: false, ...DEFAULT_SIZES.header },
+  { id: "menu", label: "لوكو القائمة", saved: "", published: false, ...DEFAULT_SIZES.menu },
+  { id: "dashboard", label: "لوكو لوحة التحكم", saved: "", published: false, ...DEFAULT_SIZES.dashboard },
 ];
 
 function readStore(): StoredCard[] {
@@ -30,12 +42,18 @@ function readStore(): StoredCard[] {
     if (!raw) return DEFAULT_CARDS;
     const parsed = JSON.parse(raw) as Partial<StoredCard>[];
     if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_CARDS;
-    return parsed.map((c) => ({
-      id: String(c.id ?? crypto.randomUUID()),
-      label: String(c.label ?? ""),
-      saved: String(c.saved ?? ""),
-      published: Boolean(c.published),
-    }));
+    return parsed.map((c) => {
+      const id = String(c.id ?? crypto.randomUUID());
+      const def = DEFAULT_SIZES[id] ?? { width: 40, height: 40 };
+      return {
+        id,
+        label: String(c.label ?? ""),
+        saved: String(c.saved ?? ""),
+        published: Boolean(c.published),
+        width: Number(c.width) > 0 ? Number(c.width) : def.width,
+        height: Number(c.height) > 0 ? Number(c.height) : def.height,
+      };
+    });
   } catch {
     return DEFAULT_CARDS;
   }
@@ -56,7 +74,16 @@ export function LogoManagerPanel({ flash }: { flash: (m: string) => void }) {
   );
 
   useEffect(() => {
-    writeStore(cards.map(({ id, label, saved, published }) => ({ id, label, saved, published })));
+    writeStore(
+      cards.map(({ id, label, saved, published, width, height }) => ({
+        id,
+        label,
+        saved,
+        published,
+        width,
+        height,
+      })),
+    );
   }, [cards]);
 
   const patch = (id: string, p: Partial<LogoCard>) =>
@@ -67,10 +94,11 @@ export function LogoManagerPanel({ flash }: { flash: (m: string) => void }) {
     if (!label) return;
     setCards((cs) => [
       ...cs,
-      { id: crypto.randomUUID(), label: label.trim(), saved: "", draft: "", published: false },
+      { id: crypto.randomUUID(), label: label.trim(), saved: "", draft: "", published: false, width: 40, height: 40 },
     ]);
     flash("تمت إضافة بطاقة جديدة");
   };
+
 
   const renameCard = (id: string, current: string) => {
     const next = window.prompt("اسم البطاقة:", current);
