@@ -213,9 +213,12 @@ export function makeApplied(id: FilterId): AppliedFilter {
   return s ? { id, settings: s } : { id };
 }
 
-export const DEFAULT_BUTTONS: Record<ButtonId, ButtonConfig> = {
+export const DEFAULT_BUTTONS: Record<BuiltinButtonId, ButtonConfig> = {
   nearby: {
     id: "nearby",
+    label: BUTTON_META.nearby.label,
+    icon: BUTTON_META.nearby.icon,
+    builtin: true,
     enabled: true,
     filters: [
       makeApplied("filter_time_auto"),
@@ -226,6 +229,9 @@ export const DEFAULT_BUTTONS: Record<ButtonId, ButtonConfig> = {
   },
   on_duty: {
     id: "on_duty",
+    label: BUTTON_META.on_duty.label,
+    icon: BUTTON_META.on_duty.icon,
+    builtin: true,
     enabled: true,
     filters: [
       makeApplied("filter_on_duty"),
@@ -236,6 +242,9 @@ export const DEFAULT_BUTTONS: Record<ButtonId, ButtonConfig> = {
   },
   open_now: {
     id: "open_now",
+    label: BUTTON_META.open_now.label,
+    icon: BUTTON_META.open_now.icon,
+    builtin: true,
     enabled: true,
     filters: [
       makeApplied("filter_open_now"),
@@ -245,6 +254,9 @@ export const DEFAULT_BUTTONS: Record<ButtonId, ButtonConfig> = {
   },
   all: {
     id: "all",
+    label: BUTTON_META.all.label,
+    icon: BUTTON_META.all.icon,
+    builtin: true,
     enabled: true,
     filters: [makeApplied("filter_sort_nearest"), makeApplied("filter_result_limit")],
   },
@@ -252,7 +264,8 @@ export const DEFAULT_BUTTONS: Record<ButtonId, ButtonConfig> = {
 
 export function defaultState(): ButtonFiltersState {
   return {
-    buttons: structuredClone(DEFAULT_BUTTONS),
+    buttons: structuredClone(DEFAULT_BUTTONS) as Record<ButtonId, ButtonConfig>,
+    order: [...BUILTIN_BUTTON_IDS],
     presets: [],
     updated_at: new Date().toISOString(),
   };
