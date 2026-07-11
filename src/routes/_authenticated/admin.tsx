@@ -1307,3 +1307,159 @@ function BrandPicker({
     </div>
   );
 }
+
+function AdminInfo({ flash }: { flash: (m: string) => void }) {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
+  const [createdAt, setCreatedAt] = useState<string>("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setEmail(data.user.email ?? "");
+        setUserId(data.user.id);
+        setCreatedAt(data.user.created_at ?? "");
+      }
+    });
+  }, []);
+
+  const changePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (newPassword.length < 6) {
+      setError("كلمة السر يجب أن تكون 6 أحرف على الأقل");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("كلمتا السر غير متطابقتين");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    setNewPassword("");
+    setConfirmPassword("");
+    flash("تم تحديث كلمة السر");
+  };
+
+  const sendReset = async () => {
+    if (!email) return;
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    flash("تم إرسال رابط الاسترجاع إلى بريدك");
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/auth" });
+  };
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-2xl border border-border bg-card p-6">
+        <h3 className="mb-4 text-lg font-black text-primary">معلومات الحساب</h3>
+        <div className="grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <label className="text-xs font-bold text-muted-foreground">البريد الإلكتروني</label>
+            <div className="mt-1 rounded-lg border border-input bg-muted/40 px-3 py-2 font-mono text-xs" dir="ltr">
+              {email || "—"}
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-bold text-muted-foreground">تاريخ الإنشاء</label>
+            <div className="mt-1 rounded-lg border border-input bg-muted/40 px-3 py-2 text-xs">
+              {createdAt ? new Date(createdAt).toLocaleString("ar") : "—"}
+            </div>
+          </div>
+          <div className="sm:col-span-2">
+            <label className="text-xs font-bold text-muted-foreground">معرّف المستخدم</label>
+            <div className="mt-1 truncate rounded-lg border border-input bg-muted/40 px-3 py-2 font-mono text-[10px]" dir="ltr">
+              {userId || "—"}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-6">
+        <h3 className="mb-4 text-lg font-black text-primary">تغيير كلمة السر</h3>
+        <form onSubmit={changePassword} className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-bold text-muted-foreground">كلمة السر الجديدة</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              minLength={6}
+              required
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-bold text-muted-foreground">تأكيد كلمة السر</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              minLength={6}
+              required
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          {error && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+              {error}
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          >
+            <Save className="h-4 w-4" /> {loading ? "جاري الحفظ..." : "حفظ كلمة السر"}
+          </button>
+        </form>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-6">
+        <h3 className="mb-2 text-lg font-black text-primary">استرجاع كلمة السر</h3>
+        <p className="mb-4 text-xs text-muted-foreground">
+          سيتم إرسال رابط استرجاع كلمة السر إلى بريدك الإلكتروني المسجّل.
+        </p>
+        <button
+          onClick={sendReset}
+          disabled={loading || !email}
+          className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-bold hover:bg-muted disabled:opacity-50"
+        >
+          {loading ? "جاري الإرسال..." : "إرسال رابط الاسترجاع إلى بريدي"}
+        </button>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-6">
+        <h3 className="mb-4 text-lg font-black text-primary">تسجيل الخروج</h3>
+        <button
+          onClick={signOut}
+          className="inline-flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm font-bold text-destructive hover:bg-destructive/20"
+        >
+          تسجيل الخروج
+        </button>
+      </section>
+    </div>
+  );
+}
