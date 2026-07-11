@@ -23,13 +23,6 @@ const DEFAULT_SIZES: Record<string, { width: number; height: number }> = {
   "app-default": { width: 96, height: 96 },
   welcome: { width: 80, height: 80 },
   header: { width: 36, height: 36 },
-  "header-home": { width: 36, height: 36 },
-  "header-about": { width: 36, height: 36 },
-  "header-publisher": { width: 36, height: 36 },
-  "header-privacy": { width: 36, height: 36 },
-  "header-terms": { width: 36, height: 36 },
-  "header-disclaimer": { width: 36, height: 36 },
-  "header-admin": { width: 36, height: 36 },
   menu: { width: 40, height: 40 },
   dashboard: { width: 50, height: 50 },
 };
@@ -37,28 +30,30 @@ const DEFAULT_SIZES: Record<string, { width: number; height: number }> = {
 const DEFAULT_CARDS: StoredCard[] = [
   { id: "app-default", label: "الصورة الافتراضية للتطبيق", saved: "", published: false, ...DEFAULT_SIZES["app-default"] },
   { id: "welcome", label: "لوكو بطاقة الترحيب", saved: "", published: false, ...DEFAULT_SIZES.welcome },
-  { id: "header", label: "لوكو الهيدر (افتراضي)", saved: "", published: false, ...DEFAULT_SIZES.header },
-  { id: "header-home", label: "لوكو هيدر — الصفحة الرئيسية", saved: "", published: false, ...DEFAULT_SIZES["header-home"] },
-  { id: "header-about", label: "لوكو هيدر — من نحن", saved: "", published: false, ...DEFAULT_SIZES["header-about"] },
-  { id: "header-publisher", label: "لوكو هيدر — منصات شفاء", saved: "", published: false, ...DEFAULT_SIZES["header-publisher"] },
-  { id: "header-privacy", label: "لوكو هيدر — سياسة الخصوصية", saved: "", published: false, ...DEFAULT_SIZES["header-privacy"] },
-  { id: "header-terms", label: "لوكو هيدر — الشروط والأحكام", saved: "", published: false, ...DEFAULT_SIZES["header-terms"] },
-  { id: "header-disclaimer", label: "لوكو هيدر — إخلاء المسؤولية", saved: "", published: false, ...DEFAULT_SIZES["header-disclaimer"] },
-  { id: "header-admin", label: "لوكو هيدر — لوحة التحكم", saved: "", published: false, ...DEFAULT_SIZES["header-admin"] },
+  { id: "header", label: "لوكو الهيدر (لكل الأقسام)", saved: "", published: false, ...DEFAULT_SIZES.header },
   { id: "menu", label: "لوكو القائمة", saved: "", published: false, ...DEFAULT_SIZES.menu },
   { id: "dashboard", label: "لوكو لوحة التحكم", saved: "", published: false, ...DEFAULT_SIZES.dashboard },
 ];
 
-// Merge stored cards with defaults so new default cards appear even for users
-// whose localStorage was seeded before these ids existed.
+// Remove obsolete per-page header cards from older versions and merge with defaults.
+const OBSOLETE_IDS = new Set([
+  "header-home",
+  "header-about",
+  "header-publisher",
+  "header-privacy",
+  "header-terms",
+  "header-disclaimer",
+  "header-admin",
+]);
+
 function mergeWithDefaults(stored: StoredCard[]): StoredCard[] {
-  const byId = new Map(stored.map((c) => [c.id, c]));
+  const filtered = stored.filter((c) => !OBSOLETE_IDS.has(c.id));
+  const byId = new Map(filtered.map((c) => [c.id, c]));
   const merged: StoredCard[] = [];
   for (const def of DEFAULT_CARDS) {
     merged.push(byId.get(def.id) ?? def);
     byId.delete(def.id);
   }
-  // append any custom cards the user added that aren't in defaults
   for (const extra of byId.values()) merged.push(extra);
   return merged;
 }
