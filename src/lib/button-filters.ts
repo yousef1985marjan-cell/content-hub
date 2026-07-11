@@ -70,6 +70,8 @@ export type FilterPreset = {
   created_at: string;
 };
 
+export type FilterOverride = { label?: string; description?: string };
+
 export type ButtonFiltersState = {
   buttons: Record<ButtonId, ButtonConfig>;
   /** display order — includes both built-in and custom button ids */
@@ -77,8 +79,11 @@ export type ButtonFiltersState = {
   presets: FilterPreset[];
   /** user-defined custom filters (id, label, description) */
   customFilters: FilterMeta[];
+  /** rename/description overrides for any filter (built-in or custom) */
+  filterOverrides: Record<string, FilterOverride>;
   updated_at: string;
 };
+
 
 
 export const BUTTON_META: Record<BuiltinButtonId, { label: string; icon: string }> = {
