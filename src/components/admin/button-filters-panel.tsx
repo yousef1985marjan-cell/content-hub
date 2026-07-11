@@ -379,7 +379,7 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
               : "bg-muted text-muted-foreground hover:bg-secondary"
           }`}
         >
-          الأزرار ({orderedIds.length})
+          الفلاتر ({orderedIds.length})
         </button>
         <button
           onClick={() => setTab("presets")}
@@ -392,14 +392,39 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
           المجموعات المحفوظة ({state.presets.length})
         </button>
         {tab === "buttons" && (
-          <button
-            onClick={addCustomButton}
-            className="ms-auto inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
-          >
-            <Plus className="h-3 w-3" /> زر جديد
-          </button>
+          <div className="ms-auto flex items-center gap-2">
+            <button
+              onClick={() => setFilterMgrOpen(true)}
+              className="inline-flex items-center gap-1 rounded-lg border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent-foreground hover:bg-accent/20"
+              title="إدارة الفلاتر المخصصة"
+            >
+              <Plus className="h-3 w-3" /> فلتر جديد
+              {state.customFilters.length > 0 && (
+                <span className="rounded-full bg-accent/30 px-1.5 text-[10px]">
+                  {state.customFilters.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={addCustomButton}
+              className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
+            >
+              <Plus className="h-3 w-3" /> زر جديد
+            </button>
+          </div>
         )}
       </div>
+
+      {filterMgrOpen && (
+        <CustomFiltersManager
+          filters={state.customFilters}
+          onAdd={addCustomFilter}
+          onRename={renameCustomFilter}
+          onDelete={deleteCustomFilter}
+          onClose={() => setFilterMgrOpen(false)}
+        />
+      )}
+
 
       {tab === "buttons" ? (
         <div className="grid gap-4 md:grid-cols-2">
