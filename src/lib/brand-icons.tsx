@@ -792,5 +792,67 @@ export function BrandIcon({ brand, ...props }: { brand: BrandKey } & P) {
       return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M12 2a10 10 0 0 0-6.6 2.5c2.5-.3 5.5 1.8 6.6 3 1.1-1.2 4.1-3.3 6.6-3A10 10 0 0 0 12 2zM4 6.3A10 10 0 0 0 6.6 20c-.4-2.7 1.4-7.7 4.3-11-1.5-1.7-4.4-3.7-6.9-2.7zm16 0c-2.5-1-5.4 1-6.9 2.7 2.9 3.3 4.7 8.3 4.3 11A10 10 0 0 0 20 6.3zM12 10.5c-2 2.2-4 6.3-4 8.7 0 1 1.5 1.7 4 1.7s4-.7 4-1.7c0-2.4-2-6.5-4-8.7z"/></svg>;
     case "playstation":
       return <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M9 2v18l4-1V6.5c0-1 .3-1.5 1-1.5s1 .7 1 2.3v4.4c2 .9 3.5 1.5 5 1.5.5 0 1-.1 1-.8 0-1.7-1.4-3-4.5-4.3C13 6.5 9.7 5.4 9 2zM3 15.8c0 1.4 1.2 2 3 1.4l3-1v-2l-3 1c-.5.2-.7 0-.7-.2 0-.4.5-.8 1.3-1.1L9 13V11l-4 1.4c-1.4.5-2 1.7-2 3.4zm18 .2c0-1-.5-1.6-1.8-2.2L15 12v2l4.5 1.6c.5.2.7.3.7.5s-.2.3-.7.3l-4.5-1.5v2l4 1.4c1.5.6 2.5.3 2.5-.7"/></svg>;
+    // ===== monochrome / line versions =====
+    case "threadsAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M17 11c-.5-2.5-2.5-4-5-4-2 0-3.5 1-4.5 2.5"/><path d="M8 15c1 1 2.5 1.5 4 1.5 3 0 5-1.7 5-4 0-2-1.5-3.5-4-3.5-3 0-5 1.5-5 3.5"/><path d="M20 12a8 8 0 1 1-8-8 8 8 0 0 1 8 8z"/></svg>;
+    case "wechatAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M8.5 4C4.9 4 2 6.4 2 9.4c0 1.6.9 3.1 2.4 4.1L4 15.2l2-1c.7.2 1.5.4 2.4.4"/><path d="M15 10.2c-3 0-5.5 2-5.5 4.4 0 2.5 2.5 4.5 5.5 4.5.6 0 1.2-.1 1.8-.3l1.7.9-.4-1.5c1.3-.8 2-2.2 2-3.6 0-2.4-2.5-4.4-5.1-4.4z"/><circle cx="6.5" cy="7.5" r=".6"/><circle cx="10.5" cy="7.5" r=".6"/><circle cx="13.5" cy="13.5" r=".5"/><circle cx="17" cy="13.5" r=".5"/></svg>;
+    case "lineAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M22 10.5c0-4.7-4.5-8.5-10-8.5S2 5.8 2 10.5c0 4.2 3.6 7.8 8.5 8.4.4.1.7.3.7.6l-.2 1.5c0 .3.3.8.9.5l5.5-3.3c2.2-1.4 4.6-3.6 4.6-7.7z"/><path d="M7 9v3.5h1.5M11 9v3.5M14 9v3.5l2 0M18 9v3.5l-1.7-3.5v3.5"/></svg>;
+    case "kakaoAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 3C6.5 3 2 6.5 2 10.8c0 2.8 1.9 5.3 4.7 6.7-.2.7-.8 2.7-.9 3.2-.1.6.2.6.5.4.2-.1 3-2 4.2-2.9.5.1 1 .1 1.5.1 5.5 0 10-3.5 10-7.7C22 6.5 17.5 3 12 3z"/></svg>;
+    case "viberAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2C7 2 3 5.5 3 10c0 2.3 1.1 4.5 3 6v4l3.5-2c.8.2 1.7.3 2.5.3 5 0 9-3.5 9-8.3S17 2 12 2z"/><path d="M8 8c0 3 2 6 5 7"/><path d="M14 8c1 0 2 1 2 2"/></svg>;
+    case "signalAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l4.9-1.4A10 10 0 1 0 12 2z"/></svg>;
+    case "skypeAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="9"/><path d="M8 14c.5 1.5 2 2.5 4 2.5s3.5-.8 3.5-2.3-1.5-1.8-3.5-2.2-3.5-.7-3.5-2.2S9.5 7.5 11.5 7.5s3.5 1 4 2.5"/></svg>;
+    case "zoomAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="7" width="14" height="10" rx="2"/><path d="m16 11 5-3v8l-5-3z"/></svg>;
+    case "teamsAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="7" width="10" height="10" rx="1"/><path d="M6 10h4M8 10v4"/><circle cx="17" cy="7" r="2"/><path d="M14 12h5a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2"/></svg>;
+    case "slackAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="10" y="2" width="4" height="12" rx="2"/><rect x="10" y="15" width="4" height="7" rx="2"/><rect x="2" y="10" width="12" height="4" rx="2"/><rect x="15" y="10" width="7" height="4" rx="2"/></svg>;
+    case "gmailAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 6 10 7 10-7"/></svg>;
+    case "outlookAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="4" width="12" height="16" rx="1"/><ellipse cx="8" cy="12" rx="3" ry="3.5"/><path d="M14 8h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-7"/></svg>;
+    case "quoraAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="11" r="9"/><path d="m16 18 3 4"/></svg>;
+    case "mastodonAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 14c0 3-2 5-5 5-3 0-4-1-4-1M4 14c0-6 0-9 3-10 2-.8 8-.8 10 0 3 1 3 4 3 10"/><path d="M8 10v4M16 10v4M8 10c0-1.5 1-2.5 2-2.5s2 1 2 2.5M16 10c0-1.5-1-2.5-2-2.5s-2 1-2 2.5"/></svg>;
+    case "blueskyAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M6 3c2 1 4 3 6 6 2-3 4-5 6-6 2 0 3 1.5 3 4 0 2-.5 3-1 4-.5.5-2 1-4 1 3 0 4 1 4 3s-2 5-5 5c-2 0-3-2-3-4 0 2-1 4-3 4-3 0-5-3-5-5s1-3 4-3c-2 0-3.5-.5-4-1-.5-1-1-2-1-4 0-2.5 1-4 3-4z"/></svg>;
+    case "threemaAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a10 10 0 0 0-9 14.5L2 22l5.5-1.4A10 10 0 1 0 12 2z"/><circle cx="8" cy="12" r=".8"/><circle cx="12" cy="12" r=".8"/><circle cx="16" cy="12" r=".8"/><path d="M8 10V8a4 4 0 0 1 8 0v2"/></svg>;
+    case "playstoreAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 3v18l14-9z"/><path d="m4 3 10 9-10 9"/></svg>;
+    case "appstoreAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="m7 16 5-8 5 8M9 14h6"/></svg>;
+    case "appgalleryAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 8v4a3 3 0 0 0 6 0V8"/></svg>;
+    case "galaxystoreAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="M15 10c0-1.5-1.5-2-3-2s-3 .5-3 2c0 3 6 1.5 6 4 0 1.5-1.5 2-3 2s-3-.5-3-2"/></svg>;
+    case "amazonAppstoreAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 17c5 3 11 3 16 0"/><path d="M6 19c4 2 8 2 12 1"/><path d="M9 12v-2a3 3 0 0 1 6 0v3c0 1.5-1 3-3 3s-3-1-3-2.5S10.5 11 15 11"/></svg>;
+    case "microsoftStoreAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>;
+    case "macAppstoreAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="m7 16 5-8 5 8M9 14h6"/></svg>;
+    case "huaweiAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 5c0 4 3 7 7 8-2 1-4 3-5 6h5V6"/><path d="M21 5c0 4-3 7-7 8 2 1 4 3 5 6h-5V6"/></svg>;
+    case "steamAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><circle cx="16" cy="9" r="2.5"/><circle cx="9" cy="15" r="2"/><path d="m11 14 4-3"/></svg>;
+    case "epicgamesAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="18" height="16" rx="2"/><path d="M8 7v10M8 7h6M8 12h5M8 17h6"/><path d="m14 19-2 3"/></svg>;
+    case "xboxAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="M6 5c2.5-.3 5 1.8 6 3 1-1.2 3.5-3.3 6-3M4 7c-.5 3 3 8 6 12M20 7c.5 3-3 8-6 12"/></svg>;
+    case "playstationAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M9 3v17l4-1V6c0-.8.5-1.3 1-1.3s1 .5 1 1.8v4.5c2 .9 4 1.5 5 1.3"/><path d="M3 16c0 1.4 1.2 2 3 1.4l3-1M15 14l6 2c.5.2.7.3.7.5s-.2.3-.7.3l-6.5-2"/></svg>;
+    case "androidAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 11a8 8 0 0 1 16 0v5H4z"/><path d="M6 4.5 7.5 7M18 4.5 16.5 7"/><circle cx="9" cy="11" r=".6"/><circle cx="15" cy="11" r=".6"/><path d="M6 16v3M18 16v3"/></svg>;
+    case "appleAlt":
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16.5 12.5c0-2.5 2-3.7 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.2 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3.1 2.5 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4a10.5 10.5 0 0 0 1.4-2.9"/><path d="M14.1 5.4a4.4 4.4 0 0 0 1-3.2 4.5 4.5 0 0 0-3 1.5 4.2 4.2 0 0 0-1 3.1 3.8 3.8 0 0 0 3-1.4z"/></svg>;
+
   }
 }
