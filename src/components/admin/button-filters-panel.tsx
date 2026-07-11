@@ -57,11 +57,14 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const offline = isOffline();
 
+  const [filterMgrOpen, setFilterMgrOpen] = useState(false);
+
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
         const s = await loadButtonFilters();
+        setCustomFilters(s.customFilters || []);
         setState(s);
         setSaved(s);
       } catch (e) {
@@ -71,6 +74,7 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const orderedIds = state.order;
 
