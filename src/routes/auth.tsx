@@ -122,7 +122,7 @@ function AuthPage() {
               />
             </div>
 
-            {mode === "signin" && (
+            {mode !== "forgot" && (
               <div>
                 <label className="mb-1 flex items-center gap-1 text-xs font-bold text-muted-foreground">
                   <Lock className="h-3 w-3" /> كلمة السر
