@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Save, Eye, EyeOff, Settings as SettingsIcon } from "lucide-react";
+import { Save, Eye, EyeOff, Settings as SettingsIcon, KeyRound, Trash2, RefreshCw } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useAppSettings } from "@/lib/app-settings";
+import { getAppSecretStatus, setAppSecret, deleteAppSecret } from "@/lib/app-secrets.functions";
 
 export function SettingsPanel({ flash }: { flash: (m: string) => void }) {
   const { settings, update, hydrated } = useAppSettings();
