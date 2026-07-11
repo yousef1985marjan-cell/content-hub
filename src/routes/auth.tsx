@@ -4,6 +4,7 @@ import { PageShell } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, LogIn, KeyRound, ArrowLeft, ShieldCheck } from "lucide-react";
 import { logSelfSignIn, logSelfPasswordResetRequest } from "@/lib/security-log.functions";
+import { sendPasswordResetEmail } from "@/lib/password-reset.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "تسجيل الدخول — لوحة التحكم" }, { name: "robots", content: "noindex" }] }),
@@ -95,16 +96,22 @@ function AuthPage() {
     setError(null);
     setNotice(null);
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await sendPasswordResetEmail({
+        data: {
+          email,
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      });
+      try { await logSelfPasswordResetRequest({ data: { email } }); } catch { /* ignore */ }
+      setNotice("إن كان البريد مسجّلاً، ستصلك رسالة تحتوي على رابط استرجاع كلمة السر.");
+    } catch (err) {
+      // Still show generic message to avoid leaking existence of the email
+      setNotice("إن كان البريد مسجّلاً، ستصلك رسالة تحتوي على رابط استرجاع كلمة السر.");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    try { await logSelfPasswordResetRequest({ data: { email } }); } catch { /* ignore */ }
-    setNotice("إن كان البريد مسجّلاً، ستصلك رسالة تحتوي على رابط استرجاع كلمة السر.");
   };
 
   const cancelMfa = async () => {
