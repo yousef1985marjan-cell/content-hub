@@ -714,9 +714,21 @@ function ButtonCard({
               مخصص
             </span>
           )}
-          {dirty && (
+          {dirty ? (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-              غير محفوظ
+              تعديلات غير محفوظة
+            </span>
+          ) : !everPublished ? (
+            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+              غير منشور
+            </span>
+          ) : isPublished ? (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+              منشور
+            </span>
+          ) : (
+            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-800">
+              محفوظ — بانتظار النشر
             </span>
           )}
         </h3>
