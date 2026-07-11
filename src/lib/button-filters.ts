@@ -373,9 +373,11 @@ export function defaultState(): ButtonFiltersState {
     buttons: structuredClone(DEFAULT_BUTTONS) as Record<ButtonId, ButtonConfig>,
     order: [...BUILTIN_BUTTON_IDS],
     presets: [],
+    customFilters: [],
     updated_at: new Date().toISOString(),
   };
 }
+
 
 /** Return filter ids in this list that conflict with the given id. */
 export function conflictsIn(filters: AppliedFilter[], id: FilterId): FilterId[] {
