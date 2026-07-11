@@ -184,6 +184,11 @@ function LogoCardView({
             غير محفوظ
           </span>
         )}
+        {card.published && !dirty && card.saved && (
+          <span className="absolute top-2 start-2 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">
+            منشور
+          </span>
+        )}
       </div>
 
       <input
