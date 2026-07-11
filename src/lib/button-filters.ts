@@ -70,6 +70,8 @@ export type FilterPreset = {
   created_at: string;
 };
 
+export type FilterOverride = { label?: string; description?: string };
+
 export type ButtonFiltersState = {
   buttons: Record<ButtonId, ButtonConfig>;
   /** display order — includes both built-in and custom button ids */
@@ -77,8 +79,11 @@ export type ButtonFiltersState = {
   presets: FilterPreset[];
   /** user-defined custom filters (id, label, description) */
   customFilters: FilterMeta[];
+  /** rename/description overrides for any filter (built-in or custom) */
+  filterOverrides: Record<string, FilterOverride>;
   updated_at: string;
 };
+
 
 
 export const BUTTON_META: Record<BuiltinButtonId, { label: string; icon: string }> = {
@@ -273,6 +278,7 @@ export const FILTER_LIBRARY: FilterMeta[] = [
 ];
 
 let CUSTOM_FILTERS: FilterMeta[] = [];
+let FILTER_OVERRIDES: Record<string, FilterOverride> = {};
 
 export function setCustomFilters(list: FilterMeta[]) {
   CUSTOM_FILTERS = list.slice();
@@ -280,21 +286,33 @@ export function setCustomFilters(list: FilterMeta[]) {
 export function getCustomFilters(): FilterMeta[] {
   return CUSTOM_FILTERS.slice();
 }
+export function setFilterOverrides(map: Record<string, FilterOverride>) {
+  FILTER_OVERRIDES = { ...map };
+}
+export function getFilterOverrides(): Record<string, FilterOverride> {
+  return { ...FILTER_OVERRIDES };
+}
+function applyOverride(f: FilterMeta): FilterMeta {
+  const o = FILTER_OVERRIDES[f.id];
+  if (!o) return f;
+  return { ...f, label: o.label ?? f.label, description: o.description ?? f.description };
+}
 export function allFilters(): FilterMeta[] {
-  return [...FILTER_LIBRARY, ...CUSTOM_FILTERS];
+  return [...FILTER_LIBRARY, ...CUSTOM_FILTERS].map(applyOverride);
 }
 
 export function getFilterMeta(id: FilterId): FilterMeta {
-  return (
+  const base =
     FILTER_LIBRARY.find((f) => f.id === id) ||
     CUSTOM_FILTERS.find((f) => f.id === id) || {
       id,
       label: id,
       description: "",
       hasSettings: false,
-    }
-  );
+    };
+  return applyOverride(base);
 }
+
 
 
 export const DEFAULT_HOURS: WeeklyHours = {
@@ -374,7 +392,9 @@ export function defaultState(): ButtonFiltersState {
     order: [...BUILTIN_BUTTON_IDS],
     presets: [],
     customFilters: [],
+    filterOverrides: {},
     updated_at: new Date().toISOString(),
+
   };
 }
 
@@ -453,6 +473,8 @@ function readLocal(): ButtonFiltersState {
     }
     if (!Array.isArray(p.presets)) p.presets = [];
     if (!Array.isArray(p.customFilters)) p.customFilters = [];
+    if (!p.filterOverrides || typeof p.filterOverrides !== "object") p.filterOverrides = {};
+
 
     return p;
   } catch {
@@ -492,7 +514,9 @@ export async function loadButtonFilters(): Promise<ButtonFiltersState> {
     order: data.order && data.order.length > 0 ? data.order : Object.keys(merged),
     presets: data.presets || [],
     customFilters: data.customFilters || [],
+    filterOverrides: data.filterOverrides || {},
     updated_at: data.updated_at || base.updated_at,
+
   };
 }
 

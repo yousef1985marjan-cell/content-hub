@@ -34,6 +34,8 @@ import {
   previewButton,
   saveButtonFilters,
   setCustomFilters,
+  setFilterOverrides,
+
   type AppliedFilter,
   type ButtonConfig,
   type ButtonFiltersState,
@@ -270,17 +272,38 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     flash(`تمت إضافة فلتر "${meta.label}" — لا تنسَ الحفظ`);
   };
 
-  const renameCustomFilter = (id: FilterId, label: string, description: string) => {
-    const nextCustom = state.customFilters.map((f) =>
-      f.id === id ? { ...f, label: label.trim() || f.label, description: description.trim() } : f,
-    );
-    setCustomFilters(nextCustom);
-    setState((s) => ({ ...s, customFilters: nextCustom }));
+  // Rename any filter (built-in via override, custom directly)
+  const renameFilter = (id: FilterId, label: string, description: string) => {
+    const isCustom = state.customFilters.some((f) => f.id === id);
+    if (isCustom) {
+      const nextCustom = state.customFilters.map((f) =>
+        f.id === id ? { ...f, label: label.trim() || f.label, description: description.trim() } : f,
+      );
+      setCustomFilters(nextCustom);
+      setState((s) => ({ ...s, customFilters: nextCustom }));
+    } else {
+      const nextOv = { ...state.filterOverrides, [id]: { label: label.trim(), description: description.trim() } };
+      setFilterOverrides(nextOv);
+      setState((s) => ({ ...s, filterOverrides: nextOv }));
+    }
   };
 
+  // Reset a built-in filter override to its original label/description
+  const resetFilterOverride = (id: FilterId) => {
+    if (!state.filterOverrides[id]) return;
+    const { [id]: _drop, ...rest } = state.filterOverrides;
+    void _drop;
+    setFilterOverrides(rest);
+    setState((s) => ({ ...s, filterOverrides: rest }));
+  };
+
+  // Delete only custom filters (built-ins can't be deleted)
   const deleteCustomFilter = (id: FilterId) => {
     const meta = state.customFilters.find((f) => f.id === id);
-    if (!meta) return;
+    if (!meta) {
+      alert("لا يمكن حذف فلتر أساسي — يمكنك إعادة تسميته فقط.");
+      return;
+    }
     if (!confirm(`حذف الفلتر "${meta.label}"؟ سيُزال من جميع الأزرار والمجموعات.`)) return;
     const nextCustom = state.customFilters.filter((f) => f.id !== id);
     const nextButtons: Record<ButtonId, ButtonConfig> = {};
@@ -296,6 +319,12 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     setState((s) => ({ ...s, customFilters: nextCustom, buttons: nextButtons, presets: nextPresets }));
     flash(`تم حذف الفلتر "${meta.label}"`);
   };
+
+  const saveFiltersLibrary = async () => {
+    await persist(state, "تم حفظ الفلاتر");
+  };
+
+
 
   if (loading) {
     return <p className="text-muted-foreground">جاري التحميل...</p>;
@@ -396,15 +425,14 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
             <button
               onClick={() => setFilterMgrOpen(true)}
               className="inline-flex items-center gap-1 rounded-lg border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent-foreground hover:bg-accent/20"
-              title="إدارة الفلاتر المخصصة"
+              title="إدارة جميع الفلاتر"
             >
-              <Plus className="h-3 w-3" /> فلتر جديد
-              {state.customFilters.length > 0 && (
-                <span className="rounded-full bg-accent/30 px-1.5 text-[10px]">
-                  {state.customFilters.length}
-                </span>
-              )}
+              <SettingsIcon className="h-3 w-3" /> الفلاتر
+              <span className="rounded-full bg-accent/30 px-1.5 text-[10px]">
+                {allFilters().length}
+              </span>
             </button>
+
             <button
               onClick={addCustomButton}
               className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
@@ -417,13 +445,18 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 
       {filterMgrOpen && (
         <CustomFiltersManager
-          filters={state.customFilters}
+          allList={allFilters()}
+          customIds={new Set(state.customFilters.map((f) => f.id))}
+          overrides={state.filterOverrides}
           onAdd={addCustomFilter}
-          onRename={renameCustomFilter}
+          onRename={renameFilter}
+          onResetOverride={resetFilterOverride}
           onDelete={deleteCustomFilter}
+          onSave={saveFiltersLibrary}
           onClose={() => setFilterMgrOpen(false)}
         />
       )}
+
 
 
       {tab === "buttons" ? (
@@ -1017,16 +1050,24 @@ function PresetCard({
 // ---------- Custom Filters Manager ----------
 
 function CustomFiltersManager({
-  filters,
+  allList,
+  customIds,
+  overrides,
   onAdd,
   onRename,
+  onResetOverride,
   onDelete,
+  onSave,
   onClose,
 }: {
-  filters: FilterMeta[];
+  allList: FilterMeta[];
+  customIds: Set<FilterId>;
+  overrides: Record<string, { label?: string; description?: string }>;
   onAdd: (label: string, description: string) => void;
   onRename: (id: FilterId, label: string, description: string) => void;
+  onResetOverride: (id: FilterId) => void;
   onDelete: (id: FilterId) => void;
+  onSave: () => void;
   onClose: () => void;
 }) {
   const [label, setLabel] = useState("");
@@ -1062,14 +1103,22 @@ function CustomFiltersManager({
         className="max-h-[85vh] w-full max-w-2xl overflow-auto rounded-2xl border border-border bg-card p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
-          <h3 className="text-lg font-black text-primary">إدارة الفلاتر المخصصة</h3>
-          <button
-            onClick={onClose}
-            className="rounded-md border border-input bg-background px-3 py-1 text-xs font-bold hover:bg-muted"
-          >
-            إغلاق
-          </button>
+        <div className="mb-4 flex items-center justify-between gap-2 border-b border-border pb-3">
+          <h3 className="text-lg font-black text-primary">الفلاتر ({allList.length})</h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onSave}
+              className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90"
+            >
+              <Save className="h-3 w-3" /> حفظ
+            </button>
+            <button
+              onClick={onClose}
+              className="rounded-md border border-input bg-background px-3 py-1 text-xs font-bold hover:bg-muted"
+            >
+              إغلاق
+            </button>
+          </div>
         </div>
 
         {/* Add form */}
@@ -1093,74 +1142,93 @@ function CustomFiltersManager({
             <button
               onClick={submit}
               disabled={!label.trim()}
-              className="inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-1.5 text-xs font-bold text-accent-foreground hover:opacity-90 disabled:opacity-50"
             >
               <Plus className="h-3 w-3" /> إضافة
             </button>
           </div>
         </div>
 
-        {/* List */}
-        {filters.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            لا توجد فلاتر مخصصة بعد.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {filters.map((f) => {
-              const isEditing = editingId === f.id;
-              return (
-                <li
-                  key={f.id}
-                  className="rounded-lg border border-border bg-background p-3"
-                >
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      <input
-                        value={editLabel}
-                        onChange={(e) => setEditLabel(e.target.value)}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                        placeholder="اسم الفلتر"
-                      />
-                      <input
-                        value={editDesc}
-                        onChange={(e) => setEditDesc(e.target.value)}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                        placeholder="الوصف"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={saveEdit}
-                          className="rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground hover:opacity-90"
-                        >
-                          حفظ
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          className="rounded-lg border border-input bg-background px-3 py-1 text-xs font-bold hover:bg-muted"
-                        >
-                          إلغاء
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-start gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold">{f.label}</p>
-                        {f.description && (
-                          <p className="text-xs text-muted-foreground">{f.description}</p>
-                        )}
-                        <p className="mt-0.5 text-[10px] text-muted-foreground/70" dir="ltr">
-                          {f.id}
-                        </p>
-                      </div>
+        {/* Unified list */}
+        <ul className="space-y-2">
+          {allList.map((f) => {
+            const isEditing = editingId === f.id;
+            const isCustom = customIds.has(f.id);
+            const isOverridden = !isCustom && !!overrides[f.id];
+            return (
+              <li
+                key={f.id}
+                className="rounded-lg border border-border bg-background p-3"
+              >
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <input
+                      value={editLabel}
+                      onChange={(e) => setEditLabel(e.target.value)}
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                      placeholder="اسم الفلتر"
+                    />
+                    <input
+                      value={editDesc}
+                      onChange={(e) => setEditDesc(e.target.value)}
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                      placeholder="الوصف"
+                    />
+                    <div className="flex gap-2">
                       <button
-                        onClick={() => startEdit(f)}
-                        className="rounded-md border border-input bg-background p-1.5 hover:bg-muted"
-                        title="تعديل الاسم"
+                        onClick={saveEdit}
+                        className="rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground hover:opacity-90"
                       >
-                        <Pencil className="h-3 w-3" />
+                        حفظ
                       </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="rounded-lg border border-input bg-background px-3 py-1 text-xs font-bold hover:bg-muted"
+                      >
+                        إلغاء
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 text-sm font-bold">
+                        {f.label}
+                        {isCustom && (
+                          <span className="rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">
+                            مخصص
+                          </span>
+                        )}
+                        {isOverridden && (
+                          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                            معدّل
+                          </span>
+                        )}
+                      </p>
+                      {f.description && (
+                        <p className="text-xs text-muted-foreground">{f.description}</p>
+                      )}
+                      <p className="mt-0.5 text-[10px] text-muted-foreground/70" dir="ltr">
+                        {f.id}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => startEdit(f)}
+                      className="rounded-md border border-input bg-background p-1.5 hover:bg-muted"
+                      title="تعديل الاسم"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                    {isOverridden && (
+                      <button
+                        onClick={() => onResetOverride(f.id)}
+                        className="rounded-md border border-input bg-background p-1.5 hover:bg-muted"
+                        title="إعادة الاسم الأصلي"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                      </button>
+                    )}
+                    {isCustom && (
                       <button
                         onClick={() => onDelete(f.id)}
                         className="rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20"
@@ -1168,14 +1236,15 @@ function CustomFiltersManager({
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </div>
   );
 }
+
