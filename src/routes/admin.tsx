@@ -824,12 +824,45 @@ function ExtraLinksEditor({
                   />
                 </label>
                 <div className="min-w-[200px] flex-1 space-y-2">
-                  <input
-                    value={l.title}
-                    onChange={(e) => patch(l.id, { title: e.target.value })}
-                    placeholder="اسم الرابط"
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
+                  <div className="flex items-start gap-2">
+                    <label className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-dashed border-input bg-muted/40 hover:border-primary cursor-pointer" title="أيقونة الرابط">
+                      {l.icon ? (
+                        <img src={l.icon} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          if (f.size > 500 * 1024) {
+                            alert("حجم الأيقونة يجب أن يكون أقل من 500 كيلوبايت");
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = () => patch(l.id, { icon: reader.result as string });
+                          reader.readAsDataURL(f);
+                        }}
+                      />
+                    </label>
+                    <input
+                      value={l.title}
+                      onChange={(e) => patch(l.id, { title: e.target.value })}
+                      placeholder="اسم الرابط"
+                      className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                  {l.icon && (
+                    <button
+                      onClick={() => patch(l.id, { icon: "" })}
+                      className="text-[10px] text-destructive hover:underline"
+                    >
+                      حذف الأيقونة
+                    </button>
+                  )}
                   <input
                     dir="ltr"
                     value={l.url}
@@ -837,8 +870,15 @@ function ExtraLinksEditor({
                     placeholder="https://..."
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-left text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                   />
+                  <textarea
+                    value={l.description ?? ""}
+                    onChange={(e) => patch(l.id, { description: e.target.value })}
+                    placeholder="وصف الرابط (اختياري)"
+                    rows={2}
+                    className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
                   <p className="text-[10px] text-muted-foreground">
-                    الصورة المصغّرة تُلتقط تلقائياً من صفحة الرابط، أو يمكنك رفع صورة مخصّصة.
+                    الصورة المصغّرة تُلتقط تلقائياً من واجهة الرابط، أو ارفع صورة مخصّصة.
                   </p>
                 </div>
                 <div className="flex flex-col gap-1">
