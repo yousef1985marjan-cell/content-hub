@@ -588,6 +588,7 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
                 canMoveUp={idx > 0}
                 canMoveDown={idx < orderedIds.length - 1}
                 hasFiltersClip={!!filtersClip}
+                allFiltersList={allFilters().filter((f) => !state.hiddenFilters.includes(String(f.id)))}
                 onChange={(c) => patchButton(id, c)}
                 onSave={() => saveButton(id)}
                 onCopy={() => copyFilters(id)}
