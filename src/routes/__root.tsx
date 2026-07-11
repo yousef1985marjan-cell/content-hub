@@ -117,6 +117,17 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    // Apply published brand identity + theme mode on client mount.
+    void import("../lib/brand-identity").then((m) => {
+      m.applyPublished();
+      const refresh = () => m.applyPublished();
+      window.addEventListener(m.BRAND_UPDATED_EVENT, refresh);
+      const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
+      mq?.addEventListener?.("change", m.applyThemeMode);
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
