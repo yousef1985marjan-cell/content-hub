@@ -90,9 +90,11 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     () =>
       Object.values(dirtyButtons).some(Boolean) ||
       JSON.stringify(state.order) !== JSON.stringify(saved.order) ||
-      JSON.stringify(state.presets) !== JSON.stringify(saved.presets),
-    [dirtyButtons, state.order, saved.order, state.presets, saved.presets],
+      JSON.stringify(state.presets) !== JSON.stringify(saved.presets) ||
+      JSON.stringify(state.customFilters) !== JSON.stringify(saved.customFilters),
+    [dirtyButtons, state.order, saved.order, state.presets, saved.presets, state.customFilters, saved.customFilters],
   );
+
 
   const patchButton = (id: ButtonId, next: ButtonConfig) => {
     setState((s) => ({ ...s, buttons: { ...s.buttons, [id]: next } }));
