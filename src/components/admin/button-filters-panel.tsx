@@ -1219,6 +1219,14 @@ function CustomFiltersManager({
                     >
                       <Pencil className="h-3 w-3" />
                     </button>
+                    <button
+                      onClick={onSave}
+                      className="rounded-md border border-primary/40 bg-primary/10 p-1.5 text-primary hover:bg-primary/20"
+                      title="حفظ التغييرات"
+                    >
+                      <Save className="h-3 w-3" />
+                    </button>
+
                     {isOverridden && (
                       <button
                         onClick={() => onResetOverride(f.id)}
