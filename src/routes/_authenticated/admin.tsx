@@ -13,11 +13,9 @@ import {
   type SectionLink,
 } from "@/lib/content-store";
 import { translateSection } from "@/lib/translate.functions";
-import { useMemo, useRef, useState } from "react";
-import { Save, Plus, Trash2, Languages, Upload, Image as ImageIcon, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Save, Plus, Trash2, Languages } from "lucide-react";
 import { SettingsPanel } from "@/components/admin/settings-panel";
-import { PharmaciesPanel } from "@/components/admin/pharmacies-panel";
-import { MediaPanel } from "@/components/admin/media-panel";
 import { ButtonFiltersPanel } from "@/components/admin/button-filters-panel";
 import { UsersPanel } from "@/components/admin/users-panel";
 
@@ -26,21 +24,18 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
 });
 
-type TabKey = SectionKey | "__logo" | "__settings" | "__pharmacies" | "__media" | "__button_filters" | "__users";
+type TabKey = SectionKey | "__settings" | "__button_filters" | "__users";
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: "__pharmacies", label: "الصيدليات" },
   { key: "__button_filters", label: "إدارة فلاتر الأزرار" },
-  { key: "__media", label: "الإعلام / الإعلانات" },
   ...SECTION_KEYS.map((k) => ({ key: k as TabKey, label: SECTION_LABELS[k] })),
-  { key: "__logo", label: "إدارة الشعار" },
   { key: "__users", label: "المستخدمون والصلاحيات" },
   { key: "__settings", label: "الإعدادات" },
 ];
 
 function Admin() {
   const { state, update, hydrated } = useContent();
-  const [activeTab, setActiveTab] = useState<TabKey>("__pharmacies");
+  const [activeTab, setActiveTab] = useState<TabKey>("__button_filters");
   const [flashMsg, setFlashMsg] = useState<string | null>(null);
   const flash = (m: string) => {
     setFlashMsg(m);
@@ -79,22 +74,12 @@ function Admin() {
         ))}
       </div>
 
-      {activeTab === "__pharmacies" ? (
-        <PharmaciesPanel />
-      ) : activeTab === "__button_filters" ? (
+      {activeTab === "__button_filters" ? (
         <ButtonFiltersPanel flash={flash} />
-      ) : activeTab === "__media" ? (
-        <MediaPanel flash={flash} />
       ) : activeTab === "__users" ? (
         <UsersPanel flash={flash} />
       ) : activeTab === "__settings" ? (
         <SettingsPanel flash={flash} />
-      ) : activeTab === "__logo" ? (
-        <LogoManager
-          logoUrl={state.logoUrl}
-          onChange={(logoUrl) => update({ logoUrl })}
-          flash={flash}
-        />
       ) : (
         <SectionEditor
           key={activeTab}
@@ -342,113 +327,3 @@ function LinksEditor({
   );
 }
 
-function LogoManager({
-  logoUrl,
-  onChange,
-  flash,
-}: {
-  logoUrl: string;
-  onChange: (url: string) => void;
-  flash: (m: string) => void;
-}) {
-  const [pending, setPending] = useState<string>("");
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const pick = (file: File) => {
-    if (file.size > 2 * 1024 * 1024) {
-      alert("حجم الصورة يجب أن يكون أقل من 2 ميغابايت");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => setPending(reader.result as string);
-    reader.readAsDataURL(file);
-  };
-
-  const save = () => {
-    if (!pending) return;
-    onChange(pending);
-    setPending("");
-    flash("تم حفظ الشعار");
-  };
-
-  const removeLogo = () => {
-    if (!confirm("حذف الشعار الحالي؟")) return;
-    onChange("");
-    setPending("");
-    flash("تم حذف الشعار");
-  };
-
-  const preview = pending || logoUrl;
-
-  return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="mb-1 text-lg font-black text-primary">إدارة الشعار</h2>
-        <p className="text-xs text-muted-foreground">الشعار صورة واحدة مشتركة لجميع اللغات.</p>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card p-6">
-        <label className="mb-2 block text-xs font-bold text-muted-foreground">معاينة الشعار</label>
-        <div className="mb-4 grid h-40 w-full place-items-center rounded-xl border-2 border-dashed border-border bg-muted/20">
-          {preview ? (
-            <img src={preview} alt="Logo" className="max-h-36 max-w-full object-contain" />
-          ) : (
-            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <ImageIcon className="h-8 w-8" />
-              <span className="text-xs">لا يوجد شعار</span>
-            </div>
-          )}
-        </div>
-
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) pick(f);
-            e.target.value = "";
-          }}
-        />
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90"
-          >
-            <Upload className="h-4 w-4" />
-            {logoUrl ? "استبدال الشعار الحالي" : "رفع شعار جديد"}
-          </button>
-          {pending && (
-            <>
-              <button
-                onClick={save}
-                className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-bold text-accent-foreground hover:opacity-90"
-              >
-                <Save className="h-4 w-4" />
-                حفظ التغيير
-              </button>
-              <button
-                onClick={() => setPending("")}
-                className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-bold hover:bg-muted"
-              >
-                <X className="h-4 w-4" />
-                إلغاء
-              </button>
-            </>
-          )}
-          {logoUrl && !pending && (
-            <button
-              onClick={removeLogo}
-              className="inline-flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm font-bold text-destructive hover:bg-destructive/20"
-            >
-              <Trash2 className="h-4 w-4" />
-              حذف الشعار الحالي
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
