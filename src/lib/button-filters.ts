@@ -376,8 +376,10 @@ export async function loadButtonFilters(): Promise<ButtonFiltersState> {
   const data = (json?.data ?? json) as Partial<ButtonFiltersState>;
   // merge with defaults
   const base = defaultState();
+  const merged = { ...base.buttons, ...(data.buttons || {}) };
   return {
-    buttons: { ...base.buttons, ...(data.buttons || {}) },
+    buttons: merged,
+    order: data.order && data.order.length > 0 ? data.order : Object.keys(merged),
     presets: data.presets || [],
     updated_at: data.updated_at || base.updated_at,
   };
