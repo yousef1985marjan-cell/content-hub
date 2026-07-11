@@ -75,8 +75,11 @@ export type ButtonFiltersState = {
   /** display order — includes both built-in and custom button ids */
   order: ButtonId[];
   presets: FilterPreset[];
+  /** user-defined custom filters (id, label, description) */
+  customFilters: FilterMeta[];
   updated_at: string;
 };
+
 
 export const BUTTON_META: Record<BuiltinButtonId, { label: string; icon: string }> = {
   nearby: { label: "بالقرب مني", icon: "📍" },
