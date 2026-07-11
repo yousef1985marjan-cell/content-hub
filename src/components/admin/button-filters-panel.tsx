@@ -308,18 +308,22 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 
         {previewOpen && (
           <div className="mt-3 space-y-1 rounded-lg border border-border/60 bg-muted/20 p-3 text-xs">
-            {BUTTON_IDS.map((id) => (
-              <p key={id}>
-                <span className="font-bold">{BUTTON_META[id].icon}</span>{" "}
-                {previewButton(state.buttons[id])}
-              </p>
-            ))}
+            {orderedIds.map((id) => {
+              const b = state.buttons[id];
+              if (!b) return null;
+              return (
+                <p key={id}>
+                  <span className="font-bold">{buttonIcon(b)}</span>{" "}
+                  {previewButton(b)}
+                </p>
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Sub-tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={() => setTab("buttons")}
           className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
@@ -328,7 +332,7 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
               : "bg-muted text-muted-foreground hover:bg-secondary"
           }`}
         >
-          الأزرار الأربعة
+          الأزرار ({orderedIds.length})
         </button>
         <button
           onClick={() => setTab("presets")}
@@ -340,25 +344,45 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
         >
           المجموعات المحفوظة ({state.presets.length})
         </button>
+        {tab === "buttons" && (
+          <button
+            onClick={addCustomButton}
+            className="ms-auto inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
+          >
+            <Plus className="h-3 w-3" /> زر جديد
+          </button>
+        )}
       </div>
 
       {tab === "buttons" ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {BUTTON_IDS.map((id) => (
-            <ButtonCard
-              key={id}
-              cfg={state.buttons[id]}
-              dirty={dirtyButtons[id]}
-              onChange={(c) => patchButton(id, c)}
-              onSave={() => saveButton(id)}
-              onReset={() => resetButton(id)}
-              onSaveAsPreset={() => saveAsPreset(id)}
-            />
-          ))}
+          {orderedIds.map((id, idx) => {
+            const cfg = state.buttons[id];
+            if (!cfg) return null;
+            return (
+              <ButtonCard
+                key={id}
+                cfg={cfg}
+                dirty={!!dirtyButtons[id]}
+                canMoveUp={idx > 0}
+                canMoveDown={idx < orderedIds.length - 1}
+                onChange={(c) => patchButton(id, c)}
+                onSave={() => saveButton(id)}
+                onReset={() => resetButton(id)}
+                onSaveAsPreset={() => saveAsPreset(id)}
+                onRename={() => renameButton(id)}
+                onDelete={() => deleteButton(id)}
+                onMoveUp={() => moveButton(id, -1)}
+                onMoveDown={() => moveButton(id, 1)}
+              />
+            );
+          })}
         </div>
       ) : (
         <PresetsList
           presets={state.presets}
+          buttons={state.buttons}
+          order={orderedIds}
           onApply={applyPreset}
           onRename={renamePreset}
           onEdit={editPreset}
