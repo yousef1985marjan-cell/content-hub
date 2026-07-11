@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Heart, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useFirstPublishedLogo } from "@/lib/use-published-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const links = [
   { to: "/about", label: "من نحن" },
@@ -54,7 +55,12 @@ export function SiteNav() {
           >
             لوحة التحكم
           </Link>
+          <ThemeToggle compact />
         </nav>
+
+        <div className="lg:hidden">
+          <ThemeToggle compact />
+        </div>
 
         <button
           onClick={() => setOpen((v) => !v)}
