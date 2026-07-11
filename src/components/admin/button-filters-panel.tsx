@@ -1264,23 +1264,45 @@ function CustomFiltersManager({
                         <RotateCcw className="h-3 w-3" />
                       </button>
                     )}
-                    {isCustom && (
-                      <button
-                        onClick={() => onDelete(f.id)}
-                        className="rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20"
-                        title="حذف"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => onDelete(f.id)}
+                      className="rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20"
+                      title={isCustom ? "حذف" : "إخفاء الفلتر الأساسي"}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
                   </div>
                 )}
               </li>
             );
           })}
         </ul>
+
+        {hiddenIds.length > 0 && (
+          <div className="mt-4 rounded-xl border border-border bg-muted/10 p-3">
+            <h4 className="mb-2 text-sm font-bold text-muted-foreground">
+              فلاتر مخفية ({hiddenIds.length})
+            </h4>
+            <ul className="space-y-1">
+              {hiddenIds.map((id) => (
+                <li key={id} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="truncate" dir="ltr">
+                    {id}
+                  </span>
+                  <button
+                    onClick={() => onRestore(id)}
+                    className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-[11px] font-bold hover:bg-muted"
+                  >
+                    <RotateCcw className="h-3 w-3" /> استعادة
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
 
