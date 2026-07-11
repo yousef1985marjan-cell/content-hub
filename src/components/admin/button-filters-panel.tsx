@@ -582,10 +582,14 @@ function ButtonCard({
   dirty,
   canMoveUp,
   canMoveDown,
+  hasFiltersClip,
+  hasCardClip,
   onChange,
   onSave,
-  onReset,
-  onSaveAsPreset,
+  onCopyFilters,
+  onPasteFilters,
+  onCopyCard,
+  onPasteCard,
   onRename,
   onDelete,
   onMoveUp,
@@ -595,10 +599,14 @@ function ButtonCard({
   dirty: boolean;
   canMoveUp: boolean;
   canMoveDown: boolean;
+  hasFiltersClip: boolean;
+  hasCardClip: boolean;
   onChange: (c: ButtonConfig) => void;
   onSave: () => void;
-  onReset: () => void;
-  onSaveAsPreset: () => void;
+  onCopyFilters: () => void;
+  onPasteFilters: () => void;
+  onCopyCard: () => void;
+  onPasteCard: () => void;
   onRename: () => void;
   onDelete: () => void;
   onMoveUp: () => void;
@@ -608,6 +616,7 @@ function ButtonCard({
   const [openSettings, setOpenSettings] = useState<string | null>(null);
 
   const used = new Set(cfg.filters.map((f) => f.id));
+
   const available = allFilters().filter((f) => !used.has(f.id));
 
 
