@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Save,
   Trash2,
@@ -389,10 +389,6 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     const custom = state.customFilters.find((f) => f.id === id);
     const label = custom?.label || getFilterMeta(id).label;
     const isBuiltin = !custom;
-    const msg = isBuiltin
-      ? `إخفاء الفلتر الأساسي "${label}"؟ سيُزال من الأزرار والمجموعات ويختفي من القائمة (يمكن إظهاره لاحقاً).`
-      : `حذف الفلتر "${label}"؟ سيُزال من جميع الأزرار والمجموعات.`;
-    if (!confirm(msg)) return;
 
     const nextCustom = custom
       ? state.customFilters.filter((f) => f.id !== id)
@@ -617,6 +613,60 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
   );
 }
 
+function ConfirmDialog({
+  open,
+  title,
+  children,
+  confirmLabel = "تأكيد",
+  cancelLabel = "إلغاء",
+  variant = "danger",
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  title: string;
+  children: ReactNode;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  variant?: "danger" | "warning";
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h4 className="mb-2 text-base font-black text-primary">{title}</h4>
+        <div className="mb-4 text-sm leading-relaxed text-foreground">{children}</div>
+        <div className="flex flex-wrap justify-end gap-2">
+          <button
+            onClick={onCancel}
+            className="rounded-lg border border-input bg-background px-4 py-2 text-xs font-bold hover:bg-muted"
+          >
+            {cancelLabel}
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`rounded-lg px-4 py-2 text-xs font-bold text-white ${
+              variant === "danger"
+                ? "bg-destructive hover:bg-destructive/90"
+                : "bg-amber-600 hover:bg-amber-700"
+            }`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Button Card ----------
 
 function ButtonCard({
@@ -658,6 +708,7 @@ function ButtonCard({
 }) {
   const [addFid, setAddFid] = useState<FilterId | "">("");
   const [openSettings, setOpenSettings] = useState<string | null>(null);
+  const [pendingRemove, setPendingRemove] = useState<FilterId | null>(null);
 
   const used = new Set(cfg.filters.map((f) => f.id));
 
@@ -678,8 +729,13 @@ function ButtonCard({
       alert(`الفلتر "${fm.label}" مثبت لهذا الزر ولا يمكن إزالته.`);
       return;
     }
-    if (!window.confirm(`هل أنت متأكد بأنك ستحذف فلتر "${fm.label}" من هذه البطاقة؟`)) return;
-    onChange({ ...cfg, filters: cfg.filters.filter((f) => f.id !== fid) });
+    setPendingRemove(fid);
+  };
+
+  const doRemove = () => {
+    if (!pendingRemove) return;
+    onChange({ ...cfg, filters: cfg.filters.filter((f) => f.id !== pendingRemove) });
+    setPendingRemove(null);
   };
 
   const add = () => {
@@ -923,7 +979,19 @@ function ButtonCard({
         </button>
       </div>
 
-
+      {pendingRemove && (
+        <ConfirmDialog
+          open
+          title="تأكيد الحذف"
+          confirmLabel="حذف"
+          cancelLabel="إلغاء"
+          variant="danger"
+          onConfirm={doRemove}
+          onCancel={() => setPendingRemove(null)}
+        >
+          هل أنت متأكد بأنك ستحذف فلتر &quot;{getFilterMeta(pendingRemove).label}&quot; من هذه البطاقة؟
+        </ConfirmDialog>
+      )}
     </div>
   );
 }
@@ -1237,6 +1305,7 @@ function CustomFiltersManager({
   const [editingId, setEditingId] = useState<FilterId | null>(null);
   const [editLabel, setEditLabel] = useState("");
   const [editDesc, setEditDesc] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState<FilterId | null>(null);
 
   const submit = () => {
     if (!label.trim()) return;
@@ -1255,6 +1324,17 @@ function CustomFiltersManager({
     if (editingId) onRename(editingId, editLabel, editDesc);
     setEditingId(null);
   };
+
+  const doDelete = () => {
+    if (!pendingDeleteId) return;
+    onDelete(pendingDeleteId);
+    setPendingDeleteId(null);
+  };
+
+  const pendingFilter = pendingDeleteId
+    ? allList.find((f) => f.id === pendingDeleteId)
+    : null;
+  const pendingIsCustom = pendingFilter ? customIds.has(pendingFilter.id) : false;
 
   return (
     <div
@@ -1399,7 +1479,7 @@ function CustomFiltersManager({
                       </button>
                     )}
                     <button
-                      onClick={() => onDelete(f.id)}
+                      onClick={() => setPendingDeleteId(f.id)}
                       className="rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20"
                       title={isCustom ? "حذف" : "إخفاء الفلتر الأساسي"}
                     >
@@ -1434,9 +1514,26 @@ function CustomFiltersManager({
             </ul>
           </div>
         )}
+      {pendingFilter && (
+        <ConfirmDialog
+          open
+          title={pendingIsCustom ? "تأكيد حذف الفلتر" : "تأكيد إخفاء الفلتر الأساسي"}
+          confirmLabel={pendingIsCustom ? "حذف" : "إخفاء"}
+          cancelLabel="إلغاء"
+          variant="danger"
+          onConfirm={doDelete}
+          onCancel={() => setPendingDeleteId(null)}
+        >
+          {pendingIsCustom
+            ? `حذف الفلتر "${pendingFilter.label}"؟ سيُزال من جميع الأزرار والمجموعات.`
+            : `إخفاء الفلتر الأساسي "${pendingFilter.label}"؟ سيُزال من الأزرار والمجموعات ويختفي من القائمة (يمكن إظهاره لاحقاً).`}
+        </ConfirmDialog>
+      )}
       </div>
     </div>
   );
 }
+
+
 
 
