@@ -12,7 +12,17 @@ export type FilterId =
   | "filter_result_limit"
   | "filter_wheelchair"
   | "filter_open_weekend"
-  | "filter_open_late";
+  | "filter_open_late"
+  | "filter_favorites"
+  | "filter_24h"
+  | "filter_night_duty"
+  | "filter_delivery"
+  | "filter_parking"
+  | "filter_arabic_speaker"
+  | "filter_state_only"
+  | "filter_search_text"
+  | "filter_min_rating"
+  | "filter_sort_alpha";
 
 /** Built-in button ids kept for sticky/conflict rules; custom buttons use uuid strings. */
 export type BuiltinButtonId = "nearby" | "on_duty" | "open_now" | "all";
