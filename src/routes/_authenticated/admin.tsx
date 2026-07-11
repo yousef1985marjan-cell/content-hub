@@ -18,16 +18,18 @@ import { Save, Plus, Trash2, Languages } from "lucide-react";
 import { SettingsPanel } from "@/components/admin/settings-panel";
 import { ButtonFiltersPanel } from "@/components/admin/button-filters-panel";
 import { UsersPanel } from "@/components/admin/users-panel";
+import { LogoManagerPanel } from "@/components/admin/logo-manager-panel";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "لوحة التحكم — منصات شفاء" }, { name: "robots", content: "noindex" }] }),
   component: Admin,
 });
 
-type TabKey = SectionKey | "__settings" | "__button_filters" | "__users";
+type TabKey = SectionKey | "__settings" | "__button_filters" | "__users" | "__logos";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "__button_filters", label: "إدارة فلاتر الأزرار" },
+  { key: "__logos", label: "إدارة اللوكو" },
   ...SECTION_KEYS.map((k) => ({ key: k as TabKey, label: SECTION_LABELS[k] })),
   { key: "__users", label: "المستخدمون والصلاحيات" },
   { key: "__settings", label: "الإعدادات" },
