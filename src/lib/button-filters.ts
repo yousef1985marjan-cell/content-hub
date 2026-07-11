@@ -392,7 +392,9 @@ export function defaultState(): ButtonFiltersState {
     order: [...BUILTIN_BUTTON_IDS],
     presets: [],
     customFilters: [],
+    filterOverrides: {},
     updated_at: new Date().toISOString(),
+
   };
 }
 
