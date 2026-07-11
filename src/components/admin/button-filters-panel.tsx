@@ -797,12 +797,16 @@ function HoursEditor({
 
 function PresetsList({
   presets,
+  buttons,
+  order,
   onApply,
   onRename,
   onEdit,
   onDelete,
 }: {
   presets: FilterPreset[];
+  buttons: Record<ButtonId, ButtonConfig>;
+  order: ButtonId[];
   onApply: (p: FilterPreset, target: ButtonId | "__all") => void;
   onRename: (p: FilterPreset) => void;
   onEdit: (p: FilterPreset) => void;
@@ -821,6 +825,8 @@ function PresetsList({
         <PresetCard
           key={p.id}
           preset={p}
+          buttons={buttons}
+          order={order}
           onApply={onApply}
           onRename={onRename}
           onEdit={onEdit}
