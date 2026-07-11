@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_secrets: {
+        Row: {
+          name: string
+          updated_at: string
+          updated_by: string | null
+          value: string
+        }
+        Insert: {
+          name: string
+          updated_at?: string
+          updated_by?: string | null
+          value: string
+        }
+        Update: {
+          name?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
