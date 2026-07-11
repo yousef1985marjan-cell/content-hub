@@ -455,16 +455,20 @@ function ItemEditor({
   onChange,
   onCancel,
   onSave,
+  flash,
 }: {
   groupKey: PubGroupKey;
   value: PubItem;
   onChange: (v: PubItem) => void;
   onCancel: () => void;
   onSave: (mode: "changes" | "draft" | "publish") => void;
+  flash: Flash;
 }) {
   const [lang, setLang] = useState<Lang>("ar");
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [brandQuery, setBrandQuery] = useState("");
+  const [translating, setTranslating] = useState(false);
+  const doTranslate = useServerFn(translateSection);
   const imgRef = useRef<HTMLInputElement>(null);
   const thumbRef = useRef<HTMLInputElement>(null);
 
@@ -472,6 +476,40 @@ function ItemEditor({
   const patch = (p: Partial<PubItem>) => onChange({ ...value, ...p });
   const patchName = (v: string) => patch({ name: { ...value.name, [lang]: v } });
   const patchDesc = (v: string) => patch({ description: { ...value.description, [lang]: v } });
+
+  const runTranslate = async () => {
+    const arName = value.name.ar?.trim() || "";
+    const arDesc = value.description.ar?.trim() || "";
+    if (!arName && !arDesc) {
+      flash("أدخل الاسم أو الوصف بالعربية أولاً");
+      return;
+    }
+    setTranslating(true);
+    try {
+      const targets = LANGS.filter((l) => l !== "ar");
+      const res = await doTranslate({
+        data: {
+          title: arName,
+          content: arDesc,
+          links: [],
+          targets: targets as unknown as string[],
+        },
+      });
+      const nextName = { ...value.name };
+      const nextDesc = { ...value.description };
+      for (const r of res.results) {
+        const l = r.lang as Lang;
+        if (r.title) nextName[l] = r.title;
+        if (r.content) nextDesc[l] = r.content;
+      }
+      onChange({ ...value, name: nextName, description: nextDesc });
+      flash("تمت الترجمة — راجع ثم احفظ");
+    } catch (e) {
+      flash((e as Error).message || "فشلت الترجمة");
+    }
+    setTranslating(false);
+  };
+
 
   const filteredBrands = useMemo(() => {
     const q = brandQuery.trim().toLowerCase();
