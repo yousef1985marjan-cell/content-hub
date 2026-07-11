@@ -387,6 +387,11 @@ function PlatformsEditor({
                         {it.badge}
                       </span>
                     )}
+                    {(it.extraLinks?.length ?? 0) > 0 && (
+                      <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">
+                        {it.extraLinks!.length} روابط
+                      </span>
+                    )}
                   </div>
                   <p className="truncate text-[11px] text-muted-foreground" dir="ltr">
                     {it.url}
