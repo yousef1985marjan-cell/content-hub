@@ -18,16 +18,18 @@ import { Save, Plus, Trash2, Languages, Upload, Image as ImageIcon, X } from "lu
 import { SettingsPanel } from "@/components/admin/settings-panel";
 import { PharmaciesPanel } from "@/components/admin/pharmacies-panel";
 import { MediaPanel } from "@/components/admin/media-panel";
+import { ButtonFiltersPanel } from "@/components/admin/button-filters-panel";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "لوحة التحكم — منصات شفاء" }, { name: "robots", content: "noindex" }] }),
   component: Admin,
 });
 
-type TabKey = SectionKey | "__logo" | "__settings" | "__pharmacies" | "__media";
+type TabKey = SectionKey | "__logo" | "__settings" | "__pharmacies" | "__media" | "__button_filters";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "__pharmacies", label: "الصيدليات" },
+  { key: "__button_filters", label: "إدارة فلاتر الأزرار" },
   { key: "__media", label: "الإعلام / الإعلانات" },
   ...SECTION_KEYS.map((k) => ({ key: k as TabKey, label: SECTION_LABELS[k] })),
   { key: "__logo", label: "إدارة الشعار" },
