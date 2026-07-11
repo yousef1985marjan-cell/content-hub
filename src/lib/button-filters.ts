@@ -41,6 +41,9 @@ export type AppliedFilter = {
 
 export type ButtonConfig = {
   id: ButtonId;
+  label: string;
+  icon: string;
+  builtin: boolean;
   enabled: boolean;
   filters: AppliedFilter[];
 };
@@ -55,18 +58,42 @@ export type FilterPreset = {
 
 export type ButtonFiltersState = {
   buttons: Record<ButtonId, ButtonConfig>;
+  /** display order — includes both built-in and custom button ids */
+  order: ButtonId[];
   presets: FilterPreset[];
   updated_at: string;
 };
 
-export const BUTTON_META: Record<ButtonId, { label: string; icon: string }> = {
+export const BUTTON_META: Record<BuiltinButtonId, { label: string; icon: string }> = {
   nearby: { label: "بالقرب مني", icon: "📍" },
   on_duty: { label: "الصيدليات المناوبة", icon: "🌙" },
   open_now: { label: "مفتوحة الآن", icon: "🟢" },
   all: { label: "جميع الصيدليات", icon: "📋" },
 };
 
-export const BUTTON_IDS: ButtonId[] = ["nearby", "on_duty", "open_now", "all"];
+export const BUILTIN_BUTTON_IDS: BuiltinButtonId[] = ["nearby", "on_duty", "open_now", "all"];
+/** @deprecated use state.order — kept for compatibility */
+export const BUTTON_IDS: BuiltinButtonId[] = BUILTIN_BUTTON_IDS;
+
+export function buttonLabel(cfg: ButtonConfig): string {
+  return cfg.label || (cfg.builtin ? BUTTON_META[cfg.id as BuiltinButtonId]?.label : cfg.id) || cfg.id;
+}
+export function buttonIcon(cfg: ButtonConfig): string {
+  return cfg.icon || (cfg.builtin ? BUTTON_META[cfg.id as BuiltinButtonId]?.icon : "🔘") || "🔘";
+}
+
+export function createCustomButton(label: string, icon: string): ButtonConfig {
+  return {
+    id: (typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `btn_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`),
+    label: label.trim() || "زر جديد",
+    icon: icon.trim() || "🔘",
+    builtin: false,
+    enabled: true,
+    filters: [makeApplied("filter_result_limit")],
+  };
+}
 
 export type FilterMeta = {
   id: FilterId;
