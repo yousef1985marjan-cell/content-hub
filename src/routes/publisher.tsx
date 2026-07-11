@@ -193,10 +193,88 @@ function Page() {
           </Card>
         )}
 
+        {visible
+          .filter((p) => (p.extraLinks?.length ?? 0) > 0)
+          .map((p) => (
+            <ExtraLinksCard key={`extra-${p.id}`} platform={p} />
+          ))}
+
         {visible.length === 0 && (
           <p className="text-center text-muted-foreground">لم تُضف منصات بعد.</p>
         )}
       </div>
     </PageShell>
+  );
+}
+
+function autoThumb(url: string): string {
+  if (!url || !/^https?:\/\//i.test(url)) return "";
+  return `https://image.thum.io/get/width/600/crop/400/${url}`;
+}
+
+function ExtraLinkTile({ link }: { link: ExtraLink }) {
+  const thumb = link.thumbnail || autoThumb(link.url);
+  return (
+    <a
+      href={link.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-background/60 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/30"
+    >
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
+        {thumb ? (
+          <img
+            src={thumb}
+            alt={link.title}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={(e) => {
+              const el = e.currentTarget as HTMLImageElement;
+              el.style.display = "none";
+            }}
+          />
+        ) : (
+          <div className="grid h-full w-full place-items-center text-muted-foreground">
+            <ExternalLink className="h-6 w-6" />
+          </div>
+        )}
+      </div>
+      <div className="flex items-center justify-between gap-2 p-3">
+        <div className="min-w-0 text-right">
+          <div className="truncate text-sm font-black text-foreground">{link.title}</div>
+          <div className="truncate text-[11px] text-muted-foreground" dir="ltr">
+            {link.url.replace(/^https?:\/\//, "")}
+          </div>
+        </div>
+        <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+      </div>
+    </a>
+  );
+}
+
+function ExtraLinksCard({ platform }: { platform: PlatformLink }) {
+  const brand = (platform.brand as BrandKey) || detectBrand(platform.url);
+  return (
+    <section
+      className="rounded-3xl border border-border/60 bg-card p-6 sm:p-8"
+      style={{ boxShadow: "var(--shadow-card)" }}
+    >
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <h2 className="text-right text-2xl font-black text-primary">{platform.name}</h2>
+        {brand && (
+          <div
+            className="grid h-10 w-10 place-items-center rounded-xl text-white"
+            style={{ background: platform.accent || BRAND_META[brand].color }}
+          >
+            <BrandIcon brand={brand} className="h-5 w-5" />
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {(platform.extraLinks ?? []).map((l) => (
+          <ExtraLinkTile key={l.id} link={l} />
+        ))}
+      </div>
+    </section>
   );
 }
