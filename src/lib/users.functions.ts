@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-type Role = "admin" | "editor";
+type Role = "super_admin" | "admin" | "editor";
+const ROLES: Role[] = ["super_admin", "admin", "editor"];
 
 async function assertAdminOrBootstrap(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
