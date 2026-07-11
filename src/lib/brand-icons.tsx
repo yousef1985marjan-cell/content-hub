@@ -179,7 +179,13 @@ export const GENERIC_BRANDS: BrandKey[] = [
   // social media (generic line versions)
   "facebookAlt","youtubeAlt","tiktokAlt","instagramAlt","twitterAlt","whatsappAlt","telegramAlt","snapchatAlt","linkedinAlt",
   "messenger","pinterest","reddit","discord","twitch","spotify","soundcloud","vimeo","tumblr","github","medium",
+  // monochrome versions of messengers/socials/app stores
+  "threadsAlt","wechatAlt","lineAlt","kakaoAlt","viberAlt","signalAlt","skypeAlt","zoomAlt","teamsAlt","slackAlt","gmailAlt","outlookAlt",
+  "quoraAlt","mastodonAlt","blueskyAlt","threemaAlt",
+  "playstoreAlt","appstoreAlt","appgalleryAlt","galaxystoreAlt","amazonAppstoreAlt","microsoftStoreAlt","macAppstoreAlt","huaweiAlt",
+  "steamAlt","epicgamesAlt","xboxAlt","playstationAlt","androidAlt","appleAlt",
 ];
+
 
 export function isGeneric(b: BrandKey): boolean {
   return GENERIC_BRANDS.includes(b);
