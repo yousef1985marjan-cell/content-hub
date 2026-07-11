@@ -18,18 +18,23 @@ export function SiteNav() {
   const onAdmin = pathname.startsWith("/admin");
   // Priority: on admin → dashboard logo first, then header. Otherwise header first, then app-default.
   const logoIds = onAdmin ? ["dashboard", "header", "app-default"] : ["header", "app-default"];
-  const logoUrl = useFirstPublishedLogo(logoIds);
+  const logo = useFirstPublishedLogo(logoIds);
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <Link to="/" className="flex items-center gap-2 font-black text-lg">
-          <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary text-primary-foreground">
-            {logoUrl ? (
-              <img src={logoUrl} alt="شفاء" className="h-full w-full object-cover" />
-            ) : (
+          {logo ? (
+            <img
+              src={logo.url}
+              alt="شفاء"
+              style={{ width: `${logo.width}px`, height: `${logo.height}px` }}
+              className="shrink-0 rounded-xl object-contain"
+            />
+          ) : (
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
               <Heart className="h-5 w-5" />
-            )}
-          </span>
+            </span>
+          )}
           <span>شفاء</span>
         </Link>
 

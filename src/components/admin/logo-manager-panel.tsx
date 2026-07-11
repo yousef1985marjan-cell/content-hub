@@ -11,16 +11,28 @@ type LogoCard = {
   draft: string;
   /** if true, this logo is broadcast to the site section matching `id` */
   published: boolean;
+  /** display width in px */
+  width: number;
+  /** display height in px */
+  height: number;
 };
 
 type StoredCard = Omit<LogoCard, "draft">;
 
+const DEFAULT_SIZES: Record<string, { width: number; height: number }> = {
+  "app-default": { width: 96, height: 96 },
+  welcome: { width: 80, height: 80 },
+  header: { width: 36, height: 36 },
+  menu: { width: 40, height: 40 },
+  dashboard: { width: 50, height: 50 },
+};
+
 const DEFAULT_CARDS: StoredCard[] = [
-  { id: "app-default", label: "الصورة الافتراضية للتطبيق", saved: "", published: false },
-  { id: "welcome", label: "لوكو بطاقة الترحيب", saved: "", published: false },
-  { id: "header", label: "لوكو الهيدر", saved: "", published: false },
-  { id: "menu", label: "لوكو القائمة", saved: "", published: false },
-  { id: "dashboard", label: "لوكو لوحة التحكم", saved: "", published: false },
+  { id: "app-default", label: "الصورة الافتراضية للتطبيق", saved: "", published: false, ...DEFAULT_SIZES["app-default"] },
+  { id: "welcome", label: "لوكو بطاقة الترحيب", saved: "", published: false, ...DEFAULT_SIZES.welcome },
+  { id: "header", label: "لوكو الهيدر", saved: "", published: false, ...DEFAULT_SIZES.header },
+  { id: "menu", label: "لوكو القائمة", saved: "", published: false, ...DEFAULT_SIZES.menu },
+  { id: "dashboard", label: "لوكو لوحة التحكم", saved: "", published: false, ...DEFAULT_SIZES.dashboard },
 ];
 
 function readStore(): StoredCard[] {
@@ -30,12 +42,18 @@ function readStore(): StoredCard[] {
     if (!raw) return DEFAULT_CARDS;
     const parsed = JSON.parse(raw) as Partial<StoredCard>[];
     if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_CARDS;
-    return parsed.map((c) => ({
-      id: String(c.id ?? crypto.randomUUID()),
-      label: String(c.label ?? ""),
-      saved: String(c.saved ?? ""),
-      published: Boolean(c.published),
-    }));
+    return parsed.map((c) => {
+      const id = String(c.id ?? crypto.randomUUID());
+      const def = DEFAULT_SIZES[id] ?? { width: 40, height: 40 };
+      return {
+        id,
+        label: String(c.label ?? ""),
+        saved: String(c.saved ?? ""),
+        published: Boolean(c.published),
+        width: Number(c.width) > 0 ? Number(c.width) : def.width,
+        height: Number(c.height) > 0 ? Number(c.height) : def.height,
+      };
+    });
   } catch {
     return DEFAULT_CARDS;
   }
@@ -56,7 +74,16 @@ export function LogoManagerPanel({ flash }: { flash: (m: string) => void }) {
   );
 
   useEffect(() => {
-    writeStore(cards.map(({ id, label, saved, published }) => ({ id, label, saved, published })));
+    writeStore(
+      cards.map(({ id, label, saved, published, width, height }) => ({
+        id,
+        label,
+        saved,
+        published,
+        width,
+        height,
+      })),
+    );
   }, [cards]);
 
   const patch = (id: string, p: Partial<LogoCard>) =>
@@ -67,10 +94,11 @@ export function LogoManagerPanel({ flash }: { flash: (m: string) => void }) {
     if (!label) return;
     setCards((cs) => [
       ...cs,
-      { id: crypto.randomUUID(), label: label.trim(), saved: "", draft: "", published: false },
+      { id: crypto.randomUUID(), label: label.trim(), saved: "", draft: "", published: false, width: 40, height: 40 },
     ]);
     flash("تمت إضافة بطاقة جديدة");
   };
+
 
   const renameCard = (id: string, current: string) => {
     const next = window.prompt("اسم البطاقة:", current);
@@ -172,7 +200,12 @@ function LogoCardView({
 
       <div className="relative grid aspect-video w-full place-items-center overflow-hidden rounded-lg border border-dashed border-border bg-muted/40">
         {card.draft ? (
-          <img src={card.draft} alt={card.label} className="max-h-full max-w-full object-contain" />
+          <img
+            src={card.draft}
+            alt={card.label}
+            style={{ width: `${card.width}px`, height: `${card.height}px` }}
+            className="max-h-full max-w-full object-contain"
+          />
         ) : (
           <div className="flex flex-col items-center gap-1 text-muted-foreground text-xs">
             <ImageIcon className="h-6 w-6" />
@@ -189,6 +222,40 @@ function LogoCardView({
             منشور
           </span>
         )}
+        <span className="absolute bottom-2 end-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-mono text-white">
+          {card.width}×{card.height}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <label className="text-xs font-bold text-muted-foreground shrink-0">الحجم (px)</label>
+        <input
+          type="number"
+          min={8}
+          max={512}
+          value={card.width}
+          onChange={(e) => onChange({ width: Math.max(8, Math.min(512, Number(e.target.value) || 0)) })}
+          className="w-16 rounded-md border border-input bg-background px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-ring"
+          aria-label="العرض"
+        />
+        <span className="text-muted-foreground">×</span>
+        <input
+          type="number"
+          min={8}
+          max={512}
+          value={card.height}
+          onChange={(e) => onChange({ height: Math.max(8, Math.min(512, Number(e.target.value) || 0)) })}
+          className="w-16 rounded-md border border-input bg-background px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-ring"
+          aria-label="الارتفاع"
+        />
+        <button
+          type="button"
+          onClick={() => onChange({ height: card.width })}
+          className="ms-auto rounded-md border border-input bg-background px-2 py-1 text-[10px] font-bold hover:bg-muted"
+          title="مربّع"
+        >
+          مربّع
+        </button>
       </div>
 
       <input
