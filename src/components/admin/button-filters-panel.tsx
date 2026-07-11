@@ -425,15 +425,14 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
             <button
               onClick={() => setFilterMgrOpen(true)}
               className="inline-flex items-center gap-1 rounded-lg border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent-foreground hover:bg-accent/20"
-              title="إدارة الفلاتر المخصصة"
+              title="إدارة جميع الفلاتر"
             >
-              <Plus className="h-3 w-3" /> فلتر جديد
-              {state.customFilters.length > 0 && (
-                <span className="rounded-full bg-accent/30 px-1.5 text-[10px]">
-                  {state.customFilters.length}
-                </span>
-              )}
+              <SettingsIcon className="h-3 w-3" /> الفلاتر
+              <span className="rounded-full bg-accent/30 px-1.5 text-[10px]">
+                {allFilters().length}
+              </span>
             </button>
+
             <button
               onClick={addCustomButton}
               className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
