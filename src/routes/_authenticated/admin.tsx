@@ -36,7 +36,7 @@ const TABS: { key: TabKey; label: string }[] = [
 
 function Admin() {
   const { state, update, hydrated } = useContent();
-  const [activeTab, setActiveTab] = useState<TabKey>("about");
+  const [activeTab, setActiveTab] = useState<TabKey>("__pharmacies");
   const [flashMsg, setFlashMsg] = useState<string | null>(null);
   const flash = (m: string) => {
     setFlashMsg(m);
@@ -75,7 +75,13 @@ function Admin() {
         ))}
       </div>
 
-      {activeTab === "__logo" ? (
+      {activeTab === "__pharmacies" ? (
+        <PharmaciesPanel />
+      ) : activeTab === "__media" ? (
+        <MediaPanel flash={flash} />
+      ) : activeTab === "__settings" ? (
+        <SettingsPanel flash={flash} />
+      ) : activeTab === "__logo" ? (
         <LogoManager
           logoUrl={state.logoUrl}
           onChange={(logoUrl) => update({ logoUrl })}
