@@ -58,6 +58,55 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
   const [tab, setTab] = useState<Tab>("buttons");
   const [previewOpen, setPreviewOpen] = useState(false);
   const offline = isOffline();
+  const [filtersClip, setFiltersClip] = useState<AppliedFilter[] | null>(null);
+  const [cardClip, setCardClip] = useState<Omit<ButtonConfig, "id" | "builtin"> | null>(null);
+
+  const copyFilters = (id: ButtonId) => {
+    const b = state.buttons[id];
+    if (!b) return;
+    setFiltersClip(structuredClone(b.filters));
+    flash(`تم نسخ فلاتر "${buttonLabel(b)}"`);
+  };
+  const pasteFilters = (id: ButtonId) => {
+    if (!filtersClip) return;
+    const b = state.buttons[id];
+    if (!b) return;
+    const sticky = b.filters.filter((f) => getFilterMeta(f.id).stickyOn?.includes(b.id));
+    const stickyIds = new Set(sticky.map((s) => s.id));
+    const merged: AppliedFilter[] = [...sticky];
+    for (const f of filtersClip) {
+      if (stickyIds.has(f.id)) continue;
+      if (conflictsIn(merged, f.id).length > 0) continue;
+      merged.push(structuredClone(f));
+    }
+    patchButton(id, { ...b, filters: merged });
+    flash(`تم لصق الفلاتر في "${buttonLabel(b)}"`);
+  };
+  const copyCard = (id: ButtonId) => {
+    const b = state.buttons[id];
+    if (!b) return;
+    setCardClip({
+      label: b.label,
+      icon: b.icon,
+      enabled: b.enabled,
+      filters: structuredClone(b.filters),
+    });
+    flash(`تم نسخ بطاقة "${buttonLabel(b)}"`);
+  };
+  const pasteCard = (id: ButtonId) => {
+    if (!cardClip) return;
+    const b = state.buttons[id];
+    if (!b) return;
+    patchButton(id, {
+      ...b,
+      label: cardClip.label,
+      icon: cardClip.icon,
+      enabled: cardClip.enabled,
+      filters: structuredClone(cardClip.filters),
+    });
+    flash(`تم لصق البطاقة في "${buttonLabel(b)}"`);
+  };
+
 
   const [filterMgrOpen, setFilterMgrOpen] = useState(false);
 
