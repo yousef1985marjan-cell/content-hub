@@ -129,7 +129,7 @@ function SectionEditor({
 
   const saveAll = () => {
     onChange(draft);
-    flash("تم حفظ جميع اللغات");
+    flash("تم حفظ ونشر جميع اللغات على الصفحات");
   };
 
   const runTranslate = async () => {
