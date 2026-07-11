@@ -398,25 +398,35 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 function ButtonCard({
   cfg,
   dirty,
+  canMoveUp,
+  canMoveDown,
   onChange,
   onSave,
   onReset,
   onSaveAsPreset,
+  onRename,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
 }: {
   cfg: ButtonConfig;
   dirty: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
   onChange: (c: ButtonConfig) => void;
   onSave: () => void;
   onReset: () => void;
   onSaveAsPreset: () => void;
+  onRename: () => void;
+  onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }) {
   const [addFid, setAddFid] = useState<FilterId | "">("");
   const [openSettings, setOpenSettings] = useState<string | null>(null);
 
   const used = new Set(cfg.filters.map((f) => f.id));
   const available = FILTER_LIBRARY.filter((f) => !used.has(f.id));
-
-  const meta = BUTTON_META[cfg.id];
 
   const move = (idx: number, dir: -1 | 1) => {
     const j = idx + dir;
@@ -462,26 +472,70 @@ function ButtonCard({
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="mb-3 flex items-center justify-between border-b border-border pb-3">
-        <h3 className="flex items-center gap-2 text-base font-black text-primary">
-          <span className="text-xl">{meta.icon}</span>
-          {meta.label}
+      <div className="mb-3 flex items-center justify-between gap-2 border-b border-border pb-3">
+        <h3 className="flex min-w-0 items-center gap-2 text-base font-black text-primary">
+          <span className="text-xl">{buttonIcon(cfg)}</span>
+          <span className="truncate">{buttonLabel(cfg)}</span>
+          {!cfg.builtin && (
+            <span className="rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">
+              مخصص
+            </span>
+          )}
           {dirty && (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
               غير محفوظ
             </span>
           )}
         </h3>
-        <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-bold">
-          <input
-            type="checkbox"
-            checked={cfg.enabled}
-            onChange={(e) => onChange({ ...cfg, enabled: e.target.checked })}
-            className="h-4 w-4 accent-primary"
-          />
-          {cfg.enabled ? "ظاهر" : "مخفي"}
-        </label>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onMoveUp}
+            disabled={!canMoveUp}
+            className="rounded-md border border-input bg-background p-1.5 hover:bg-muted disabled:opacity-30"
+            aria-label="تحريك لأعلى"
+            title="تحريك لأعلى"
+          >
+            <ChevronUp className="h-3 w-3" />
+          </button>
+          <button
+            onClick={onMoveDown}
+            disabled={!canMoveDown}
+            className="rounded-md border border-input bg-background p-1.5 hover:bg-muted disabled:opacity-30"
+            aria-label="تحريك لأسفل"
+            title="تحريك لأسفل"
+          >
+            <ChevronDown className="h-3 w-3" />
+          </button>
+          <button
+            onClick={onRename}
+            className="rounded-md border border-input bg-background p-1.5 hover:bg-muted"
+            aria-label="تعديل التسمية"
+            title="تعديل الاسم والرمز"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+          {!cfg.builtin && (
+            <button
+              onClick={onDelete}
+              className="rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20"
+              aria-label="حذف الزر"
+              title="حذف الزر"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          )}
+          <label className="ms-1 inline-flex cursor-pointer items-center gap-1 text-xs font-bold">
+            <input
+              type="checkbox"
+              checked={cfg.enabled}
+              onChange={(e) => onChange({ ...cfg, enabled: e.target.checked })}
+              className="h-4 w-4 accent-primary"
+            />
+            {cfg.enabled ? "ظاهر" : "مخفي"}
+          </label>
+        </div>
       </div>
+
 
       {cfg.filters.length === 0 ? (
         <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
