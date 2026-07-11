@@ -1,6 +1,6 @@
 import { fetchWithTimeout, getSettings } from "./app-settings";
 
-export type FilterId =
+export type KnownFilterId =
   | "filter_time_auto"
   | "filter_on_duty"
   | "filter_on_duty_by_state"
@@ -23,6 +23,10 @@ export type FilterId =
   | "filter_search_text"
   | "filter_min_rating"
   | "filter_sort_alpha";
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type FilterId = KnownFilterId | (string & {});
+
 
 /** Built-in button ids kept for sticky/conflict rules; custom buttons use uuid strings. */
 export type BuiltinButtonId = "nearby" | "on_duty" | "open_now" | "all";
@@ -71,8 +75,11 @@ export type ButtonFiltersState = {
   /** display order — includes both built-in and custom button ids */
   order: ButtonId[];
   presets: FilterPreset[];
+  /** user-defined custom filters (id, label, description) */
+  customFilters: FilterMeta[];
   updated_at: string;
 };
+
 
 export const BUTTON_META: Record<BuiltinButtonId, { label: string; icon: string }> = {
   nearby: { label: "بالقرب مني", icon: "📍" },
@@ -265,9 +272,30 @@ export const FILTER_LIBRARY: FilterMeta[] = [
   },
 ];
 
-export function getFilterMeta(id: FilterId): FilterMeta {
-  return FILTER_LIBRARY.find((f) => f.id === id)!;
+let CUSTOM_FILTERS: FilterMeta[] = [];
+
+export function setCustomFilters(list: FilterMeta[]) {
+  CUSTOM_FILTERS = list.slice();
 }
+export function getCustomFilters(): FilterMeta[] {
+  return CUSTOM_FILTERS.slice();
+}
+export function allFilters(): FilterMeta[] {
+  return [...FILTER_LIBRARY, ...CUSTOM_FILTERS];
+}
+
+export function getFilterMeta(id: FilterId): FilterMeta {
+  return (
+    FILTER_LIBRARY.find((f) => f.id === id) ||
+    CUSTOM_FILTERS.find((f) => f.id === id) || {
+      id,
+      label: id,
+      description: "",
+      hasSettings: false,
+    }
+  );
+}
+
 
 export const DEFAULT_HOURS: WeeklyHours = {
   mon: { start: "08:00", end: "18:00" },
@@ -345,9 +373,11 @@ export function defaultState(): ButtonFiltersState {
     buttons: structuredClone(DEFAULT_BUTTONS) as Record<ButtonId, ButtonConfig>,
     order: [...BUILTIN_BUTTON_IDS],
     presets: [],
+    customFilters: [],
     updated_at: new Date().toISOString(),
   };
 }
+
 
 /** Return filter ids in this list that conflict with the given id. */
 export function conflictsIn(filters: AppliedFilter[], id: FilterId): FilterId[] {
@@ -422,6 +452,8 @@ function readLocal(): ButtonFiltersState {
       p.order = [...BUILTIN_BUTTON_IDS, ...Object.keys(p.buttons).filter((k) => !BUILTIN_BUTTON_IDS.includes(k as BuiltinButtonId))];
     }
     if (!Array.isArray(p.presets)) p.presets = [];
+    if (!Array.isArray(p.customFilters)) p.customFilters = [];
+
     return p;
   } catch {
     return defaultState();
@@ -459,9 +491,11 @@ export async function loadButtonFilters(): Promise<ButtonFiltersState> {
     buttons: merged,
     order: data.order && data.order.length > 0 ? data.order : Object.keys(merged),
     presets: data.presets || [],
+    customFilters: data.customFilters || [],
     updated_at: data.updated_at || base.updated_at,
   };
 }
+
 
 export async function saveButtonFilters(
   state: ButtonFiltersState,
