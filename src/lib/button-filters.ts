@@ -491,9 +491,11 @@ export async function loadButtonFilters(): Promise<ButtonFiltersState> {
     buttons: merged,
     order: data.order && data.order.length > 0 ? data.order : Object.keys(merged),
     presets: data.presets || [],
+    customFilters: data.customFilters || [],
     updated_at: data.updated_at || base.updated_at,
   };
 }
+
 
 export async function saveButtonFilters(
   state: ButtonFiltersState,
