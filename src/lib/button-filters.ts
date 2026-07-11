@@ -14,7 +14,9 @@ export type FilterId =
   | "filter_open_weekend"
   | "filter_open_late";
 
-export type ButtonId = "nearby" | "on_duty" | "open_now" | "all";
+/** Built-in button ids kept for sticky/conflict rules; custom buttons use uuid strings. */
+export type BuiltinButtonId = "nearby" | "on_duty" | "open_now" | "all";
+export type ButtonId = BuiltinButtonId | string;
 
 export type WeeklyHours = {
   mon: { start: string; end: string } | null;
