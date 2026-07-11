@@ -579,22 +579,25 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
                 key={id}
                 cfg={cfg}
                 dirty={!!dirtyButtons[id]}
+                isPublished={
+                  !!published &&
+                  JSON.stringify(published.buttons[id]) ===
+                    JSON.stringify(saved.buttons[id])
+                }
+                everPublished={!!published && !!published.buttons[id]}
                 canMoveUp={idx > 0}
                 canMoveDown={idx < orderedIds.length - 1}
                 hasFiltersClip={!!filtersClip}
-                hasCardClip={!!cardClip}
                 onChange={(c) => patchButton(id, c)}
                 onSave={() => saveButton(id)}
-                onCopyFilters={() => copyFilters(id)}
-                onPasteFilters={() => pasteFilters(id)}
-                onCopyCard={() => copyCard(id)}
-                onPasteCard={() => pasteCard(id)}
+                onCopy={() => copyFilters(id)}
+                onPaste={() => pasteFilters(id)}
+                onPublish={() => publishButton(id)}
                 onRename={() => renameButton(id)}
                 onDelete={() => deleteButton(id)}
                 onMoveUp={() => moveButton(id, -1)}
                 onMoveDown={() => moveButton(id, 1)}
               />
-
             );
           })}
         </div>
