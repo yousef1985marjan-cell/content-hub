@@ -117,6 +117,8 @@ function Admin() {
 
       {activeTab === "admin" ? (
         <AdminInfo flash={flash} />
+      ) : activeTab === "users" ? (
+        <UsersManager flash={flash} />
       ) : activeTab !== "platforms" ? (
         <TextEditor
           key={activeTab}
