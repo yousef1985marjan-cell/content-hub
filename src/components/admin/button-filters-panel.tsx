@@ -621,16 +621,16 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 function ButtonCard({
   cfg,
   dirty,
+  isPublished,
+  everPublished,
   canMoveUp,
   canMoveDown,
   hasFiltersClip,
-  hasCardClip,
   onChange,
   onSave,
-  onCopyFilters,
-  onPasteFilters,
-  onCopyCard,
-  onPasteCard,
+  onCopy,
+  onPaste,
+  onPublish,
   onRename,
   onDelete,
   onMoveUp,
@@ -638,16 +638,16 @@ function ButtonCard({
 }: {
   cfg: ButtonConfig;
   dirty: boolean;
+  isPublished: boolean;
+  everPublished: boolean;
   canMoveUp: boolean;
   canMoveDown: boolean;
   hasFiltersClip: boolean;
-  hasCardClip: boolean;
   onChange: (c: ButtonConfig) => void;
   onSave: () => void;
-  onCopyFilters: () => void;
-  onPasteFilters: () => void;
-  onCopyCard: () => void;
-  onPasteCard: () => void;
+  onCopy: () => void;
+  onPaste: () => void;
+  onPublish: () => void;
   onRename: () => void;
   onDelete: () => void;
   onMoveUp: () => void;
