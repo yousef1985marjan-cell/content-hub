@@ -278,6 +278,7 @@ export const FILTER_LIBRARY: FilterMeta[] = [
 ];
 
 let CUSTOM_FILTERS: FilterMeta[] = [];
+let FILTER_OVERRIDES: Record<string, FilterOverride> = {};
 
 export function setCustomFilters(list: FilterMeta[]) {
   CUSTOM_FILTERS = list.slice();
@@ -285,21 +286,33 @@ export function setCustomFilters(list: FilterMeta[]) {
 export function getCustomFilters(): FilterMeta[] {
   return CUSTOM_FILTERS.slice();
 }
+export function setFilterOverrides(map: Record<string, FilterOverride>) {
+  FILTER_OVERRIDES = { ...map };
+}
+export function getFilterOverrides(): Record<string, FilterOverride> {
+  return { ...FILTER_OVERRIDES };
+}
+function applyOverride(f: FilterMeta): FilterMeta {
+  const o = FILTER_OVERRIDES[f.id];
+  if (!o) return f;
+  return { ...f, label: o.label ?? f.label, description: o.description ?? f.description };
+}
 export function allFilters(): FilterMeta[] {
-  return [...FILTER_LIBRARY, ...CUSTOM_FILTERS];
+  return [...FILTER_LIBRARY, ...CUSTOM_FILTERS].map(applyOverride);
 }
 
 export function getFilterMeta(id: FilterId): FilterMeta {
-  return (
+  const base =
     FILTER_LIBRARY.find((f) => f.id === id) ||
     CUSTOM_FILTERS.find((f) => f.id === id) || {
       id,
       label: id,
       description: "",
       hasSettings: false,
-    }
-  );
+    };
+  return applyOverride(base);
 }
+
 
 
 export const DEFAULT_HOURS: WeeklyHours = {
