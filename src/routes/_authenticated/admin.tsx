@@ -4,7 +4,7 @@ import { PageShell } from "@/components/page-shell";
 import { useContent, type PlatformLink, type CustomIcon, type ExtraLink } from "@/lib/content-store";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { listUsers, createUser, updateUserRole, deleteUser, claimBootstrapAdmin } from "@/lib/users.functions";
+import { listUsers, createUser, updateUserRole, deleteUser, claimBootstrapAdmin, resetUserPassword } from "@/lib/users.functions";
 import {
   Trash2,
   Plus,
