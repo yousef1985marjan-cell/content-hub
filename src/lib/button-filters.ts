@@ -272,9 +272,30 @@ export const FILTER_LIBRARY: FilterMeta[] = [
   },
 ];
 
-export function getFilterMeta(id: FilterId): FilterMeta {
-  return FILTER_LIBRARY.find((f) => f.id === id)!;
+let CUSTOM_FILTERS: FilterMeta[] = [];
+
+export function setCustomFilters(list: FilterMeta[]) {
+  CUSTOM_FILTERS = list.slice();
 }
+export function getCustomFilters(): FilterMeta[] {
+  return CUSTOM_FILTERS.slice();
+}
+export function allFilters(): FilterMeta[] {
+  return [...FILTER_LIBRARY, ...CUSTOM_FILTERS];
+}
+
+export function getFilterMeta(id: FilterId): FilterMeta {
+  return (
+    FILTER_LIBRARY.find((f) => f.id === id) ||
+    CUSTOM_FILTERS.find((f) => f.id === id) || {
+      id,
+      label: id,
+      description: "",
+      hasSettings: false,
+    }
+  );
+}
+
 
 export const DEFAULT_HOURS: WeeklyHours = {
   mon: { start: "08:00", end: "18:00" },
