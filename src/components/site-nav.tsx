@@ -12,13 +12,20 @@ const links = [
 ];
 
 
+function headerIdsForPath(pathname: string): string[] {
+  if (pathname.startsWith("/admin")) return ["header-admin", "dashboard", "header", "app-default"];
+  if (pathname.startsWith("/about")) return ["header-about", "header", "app-default"];
+  if (pathname.startsWith("/publisher")) return ["header-publisher", "header", "app-default"];
+  if (pathname.startsWith("/privacy")) return ["header-privacy", "header", "app-default"];
+  if (pathname.startsWith("/terms")) return ["header-terms", "header", "app-default"];
+  if (pathname.startsWith("/disclaimer")) return ["header-disclaimer", "header", "app-default"];
+  return ["header-home", "header", "app-default"];
+}
+
 export function SiteNav() {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const onAdmin = pathname.startsWith("/admin");
-  // Priority: on admin → dashboard logo first, then header. Otherwise header first, then app-default.
-  const logoIds = onAdmin ? ["dashboard", "header", "app-default"] : ["header", "app-default"];
-  const logo = useFirstPublishedLogo(logoIds);
+  const logo = useFirstPublishedLogo(headerIdsForPath(pathname));
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
