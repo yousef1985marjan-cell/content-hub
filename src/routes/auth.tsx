@@ -38,6 +38,25 @@ function AuthPage() {
     navigate({ to: "/admin" });
   };
 
+  const signUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setNotice(null);
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    setNotice("تم إنشاء الحساب. يمكنك تسجيل الدخول الآن.");
+    setMode("signin");
+  };
+
   const forgot = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
