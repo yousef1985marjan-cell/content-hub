@@ -78,6 +78,8 @@ function Admin() {
 
       {activeTab === "__button_filters" ? (
         <ButtonFiltersPanel flash={flash} />
+      ) : activeTab === "__logos" ? (
+        <LogoManagerPanel flash={flash} />
       ) : activeTab === "__users" ? (
         <UsersPanel flash={flash} />
       ) : activeTab === "__settings" ? (
