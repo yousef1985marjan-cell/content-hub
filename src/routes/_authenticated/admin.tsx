@@ -85,7 +85,8 @@ function Admin() {
         <UsersPanel flash={flash} />
       ) : activeTab === "__settings" ? (
         <SettingsPanel flash={flash} />
-      ) : (
+      ) : activeTab === "publisher" ? (
+        <PublisherManagerPanel flash={flash} />
         <SectionEditor
           key={activeTab}
           sectionKey={activeTab as SectionKey}
