@@ -446,13 +446,18 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 
       {filterMgrOpen && (
         <CustomFiltersManager
-          filters={state.customFilters}
+          allList={allFilters()}
+          customIds={new Set(state.customFilters.map((f) => f.id))}
+          overrides={state.filterOverrides}
           onAdd={addCustomFilter}
-          onRename={renameCustomFilter}
+          onRename={renameFilter}
+          onResetOverride={resetFilterOverride}
           onDelete={deleteCustomFilter}
+          onSave={saveFiltersLibrary}
           onClose={() => setFilterMgrOpen(false)}
         />
       )}
+
 
 
       {tab === "buttons" ? (
