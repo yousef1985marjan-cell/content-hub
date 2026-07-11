@@ -19,6 +19,7 @@ import { SettingsPanel } from "@/components/admin/settings-panel";
 import { ButtonFiltersPanel } from "@/components/admin/button-filters-panel";
 import { UsersPanel } from "@/components/admin/users-panel";
 import { LogoManagerPanel } from "@/components/admin/logo-manager-panel";
+import { PublisherManagerPanel } from "@/components/admin/publisher-manager-panel";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "لوحة التحكم — منصات شفاء" }, { name: "robots", content: "noindex" }] }),
@@ -84,6 +85,8 @@ function Admin() {
         <UsersPanel flash={flash} />
       ) : activeTab === "__settings" ? (
         <SettingsPanel flash={flash} />
+      ) : activeTab === "publisher" ? (
+        <PublisherManagerPanel flash={flash} />
       ) : (
         <SectionEditor
           key={activeTab}
