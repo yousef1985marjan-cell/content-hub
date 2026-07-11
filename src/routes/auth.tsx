@@ -11,7 +11,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
+  const [mode, setMode] = useState<"signin" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,25 +36,6 @@ function AuthPage() {
       return;
     }
     navigate({ to: "/admin" });
-  };
-
-  const signUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setNotice(null);
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: window.location.origin },
-    });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-      return;
-    }
-    setNotice("تم إنشاء الحساب. يمكنك تسجيل الدخول الآن.");
-    setMode("signin");
   };
 
   const forgot = async (e: React.FormEvent) => {
@@ -86,28 +67,11 @@ function AuthPage() {
             </Link>
           </div>
 
-          <div className="mb-4 grid grid-cols-2 gap-2 rounded-lg bg-muted p-1">
-            <button
-              type="button"
-              onClick={() => { setMode("signin"); setError(null); setNotice(null); }}
-              className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${mode === "signin" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-            >
-              تسجيل الدخول
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode("signup"); setError(null); setNotice(null); }}
-              className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${mode === "signup" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-            >
-              إنشاء حساب
-            </button>
-          </div>
+          <p className="mb-4 rounded-lg border border-border/40 bg-muted/40 p-3 text-[11px] leading-relaxed text-muted-foreground">
+            الحسابات تُنشأ من قبل المدير فقط من داخل لوحة التحكم. إذا لم يكن لديك حساب، تواصل مع المدير.
+          </p>
 
-          <h2 className="mb-4 text-center text-lg font-black text-primary">
-            {mode === "signin" ? "دخول المدير" : mode === "signup" ? "إنشاء حساب مدير" : "استرجاع كلمة السر"}
-          </h2>
-
-          <form onSubmit={mode === "signin" ? signIn : mode === "signup" ? signUp : forgot} className="space-y-4">
+          <form onSubmit={mode === "signin" ? signIn : forgot} className="space-y-4">
             <div>
               <label className="mb-1 flex items-center gap-1 text-xs font-bold text-muted-foreground">
                 <Mail className="h-3 w-3" /> البريد الإلكتروني
@@ -122,7 +86,7 @@ function AuthPage() {
               />
             </div>
 
-            {mode !== "forgot" && (
+            {mode === "signin" && (
               <div>
                 <label className="mb-1 flex items-center gap-1 text-xs font-bold text-muted-foreground">
                   <Lock className="h-3 w-3" /> كلمة السر
@@ -157,10 +121,6 @@ function AuthPage() {
               {mode === "signin" ? (
                 <>
                   <LogIn className="h-4 w-4" /> {loading ? "جاري الدخول..." : "دخول"}
-                </>
-              ) : mode === "signup" ? (
-                <>
-                  <LogIn className="h-4 w-4" /> {loading ? "جاري الإنشاء..." : "إنشاء الحساب"}
                 </>
               ) : (
                 <>
