@@ -13,6 +13,9 @@ import {
   ChevronUp,
   ChevronDown,
   Pencil,
+  Copy,
+  ClipboardPaste,
+
 } from "lucide-react";
 import {
   BUILTIN_BUTTON_IDS,
@@ -58,6 +61,55 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
   const [tab, setTab] = useState<Tab>("buttons");
   const [previewOpen, setPreviewOpen] = useState(false);
   const offline = isOffline();
+  const [filtersClip, setFiltersClip] = useState<AppliedFilter[] | null>(null);
+  const [cardClip, setCardClip] = useState<Omit<ButtonConfig, "id" | "builtin"> | null>(null);
+
+  const copyFilters = (id: ButtonId) => {
+    const b = state.buttons[id];
+    if (!b) return;
+    setFiltersClip(structuredClone(b.filters));
+    flash(`تم نسخ فلاتر "${buttonLabel(b)}"`);
+  };
+  const pasteFilters = (id: ButtonId) => {
+    if (!filtersClip) return;
+    const b = state.buttons[id];
+    if (!b) return;
+    const sticky = b.filters.filter((f) => getFilterMeta(f.id).stickyOn?.includes(b.id));
+    const stickyIds = new Set(sticky.map((s) => s.id));
+    const merged: AppliedFilter[] = [...sticky];
+    for (const f of filtersClip) {
+      if (stickyIds.has(f.id)) continue;
+      if (conflictsIn(merged, f.id).length > 0) continue;
+      merged.push(structuredClone(f));
+    }
+    patchButton(id, { ...b, filters: merged });
+    flash(`تم لصق الفلاتر في "${buttonLabel(b)}"`);
+  };
+  const copyCard = (id: ButtonId) => {
+    const b = state.buttons[id];
+    if (!b) return;
+    setCardClip({
+      label: b.label,
+      icon: b.icon,
+      enabled: b.enabled,
+      filters: structuredClone(b.filters),
+    });
+    flash(`تم نسخ بطاقة "${buttonLabel(b)}"`);
+  };
+  const pasteCard = (id: ButtonId) => {
+    if (!cardClip) return;
+    const b = state.buttons[id];
+    if (!b) return;
+    patchButton(id, {
+      ...b,
+      label: cardClip.label,
+      icon: cardClip.icon,
+      enabled: cardClip.enabled,
+      filters: structuredClone(cardClip.filters),
+    });
+    flash(`تم لصق البطاقة في "${buttonLabel(b)}"`);
+  };
+
 
   const [filterMgrOpen, setFilterMgrOpen] = useState(false);
 
@@ -494,15 +546,20 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
                 dirty={!!dirtyButtons[id]}
                 canMoveUp={idx > 0}
                 canMoveDown={idx < orderedIds.length - 1}
+                hasFiltersClip={!!filtersClip}
+                hasCardClip={!!cardClip}
                 onChange={(c) => patchButton(id, c)}
                 onSave={() => saveButton(id)}
-                onReset={() => resetButton(id)}
-                onSaveAsPreset={() => saveAsPreset(id)}
+                onCopyFilters={() => copyFilters(id)}
+                onPasteFilters={() => pasteFilters(id)}
+                onCopyCard={() => copyCard(id)}
+                onPasteCard={() => pasteCard(id)}
                 onRename={() => renameButton(id)}
                 onDelete={() => deleteButton(id)}
                 onMoveUp={() => moveButton(id, -1)}
                 onMoveDown={() => moveButton(id, 1)}
               />
+
             );
           })}
         </div>
@@ -528,10 +585,14 @@ function ButtonCard({
   dirty,
   canMoveUp,
   canMoveDown,
+  hasFiltersClip,
+  hasCardClip,
   onChange,
   onSave,
-  onReset,
-  onSaveAsPreset,
+  onCopyFilters,
+  onPasteFilters,
+  onCopyCard,
+  onPasteCard,
   onRename,
   onDelete,
   onMoveUp,
@@ -541,10 +602,14 @@ function ButtonCard({
   dirty: boolean;
   canMoveUp: boolean;
   canMoveDown: boolean;
+  hasFiltersClip: boolean;
+  hasCardClip: boolean;
   onChange: (c: ButtonConfig) => void;
   onSave: () => void;
-  onReset: () => void;
-  onSaveAsPreset: () => void;
+  onCopyFilters: () => void;
+  onPasteFilters: () => void;
+  onCopyCard: () => void;
+  onPasteCard: () => void;
   onRename: () => void;
   onDelete: () => void;
   onMoveUp: () => void;
@@ -554,6 +619,7 @@ function ButtonCard({
   const [openSettings, setOpenSettings] = useState<string | null>(null);
 
   const used = new Set(cfg.filters.map((f) => f.id));
+
   const available = allFilters().filter((f) => !used.has(f.id));
 
 
@@ -773,23 +839,44 @@ function ButtonCard({
           className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
           <Save className="h-3 w-3" />
-          حفظ
+          حفظ فلتر البطاقة
         </button>
         <button
-          onClick={onReset}
+          onClick={onCopyFilters}
           className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
+          title="نسخ فلاتر هذه البطاقة"
         >
-          <RotateCcw className="h-3 w-3" />
-          استعادة الافتراضي
+          <Copy className="h-3 w-3" />
+          نسخ فلتر البطاقة
         </button>
         <button
-          onClick={onSaveAsPreset}
-          className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
+          onClick={onPasteFilters}
+          disabled={!hasFiltersClip}
+          className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted disabled:opacity-40"
+          title="لصق الفلاتر المنسوخة"
         >
-          <Bookmark className="h-3 w-3" />
-          حفظ كمجموعة
+          <ClipboardPaste className="h-3 w-3" />
+          لصق فلتر البطاقة
+        </button>
+        <button
+          onClick={onCopyCard}
+          className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
+          title="نسخ البطاقة كاملة (الاسم/الرمز/الحالة/الفلاتر)"
+        >
+          <Copy className="h-3 w-3" />
+          نسخ البطاقة كاملة
+        </button>
+        <button
+          onClick={onPasteCard}
+          disabled={!hasCardClip}
+          className="inline-flex items-center gap-1 rounded-lg border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent-foreground hover:bg-accent/20 disabled:opacity-40"
+          title="لصق بطاقة كاملة"
+        >
+          <ClipboardPaste className="h-3 w-3" />
+          الصق بطاقة كاملة
         </button>
       </div>
+
     </div>
   );
 }
