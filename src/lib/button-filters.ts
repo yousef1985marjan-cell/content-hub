@@ -12,9 +12,21 @@ export type FilterId =
   | "filter_result_limit"
   | "filter_wheelchair"
   | "filter_open_weekend"
-  | "filter_open_late";
+  | "filter_open_late"
+  | "filter_favorites"
+  | "filter_24h"
+  | "filter_night_duty"
+  | "filter_delivery"
+  | "filter_parking"
+  | "filter_arabic_speaker"
+  | "filter_state_only"
+  | "filter_search_text"
+  | "filter_min_rating"
+  | "filter_sort_alpha";
 
-export type ButtonId = "nearby" | "on_duty" | "open_now" | "all";
+/** Built-in button ids kept for sticky/conflict rules; custom buttons use uuid strings. */
+export type BuiltinButtonId = "nearby" | "on_duty" | "open_now" | "all";
+export type ButtonId = BuiltinButtonId | string;
 
 export type WeeklyHours = {
   mon: { start: string; end: string } | null;
@@ -39,6 +51,9 @@ export type AppliedFilter = {
 
 export type ButtonConfig = {
   id: ButtonId;
+  label: string;
+  icon: string;
+  builtin: boolean;
   enabled: boolean;
   filters: AppliedFilter[];
 };
@@ -53,18 +68,42 @@ export type FilterPreset = {
 
 export type ButtonFiltersState = {
   buttons: Record<ButtonId, ButtonConfig>;
+  /** display order — includes both built-in and custom button ids */
+  order: ButtonId[];
   presets: FilterPreset[];
   updated_at: string;
 };
 
-export const BUTTON_META: Record<ButtonId, { label: string; icon: string }> = {
+export const BUTTON_META: Record<BuiltinButtonId, { label: string; icon: string }> = {
   nearby: { label: "بالقرب مني", icon: "📍" },
   on_duty: { label: "الصيدليات المناوبة", icon: "🌙" },
   open_now: { label: "مفتوحة الآن", icon: "🟢" },
   all: { label: "جميع الصيدليات", icon: "📋" },
 };
 
-export const BUTTON_IDS: ButtonId[] = ["nearby", "on_duty", "open_now", "all"];
+export const BUILTIN_BUTTON_IDS: BuiltinButtonId[] = ["nearby", "on_duty", "open_now", "all"];
+/** @deprecated use state.order — kept for compatibility */
+export const BUTTON_IDS: BuiltinButtonId[] = BUILTIN_BUTTON_IDS;
+
+export function buttonLabel(cfg: ButtonConfig): string {
+  return cfg.label || (cfg.builtin ? BUTTON_META[cfg.id as BuiltinButtonId]?.label : cfg.id) || cfg.id;
+}
+export function buttonIcon(cfg: ButtonConfig): string {
+  return cfg.icon || (cfg.builtin ? BUTTON_META[cfg.id as BuiltinButtonId]?.icon : "🔘") || "🔘";
+}
+
+export function createCustomButton(label: string, icon: string): ButtonConfig {
+  return {
+    id: (typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `btn_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`),
+    label: label.trim() || "زر جديد",
+    icon: icon.trim() || "🔘",
+    builtin: false,
+    enabled: true,
+    filters: [makeApplied("filter_result_limit")],
+  };
+}
 
 export type FilterMeta = {
   id: FilterId;
@@ -156,6 +195,74 @@ export const FILTER_LIBRARY: FilterMeta[] = [
     description: "الصيدليات التي تبقى مفتوحة بعد 18:00.",
     hasSettings: false,
   },
+  {
+    id: "filter_open_late",
+    label: "الدوام المسائي",
+    description: "الصيدليات التي تبقى مفتوحة بعد 18:00.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_favorites",
+    label: "المفضلة فقط",
+    description: "يقصر النتائج على الصيدليات المضافة إلى مفضلة المستخدم.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_24h",
+    label: "مفتوحة 24 ساعة",
+    description: "الصيدليات التي تعمل على مدار الساعة.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_night_duty",
+    label: "المناوبة الليلية",
+    description: "الصيدليات المناوبة بعد الساعة 20:00.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_delivery",
+    label: "توصيل للمنزل",
+    description: "الصيدليات التي توفر خدمة التوصيل.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_parking",
+    label: "موقف سيارات",
+    description: "الصيدليات التي يتوفر بجوارها موقف سيارات.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_arabic_speaker",
+    label: "يتحدث العربية",
+    description: "الصيدليات التي فيها موظف يتحدث العربية.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_state_only",
+    label: "مقاطعة محددة فقط",
+    description: "يقصر النتائج على المقاطعة المختارة يدوياً بدون GPS.",
+    hasSettings: false,
+    conflicts: ["filter_gps_state_detect"],
+  },
+  {
+    id: "filter_search_text",
+    label: "بحث نصي",
+    description: "يفعّل حقل بحث بالاسم أو العنوان.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_min_rating",
+    label: "حد أدنى للتقييم",
+    description: "يستبعد الصيدليات ذات التقييم المنخفض.",
+    hasSettings: false,
+  },
+  {
+    id: "filter_sort_alpha",
+    label: "ترتيب أبجدي",
+    description: "يرتب النتائج أبجدياً حسب اسم الصيدلية.",
+    hasSettings: false,
+    conflicts: ["filter_sort_nearest"],
+  },
 ];
 
 export function getFilterMeta(id: FilterId): FilterMeta {
@@ -184,9 +291,12 @@ export function makeApplied(id: FilterId): AppliedFilter {
   return s ? { id, settings: s } : { id };
 }
 
-export const DEFAULT_BUTTONS: Record<ButtonId, ButtonConfig> = {
+export const DEFAULT_BUTTONS: Record<BuiltinButtonId, ButtonConfig> = {
   nearby: {
     id: "nearby",
+    label: BUTTON_META.nearby.label,
+    icon: BUTTON_META.nearby.icon,
+    builtin: true,
     enabled: true,
     filters: [
       makeApplied("filter_time_auto"),
@@ -197,6 +307,9 @@ export const DEFAULT_BUTTONS: Record<ButtonId, ButtonConfig> = {
   },
   on_duty: {
     id: "on_duty",
+    label: BUTTON_META.on_duty.label,
+    icon: BUTTON_META.on_duty.icon,
+    builtin: true,
     enabled: true,
     filters: [
       makeApplied("filter_on_duty"),
@@ -207,6 +320,9 @@ export const DEFAULT_BUTTONS: Record<ButtonId, ButtonConfig> = {
   },
   open_now: {
     id: "open_now",
+    label: BUTTON_META.open_now.label,
+    icon: BUTTON_META.open_now.icon,
+    builtin: true,
     enabled: true,
     filters: [
       makeApplied("filter_open_now"),
@@ -216,6 +332,9 @@ export const DEFAULT_BUTTONS: Record<ButtonId, ButtonConfig> = {
   },
   all: {
     id: "all",
+    label: BUTTON_META.all.label,
+    icon: BUTTON_META.all.icon,
+    builtin: true,
     enabled: true,
     filters: [makeApplied("filter_sort_nearest"), makeApplied("filter_result_limit")],
   },
@@ -223,7 +342,8 @@ export const DEFAULT_BUTTONS: Record<ButtonId, ButtonConfig> = {
 
 export function defaultState(): ButtonFiltersState {
   return {
-    buttons: structuredClone(DEFAULT_BUTTONS),
+    buttons: structuredClone(DEFAULT_BUTTONS) as Record<ButtonId, ButtonConfig>,
+    order: [...BUILTIN_BUTTON_IDS],
     presets: [],
     updated_at: new Date().toISOString(),
   };
@@ -281,9 +401,25 @@ function readLocal(): ButtonFiltersState {
     const raw = window.localStorage.getItem(LOCAL_KEY);
     if (!raw) return defaultState();
     const p = JSON.parse(raw) as ButtonFiltersState;
-    // ensure all buttons exist
-    for (const id of BUTTON_IDS) {
+    // ensure all built-in buttons exist and migrate legacy shape
+    for (const id of BUILTIN_BUTTON_IDS) {
       if (!p.buttons[id]) p.buttons[id] = structuredClone(DEFAULT_BUTTONS[id]);
+      else {
+        const b = p.buttons[id];
+        if (!b.label) b.label = BUTTON_META[id].label;
+        if (!b.icon) b.icon = BUTTON_META[id].icon;
+        if (typeof b.builtin !== "boolean") b.builtin = true;
+      }
+    }
+    // migrate custom buttons missing new fields
+    for (const key of Object.keys(p.buttons)) {
+      const b = p.buttons[key];
+      if (!b.label) b.label = key;
+      if (!b.icon) b.icon = "🔘";
+      if (typeof b.builtin !== "boolean") b.builtin = BUILTIN_BUTTON_IDS.includes(key as BuiltinButtonId);
+    }
+    if (!Array.isArray(p.order) || p.order.length === 0) {
+      p.order = [...BUILTIN_BUTTON_IDS, ...Object.keys(p.buttons).filter((k) => !BUILTIN_BUTTON_IDS.includes(k as BuiltinButtonId))];
     }
     if (!Array.isArray(p.presets)) p.presets = [];
     return p;
@@ -318,8 +454,10 @@ export async function loadButtonFilters(): Promise<ButtonFiltersState> {
   const data = (json?.data ?? json) as Partial<ButtonFiltersState>;
   // merge with defaults
   const base = defaultState();
+  const merged = { ...base.buttons, ...(data.buttons || {}) };
   return {
-    buttons: { ...base.buttons, ...(data.buttons || {}) },
+    buttons: merged,
+    order: data.order && data.order.length > 0 ? data.order : Object.keys(merged),
     presets: data.presets || [],
     updated_at: data.updated_at || base.updated_at,
   };
@@ -362,5 +500,5 @@ export function previewButton(cfg: ButtonConfig): string {
     if (f.id === "filter_sort_nearest") return "ترتيب بالأقرب";
     return meta.label;
   });
-  return `عند ضغط "${BUTTON_META[cfg.id].label}": ${parts.join(" ← ")}`;
+  return `عند ضغط "${buttonLabel(cfg)}": ${parts.join(" ← ")}`;
 }

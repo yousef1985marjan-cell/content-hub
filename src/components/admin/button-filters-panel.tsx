@@ -15,12 +15,15 @@ import {
   Pencil,
 } from "lucide-react";
 import {
-  BUTTON_IDS,
+  BUILTIN_BUTTON_IDS,
   BUTTON_META,
   DEFAULT_BUTTONS,
   FILTER_LIBRARY,
   applyPresetToButton,
+  buttonIcon,
+  buttonLabel,
   conflictsIn,
+  createCustomButton,
   defaultSettingsFor,
   defaultState,
   getFilterMeta,
@@ -33,6 +36,7 @@ import {
   type ButtonConfig,
   type ButtonFiltersState,
   type ButtonId,
+  type BuiltinButtonId,
   type FilterId,
   type FilterPreset,
   type FilterSettingsMap,
@@ -64,18 +68,22 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const orderedIds = state.order;
+
   const dirtyButtons = useMemo(() => {
-    const out: Record<ButtonId, boolean> = {} as any;
-    for (const id of BUTTON_IDS) {
+    const out: Record<ButtonId, boolean> = {};
+    for (const id of orderedIds) {
       out[id] = JSON.stringify(state.buttons[id]) !== JSON.stringify(saved.buttons[id]);
     }
     return out;
-  }, [state, saved]);
+  }, [state, saved, orderedIds]);
 
   const anyDirty = useMemo(
-    () => Object.values(dirtyButtons).some(Boolean) ||
+    () =>
+      Object.values(dirtyButtons).some(Boolean) ||
+      JSON.stringify(state.order) !== JSON.stringify(saved.order) ||
       JSON.stringify(state.presets) !== JSON.stringify(saved.presets),
-    [dirtyButtons, state.presets, saved.presets],
+    [dirtyButtons, state.order, saved.order, state.presets, saved.presets],
   );
 
   const patchButton = (id: ButtonId, next: ButtonConfig) => {
@@ -95,22 +103,26 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 
   const saveButton = async (id: ButtonId) => {
     const cfg = state.buttons[id];
+    if (!cfg) return;
     if (cfg.filters.length === 0) {
-      flash(`لا يمكن حفظ زر "${BUTTON_META[id].label}" بلا فلاتر`);
+      flash(`لا يمكن حفظ زر "${buttonLabel(cfg)}" بلا فلاتر`);
       return;
     }
     const next: ButtonFiltersState = {
       ...saved,
       buttons: { ...saved.buttons, [id]: cfg },
+      order: state.order,
       presets: state.presets,
     };
-    await persist(next, `تم حفظ زر "${BUTTON_META[id].label}"`);
+    await persist(next, `تم حفظ زر "${buttonLabel(cfg)}"`);
   };
 
   const saveAll = async () => {
-    for (const id of BUTTON_IDS) {
-      if (state.buttons[id].filters.length === 0) {
-        flash(`لا يمكن الحفظ: زر "${BUTTON_META[id].label}" بلا فلاتر`);
+    for (const id of orderedIds) {
+      const cfg = state.buttons[id];
+      if (!cfg) continue;
+      if (cfg.filters.length === 0) {
+        flash(`لا يمكن الحفظ: زر "${buttonLabel(cfg)}" بلا فلاتر`);
         return;
       }
     }
@@ -118,8 +130,64 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
   };
 
   const resetButton = (id: ButtonId) => {
-    if (!confirm(`استعادة الإعداد الافتراضي لزر "${BUTTON_META[id].label}"؟`)) return;
-    patchButton(id, structuredClone(DEFAULT_BUTTONS[id]));
+    const cfg = state.buttons[id];
+    if (!cfg) return;
+    if (!confirm(`استعادة الإعداد الافتراضي لزر "${buttonLabel(cfg)}"؟`)) return;
+    if (cfg.builtin && BUILTIN_BUTTON_IDS.includes(id as BuiltinButtonId)) {
+      patchButton(id, structuredClone(DEFAULT_BUTTONS[id as BuiltinButtonId]));
+    } else {
+      patchButton(id, { ...cfg, filters: [makeApplied("filter_result_limit")] });
+    }
+  };
+
+  const addCustomButton = () => {
+    const label = prompt("اسم الزر الجديد:", "زر مخصص");
+    if (!label) return;
+    const icon = prompt("رمز (إيموجي) للزر:", "🔘") || "🔘";
+    const btn = createCustomButton(label, icon);
+    const next: ButtonFiltersState = {
+      ...state,
+      buttons: { ...state.buttons, [btn.id]: btn },
+      order: [...state.order, btn.id],
+    };
+    setState(next);
+    flash(`تمت إضافة زر "${btn.label}" — لا تنسَ الحفظ`);
+  };
+
+  const renameButton = (id: ButtonId) => {
+    const cfg = state.buttons[id];
+    if (!cfg) return;
+    const label = prompt("اسم الزر:", cfg.label);
+    if (!label) return;
+    const icon = prompt("رمز (إيموجي):", cfg.icon) || cfg.icon;
+    patchButton(id, { ...cfg, label, icon });
+  };
+
+  const deleteButton = (id: ButtonId) => {
+    const cfg = state.buttons[id];
+    if (!cfg) return;
+    if (cfg.builtin) {
+      alert("لا يمكن حذف زر أساسي — يمكنك إخفاؤه بدلاً من ذلك.");
+      return;
+    }
+    if (!confirm(`حذف زر "${cfg.label}" نهائياً؟`)) return;
+    const { [id]: _removed, ...rest } = state.buttons;
+    void _removed;
+    const next: ButtonFiltersState = {
+      ...state,
+      buttons: rest,
+      order: state.order.filter((x) => x !== id),
+    };
+    void persist(next, "تم حذف الزر");
+  };
+
+  const moveButton = (id: ButtonId, dir: -1 | 1) => {
+    const idx = state.order.indexOf(id);
+    const j = idx + dir;
+    if (idx < 0 || j < 0 || j >= state.order.length) return;
+    const nextOrder = [...state.order];
+    [nextOrder[idx], nextOrder[j]] = [nextOrder[j], nextOrder[idx]];
+    setState((s) => ({ ...s, order: nextOrder }));
   };
 
   const saveAsPreset = (buttonId: ButtonId) => {
@@ -138,18 +206,19 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     };
     const next = { ...state, presets: [...state.presets, preset] };
     setState(next);
-    // auto-persist presets
     void persist(next, `تم حفظ المجموعة "${name}"`);
   };
 
   const applyPreset = (preset: FilterPreset, target: ButtonId | "__all") => {
-    const targets = target === "__all" ? BUTTON_IDS : [target];
+    const targets = target === "__all" ? orderedIds : [target];
     let diffMsg = "";
     const nextButtons = { ...state.buttons };
     for (const id of targets) {
-      const { next, added, removed } = applyPresetToButton(nextButtons[id], preset);
+      const btn = nextButtons[id];
+      if (!btn) continue;
+      const { next, added, removed } = applyPresetToButton(btn, preset);
       nextButtons[id] = next;
-      diffMsg += `\n• ${BUTTON_META[id].label}: +${added.length}/-${removed.length}`;
+      diffMsg += `\n• ${buttonLabel(btn)}: +${added.length}/-${removed.length}`;
     }
     if (!confirm(`تطبيق "${preset.name}"؟${diffMsg}`)) return;
     setState((s) => ({ ...s, buttons: nextButtons }));
@@ -239,18 +308,22 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 
         {previewOpen && (
           <div className="mt-3 space-y-1 rounded-lg border border-border/60 bg-muted/20 p-3 text-xs">
-            {BUTTON_IDS.map((id) => (
-              <p key={id}>
-                <span className="font-bold">{BUTTON_META[id].icon}</span>{" "}
-                {previewButton(state.buttons[id])}
-              </p>
-            ))}
+            {orderedIds.map((id) => {
+              const b = state.buttons[id];
+              if (!b) return null;
+              return (
+                <p key={id}>
+                  <span className="font-bold">{buttonIcon(b)}</span>{" "}
+                  {previewButton(b)}
+                </p>
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Sub-tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={() => setTab("buttons")}
           className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
@@ -259,7 +332,7 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
               : "bg-muted text-muted-foreground hover:bg-secondary"
           }`}
         >
-          الأزرار الأربعة
+          الأزرار ({orderedIds.length})
         </button>
         <button
           onClick={() => setTab("presets")}
@@ -271,25 +344,45 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
         >
           المجموعات المحفوظة ({state.presets.length})
         </button>
+        {tab === "buttons" && (
+          <button
+            onClick={addCustomButton}
+            className="ms-auto inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
+          >
+            <Plus className="h-3 w-3" /> زر جديد
+          </button>
+        )}
       </div>
 
       {tab === "buttons" ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {BUTTON_IDS.map((id) => (
-            <ButtonCard
-              key={id}
-              cfg={state.buttons[id]}
-              dirty={dirtyButtons[id]}
-              onChange={(c) => patchButton(id, c)}
-              onSave={() => saveButton(id)}
-              onReset={() => resetButton(id)}
-              onSaveAsPreset={() => saveAsPreset(id)}
-            />
-          ))}
+          {orderedIds.map((id, idx) => {
+            const cfg = state.buttons[id];
+            if (!cfg) return null;
+            return (
+              <ButtonCard
+                key={id}
+                cfg={cfg}
+                dirty={!!dirtyButtons[id]}
+                canMoveUp={idx > 0}
+                canMoveDown={idx < orderedIds.length - 1}
+                onChange={(c) => patchButton(id, c)}
+                onSave={() => saveButton(id)}
+                onReset={() => resetButton(id)}
+                onSaveAsPreset={() => saveAsPreset(id)}
+                onRename={() => renameButton(id)}
+                onDelete={() => deleteButton(id)}
+                onMoveUp={() => moveButton(id, -1)}
+                onMoveDown={() => moveButton(id, 1)}
+              />
+            );
+          })}
         </div>
       ) : (
         <PresetsList
           presets={state.presets}
+          buttons={state.buttons}
+          order={orderedIds}
           onApply={applyPreset}
           onRename={renamePreset}
           onEdit={editPreset}
@@ -305,25 +398,35 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 function ButtonCard({
   cfg,
   dirty,
+  canMoveUp,
+  canMoveDown,
   onChange,
   onSave,
   onReset,
   onSaveAsPreset,
+  onRename,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
 }: {
   cfg: ButtonConfig;
   dirty: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
   onChange: (c: ButtonConfig) => void;
   onSave: () => void;
   onReset: () => void;
   onSaveAsPreset: () => void;
+  onRename: () => void;
+  onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }) {
   const [addFid, setAddFid] = useState<FilterId | "">("");
   const [openSettings, setOpenSettings] = useState<string | null>(null);
 
   const used = new Set(cfg.filters.map((f) => f.id));
   const available = FILTER_LIBRARY.filter((f) => !used.has(f.id));
-
-  const meta = BUTTON_META[cfg.id];
 
   const move = (idx: number, dir: -1 | 1) => {
     const j = idx + dir;
@@ -369,26 +472,70 @@ function ButtonCard({
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="mb-3 flex items-center justify-between border-b border-border pb-3">
-        <h3 className="flex items-center gap-2 text-base font-black text-primary">
-          <span className="text-xl">{meta.icon}</span>
-          {meta.label}
+      <div className="mb-3 flex items-center justify-between gap-2 border-b border-border pb-3">
+        <h3 className="flex min-w-0 items-center gap-2 text-base font-black text-primary">
+          <span className="text-xl">{buttonIcon(cfg)}</span>
+          <span className="truncate">{buttonLabel(cfg)}</span>
+          {!cfg.builtin && (
+            <span className="rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">
+              مخصص
+            </span>
+          )}
           {dirty && (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
               غير محفوظ
             </span>
           )}
         </h3>
-        <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-bold">
-          <input
-            type="checkbox"
-            checked={cfg.enabled}
-            onChange={(e) => onChange({ ...cfg, enabled: e.target.checked })}
-            className="h-4 w-4 accent-primary"
-          />
-          {cfg.enabled ? "ظاهر" : "مخفي"}
-        </label>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onMoveUp}
+            disabled={!canMoveUp}
+            className="rounded-md border border-input bg-background p-1.5 hover:bg-muted disabled:opacity-30"
+            aria-label="تحريك لأعلى"
+            title="تحريك لأعلى"
+          >
+            <ChevronUp className="h-3 w-3" />
+          </button>
+          <button
+            onClick={onMoveDown}
+            disabled={!canMoveDown}
+            className="rounded-md border border-input bg-background p-1.5 hover:bg-muted disabled:opacity-30"
+            aria-label="تحريك لأسفل"
+            title="تحريك لأسفل"
+          >
+            <ChevronDown className="h-3 w-3" />
+          </button>
+          <button
+            onClick={onRename}
+            className="rounded-md border border-input bg-background p-1.5 hover:bg-muted"
+            aria-label="تعديل التسمية"
+            title="تعديل الاسم والرمز"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+          {!cfg.builtin && (
+            <button
+              onClick={onDelete}
+              className="rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20"
+              aria-label="حذف الزر"
+              title="حذف الزر"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          )}
+          <label className="ms-1 inline-flex cursor-pointer items-center gap-1 text-xs font-bold">
+            <input
+              type="checkbox"
+              checked={cfg.enabled}
+              onChange={(e) => onChange({ ...cfg, enabled: e.target.checked })}
+              className="h-4 w-4 accent-primary"
+            />
+            {cfg.enabled ? "ظاهر" : "مخفي"}
+          </label>
+        </div>
       </div>
+
 
       {cfg.filters.length === 0 ? (
         <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
@@ -650,12 +797,16 @@ function HoursEditor({
 
 function PresetsList({
   presets,
+  buttons,
+  order,
   onApply,
   onRename,
   onEdit,
   onDelete,
 }: {
   presets: FilterPreset[];
+  buttons: Record<ButtonId, ButtonConfig>;
+  order: ButtonId[];
   onApply: (p: FilterPreset, target: ButtonId | "__all") => void;
   onRename: (p: FilterPreset) => void;
   onEdit: (p: FilterPreset) => void;
@@ -674,6 +825,8 @@ function PresetsList({
         <PresetCard
           key={p.id}
           preset={p}
+          buttons={buttons}
+          order={order}
           onApply={onApply}
           onRename={onRename}
           onEdit={onEdit}
@@ -686,12 +839,16 @@ function PresetsList({
 
 function PresetCard({
   preset,
+  buttons,
+  order,
   onApply,
   onRename,
   onEdit,
   onDelete,
 }: {
   preset: FilterPreset;
+  buttons: Record<ButtonId, ButtonConfig>;
+  order: ButtonId[];
   onApply: (p: FilterPreset, target: ButtonId | "__all") => void;
   onRename: (p: FilterPreset) => void;
   onEdit: (p: FilterPreset) => void;
@@ -754,11 +911,15 @@ function PresetCard({
           className="rounded-lg border border-input bg-background px-2 py-1.5 text-xs"
         >
           <option value="">تطبيق على زر...</option>
-          {BUTTON_IDS.map((id) => (
-            <option key={id} value={id}>
-              {BUTTON_META[id].label}
-            </option>
-          ))}
+          {order.map((id) => {
+            const b = buttons[id];
+            if (!b) return null;
+            return (
+              <option key={id} value={id}>
+                {buttonLabel(b)}
+              </option>
+            );
+          })}
         </select>
         <button
           onClick={() => {
