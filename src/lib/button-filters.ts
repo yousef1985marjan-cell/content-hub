@@ -396,7 +396,9 @@ export function defaultState(): ButtonFiltersState {
     presets: [],
     customFilters: [],
     filterOverrides: {},
+    hiddenFilters: [],
     updated_at: new Date().toISOString(),
+
 
   };
 }
