@@ -32,8 +32,14 @@ export const translateSection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => InputSchema.parse(data))
   .handler(async ({ data }) => {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("app_secrets")
+      .select("value")
+      .eq("name", "OPENAI_API_KEY")
+      .maybeSingle();
+    const apiKey = row?.value || process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error("لم يتم إعداد مفتاح OpenAI في لوحة التحكم");
 
     const results: Translated[] = [];
     for (const lang of data.targets) {
