@@ -1477,3 +1477,228 @@ function AdminInfo({ flash }: { flash: (m: string) => void }) {
     </div>
   );
 }
+
+type AdminUser = {
+  id: string;
+  email: string;
+  created_at: string;
+  last_sign_in_at: string | null;
+  roles: ("admin" | "editor")[];
+};
+
+function UsersManager({ flash }: { flash: (m: string) => void }) {
+  const fetchList = useServerFn(listUsers);
+  const doCreate = useServerFn(createUser);
+  const doUpdateRole = useServerFn(updateUserRole);
+  const doDelete = useServerFn(deleteUser);
+  const doClaim = useServerFn(claimBootstrapAdmin);
+
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"admin" | "editor">("editor");
+  const [creating, setCreating] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetchList();
+      setUsers(res.users);
+      setCurrentUserId(res.currentUserId);
+    } catch (e) {
+      const msg = (e as Error).message || "تعذّر تحميل المستخدمين";
+      if (msg.includes("مدير")) {
+        try {
+          const claim = await doClaim();
+          if (claim.granted) {
+            const res2 = await fetchList();
+            setUsers(res2.users);
+            setCurrentUserId(res2.currentUserId);
+            flash("تم منحك صلاحية المدير");
+            setLoading(false);
+            return;
+          }
+        } catch (ce) {
+          setError((ce as Error).message);
+          setLoading(false);
+          return;
+        }
+      }
+      setError(msg);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setCreating(true);
+    try {
+      await doCreate({ data: { email, password, role } });
+      setEmail("");
+      setPassword("");
+      setRole("editor");
+      flash("تمت إضافة المستخدم");
+      await load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+    setCreating(false);
+  };
+
+  const onChangeRole = async (userId: string, newRole: "admin" | "editor") => {
+    setError(null);
+    try {
+      await doUpdateRole({ data: { userId, role: newRole } });
+      flash("تم تحديث الصلاحية");
+      await load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+  const onDelete = async (userId: string, userEmail: string) => {
+    if (!confirm(`حذف المستخدم ${userEmail}؟ لا يمكن التراجع.`)) return;
+    setError(null);
+    try {
+      await doDelete({ data: { userId } });
+      flash("تم حذف المستخدم");
+      await load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-2xl border border-border bg-card p-6">
+        <h3 className="mb-1 text-lg font-black text-primary">إضافة مستخدم جديد</h3>
+        <p className="mb-4 text-xs text-muted-foreground">
+          أنشئ حساباً جديداً وحدد صلاحيته. صلاحية <b>مدير</b> يمكنها إدارة المستخدمين، بينما <b>محرّر</b> يمكنه تعديل المحتوى فقط.
+        </p>
+        <form onSubmit={onCreate} className="grid gap-3 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-bold text-muted-foreground">البريد الإلكتروني</label>
+            <input
+              type="email"
+              dir="ltr"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-bold text-muted-foreground">كلمة السر</label>
+            <input
+              type="text"
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="6 أحرف على الأقل"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-bold text-muted-foreground">الصلاحية</label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as "admin" | "editor")}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="editor">محرّر</option>
+              <option value="admin">مدير</option>
+            </select>
+          </div>
+          <div className="sm:col-span-2">
+            <button
+              type="submit"
+              disabled={creating}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              <Plus className="h-4 w-4" /> {creating ? "جاري الإضافة..." : "إضافة المستخدم"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {error && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          {error}
+        </div>
+      )}
+
+      <section className="rounded-2xl border border-border bg-card p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-black text-primary">المستخدمون ({users.length})</h3>
+          <button
+            onClick={load}
+            className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
+          >
+            <RotateCcw className="h-3 w-3" /> تحديث
+          </button>
+        </div>
+
+        {loading ? (
+          <p className="text-sm text-muted-foreground">جاري التحميل...</p>
+        ) : users.length === 0 ? (
+          <p className="text-sm text-muted-foreground">لا يوجد مستخدمون بعد.</p>
+        ) : (
+          <div className="space-y-2">
+            {users.map((u) => {
+              const isMe = u.id === currentUserId;
+              const currentRole: "admin" | "editor" = u.roles.includes("admin")
+                ? "admin"
+                : u.roles.includes("editor")
+                  ? "editor"
+                  : "editor";
+              return (
+                <div
+                  key={u.id}
+                  className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 bg-muted/20 p-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-mono text-sm" dir="ltr">
+                      {u.email} {isMe && <span className="mr-2 rounded bg-primary/20 px-2 py-0.5 text-[10px] text-primary">أنت</span>}
+                    </div>
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      أُنشئ: {new Date(u.created_at).toLocaleDateString("ar")}
+                      {u.last_sign_in_at && ` • آخر دخول: ${new Date(u.last_sign_in_at).toLocaleDateString("ar")}`}
+                    </div>
+                  </div>
+                  <select
+                    value={currentRole}
+                    onChange={(e) => onChangeRole(u.id, e.target.value as "admin" | "editor")}
+                    disabled={isMe}
+                    className="rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                  >
+                    <option value="editor">محرّر</option>
+                    <option value="admin">مدير</option>
+                  </select>
+                  <button
+                    onClick={() => onDelete(u.id, u.email)}
+                    disabled={isMe}
+                    className="inline-flex items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20 disabled:opacity-30"
+                  >
+                    <Trash2 className="h-3 w-3" /> حذف
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
