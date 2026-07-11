@@ -7,6 +7,7 @@ export type ExtraLink = {
   thumbnail?: string;
   icon?: string;
   description?: string;
+  youtubeUrl?: string;
 };
 
 export type PlatformLink = {

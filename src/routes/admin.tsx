@@ -877,8 +877,20 @@ function ExtraLinksEditor({
                     rows={2}
                     className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                   />
+                  <div className="flex items-center gap-2">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-red-600 text-white" title="فيديو يوتيوب">
+                      <BrandIcon brand="youtube" className="h-4 w-4" />
+                    </span>
+                    <input
+                      dir="ltr"
+                      value={l.youtubeUrl ?? ""}
+                      onChange={(e) => patch(l.id, { youtubeUrl: e.target.value })}
+                      placeholder="رابط فيديو يوتيوب (اختياري) — https://youtu.be/..."
+                      className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-left text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
                   <p className="text-[10px] text-muted-foreground">
-                    الصورة المصغّرة تُلتقط تلقائياً من واجهة الرابط، أو ارفع صورة مخصّصة.
+                    الصورة المصغّرة تُلتقط تلقائياً من واجهة الرابط، أو ارفع صورة مخصّصة. يمكن إضافة رابط فيديو يوتيوب ليظهر داخل البطاقة.
                   </p>
                 </div>
                 <div className="flex flex-col gap-1">

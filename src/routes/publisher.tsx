@@ -212,8 +212,15 @@ function autoThumb(url: string): string {
   return `https://image.thum.io/get/width/600/crop/400/${url}`;
 }
 
+function ytId(url: string): string | null {
+  if (!url) return null;
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([\w-]{6,})/);
+  return m ? m[1] : null;
+}
+
 function ExtraLinkTile({ link }: { link: ExtraLink }) {
-  const thumb = link.thumbnail || autoThumb(link.url);
+  const yt = link.youtubeUrl ? ytId(link.youtubeUrl) : null;
+  const thumb = link.thumbnail || (yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : autoThumb(link.url));
   return (
     <a
       href={link.url}
@@ -238,6 +245,13 @@ function ExtraLinkTile({ link }: { link: ExtraLink }) {
             <ExternalLink className="h-6 w-6" />
           </div>
         )}
+        {yt && (
+          <div className="pointer-events-none absolute inset-0 grid place-items-center">
+            <div className="grid h-12 w-12 place-items-center rounded-full bg-red-600/90 text-white shadow-lg">
+              <BrandIcon brand="youtube" className="h-6 w-6" />
+            </div>
+          </div>
+        )}
       </div>
       <div className="flex items-start gap-3 p-3">
         {link.icon && (
@@ -256,6 +270,19 @@ function ExtraLinkTile({ link }: { link: ExtraLink }) {
           ) : (
             <div className="truncate text-[11px] text-muted-foreground" dir="ltr">
               {link.url.replace(/^https?:\/\//, "")}
+            </div>
+          )}
+          {yt && link.youtubeUrl && (
+            <div
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.open(link.youtubeUrl, "_blank", "noopener,noreferrer");
+              }}
+              className="mt-1.5 inline-flex cursor-pointer items-center gap-1 rounded-full bg-red-600/10 px-2 py-0.5 text-[10px] font-bold text-red-600 hover:bg-red-600/20"
+            >
+              <BrandIcon brand="youtube" className="h-3 w-3" />
+              مشاهدة الفيديو
             </div>
           )}
         </div>
