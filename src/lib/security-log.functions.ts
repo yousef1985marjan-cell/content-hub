@@ -47,3 +47,31 @@ export const sendReferenceEmailTest = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+export const logSelfSignIn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    const { logSecurityEvent } = await import("./security-log.server");
+    await logSecurityEvent({
+      event: "user.signed_in",
+      actorId: context.userId,
+      actorEmail: userRes.user?.email ?? null,
+    });
+    return { ok: true };
+  });
+
+export const logSelfPasswordResetRequest = createServerFn({ method: "POST" })
+  .inputValidator((data: { email: string }) => {
+    if (!data.email || !data.email.includes("@")) throw new Error("بريد غير صالح");
+    return data;
+  })
+  .handler(async ({ data }) => {
+    const { logSecurityEvent } = await import("./security-log.server");
+    await logSecurityEvent({
+      event: "user.password_reset_self_requested",
+      targetEmail: data.email,
+    });
+    return { ok: true };
+  });
