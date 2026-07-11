@@ -1,6 +1,6 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { Plus, Trash2, RotateCcw, Copy, Pencil, Mail, ShieldCheck, ShieldOff } from "lucide-react";
+import { Plus, Trash2, RotateCcw, Copy, Pencil, Mail, ShieldCheck, ShieldOff, Eye, EyeOff } from "lucide-react";
 import {
   listUsers,
   createUser,
