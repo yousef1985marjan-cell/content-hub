@@ -239,12 +239,25 @@ function ExtraLinkTile({ link }: { link: ExtraLink }) {
           </div>
         )}
       </div>
-      <div className="flex items-center justify-between gap-2 p-3">
-        <div className="min-w-0 text-right">
+      <div className="flex items-start gap-3 p-3">
+        {link.icon && (
+          <img
+            src={link.icon}
+            alt=""
+            className="h-10 w-10 shrink-0 rounded-lg object-cover ring-1 ring-border"
+          />
+        )}
+        <div className="min-w-0 flex-1 text-right">
           <div className="truncate text-sm font-black text-foreground">{link.title}</div>
-          <div className="truncate text-[11px] text-muted-foreground" dir="ltr">
-            {link.url.replace(/^https?:\/\//, "")}
-          </div>
+          {link.description ? (
+            <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+              {link.description}
+            </p>
+          ) : (
+            <div className="truncate text-[11px] text-muted-foreground" dir="ltr">
+              {link.url.replace(/^https?:\/\//, "")}
+            </div>
+          )}
         </div>
         <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
       </div>
