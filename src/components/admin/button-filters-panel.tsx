@@ -18,7 +18,7 @@ import {
   BUILTIN_BUTTON_IDS,
   BUTTON_META,
   DEFAULT_BUTTONS,
-  FILTER_LIBRARY,
+  allFilters,
   allFilters,
   applyPresetToButton,
   buttonIcon,
