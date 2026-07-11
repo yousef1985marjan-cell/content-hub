@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { BRAND_META, BrandIcon, detectBrand, isGeneric, type BrandKey } from "@/lib/brand-icons";
 
-export const Route = createFileRoute("/admin")({
+export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "لوحة التحكم — منصات شفاء" }, { name: "robots", content: "noindex" }] }),
   component: Admin,
 });
