@@ -118,7 +118,7 @@ function SocialTile({ item }: { item: PubItem }) {
       ? "radial-gradient(circle at 30% 110%, #FFD776 0%, #F58529 20%, #DD2A7B 45%, #8134AF 70%, #515BD4 100%)"
       : color
       ? `linear-gradient(135deg, ${color}, ${color})`
-      : "var(--gradient-hero)");
+      : "var(--header)");
   return (
     <a
       href={item.url}
@@ -254,7 +254,7 @@ function AppCard({ item }: { item: PubItem }) {
       <div className="flex items-start gap-3">
         <div
           className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl text-white"
-          style={{ background: item.iconBg || (brand ? BRAND_META[brand]?.color : "var(--gradient-hero)") }}
+          style={{ background: item.iconBg || (brand ? BRAND_META[brand]?.color : "var(--header)") }}
         >
           {logo ? (
             <img src={logo} alt="" className="h-full w-full object-cover" />
@@ -302,7 +302,7 @@ function DiscoverTile({ item }: { item: PubItem }) {
     >
       <div
         className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl text-white"
-        style={{ background: item.iconBg || (brand ? BRAND_META[brand]?.color : "var(--gradient-hero)") }}
+        style={{ background: item.iconBg || (brand ? BRAND_META[brand]?.color : "var(--header)") }}
       >
         {img ? (
           <img src={img} alt="" className="h-full w-full object-cover" />
