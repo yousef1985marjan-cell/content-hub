@@ -41,34 +41,43 @@ export const translateSection = createServerFn({ method: "POST" })
     const apiKey = row?.value || process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error("لم يتم إعداد مفتاح OpenAI في لوحة التحكم");
 
-    const results: Translated[] = [];
-    for (const lang of data.targets) {
+    async function translateOne(lang: string): Promise<Translated> {
       const targetName = LANG_NAMES[lang] || lang;
       const linksJson = JSON.stringify(data.links.map((l) => ({ id: l.id, title: l.title })));
       const system = `You are a professional translator. Translate from Arabic to ${targetName}. Preserve line breaks. Keep URLs untouched. Reply with ONLY valid JSON matching the schema {"title": string, "content": string, "links": [{"id": string, "title": string}]}. Do not add commentary.`;
       const user = `Arabic title:\n${data.title}\n\nArabic content:\n${data.content}\n\nLinks to translate titles for (keep id exactly, translate title only):\n${linksJson}`;
 
-      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: system },
-            { role: "user", content: user },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.2,
-        }),
-      });
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 45000);
+      let resp: Response;
+      try {
+        resp = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          signal: ctrl.signal,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              { role: "system", content: system },
+              { role: "user", content: user },
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.2,
+          }),
+        });
+      } catch (e) {
+        clearTimeout(timer);
+        throw new Error(`Translation to ${targetName} failed: ${(e as Error).message}`);
+      }
+      clearTimeout(timer);
 
       if (!resp.ok) {
         const errorBody = await resp.text();
         console.error(`OpenAI request failed [${resp.status}]: ${errorBody}`);
-        throw new Error(`Translation failed [${resp.status}]: ${errorBody}`);
+        throw new Error(`Translation to ${targetName} failed [${resp.status}]: ${errorBody.slice(0, 200)}`);
       }
       const json = await resp.json();
       const raw = json?.choices?.[0]?.message?.content ?? "{}";
@@ -79,12 +88,14 @@ export const translateSection = createServerFn({ method: "POST" })
         parsed = {};
       }
       const linkMap = new Map((parsed.links || []).map((l) => [l.id, l.title]));
-      results.push({
+      return {
         lang,
         title: parsed.title || "",
         content: parsed.content || "",
         links: data.links.map((l) => ({ id: l.id, title: linkMap.get(l.id) || l.title, url: l.url })),
-      });
+      };
     }
+
+    const results = await Promise.all(data.targets.map(translateOne));
     return { results };
   });
