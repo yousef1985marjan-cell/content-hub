@@ -105,3 +105,18 @@ export const claimBootstrapAdmin = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { granted: true };
   });
+
+export const resetUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { userId: string; password: string }) => {
+    if (!data.userId) throw new Error("مستخدم غير محدد");
+    if (!data.password || data.password.length < 6) throw new Error("كلمة السر يجب 6 أحرف على الأقل");
+    if (data.password.length > 200) throw new Error("كلمة السر طويلة جداً");
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    const admin = await assertAdminOrBootstrap(context.userId);
+    const { error } = await admin.auth.admin.updateUserById(data.userId, { password: data.password });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
