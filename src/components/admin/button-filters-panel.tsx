@@ -154,6 +154,43 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     flash(`تم تغيير اسم الزر إلى "${trimmed}"`);
   };
 
+  // Editable section labels (panel title + tabs)
+  const PANEL_TITLE_KEY = "shifa-filters-panel-title-v1";
+  const TAB_BUTTONS_KEY = "shifa-filters-tab-buttons-v1";
+  const TAB_PRESETS_KEY = "shifa-filters-tab-presets-v1";
+  const readLS = (k: string, d: string) => {
+    if (typeof window === "undefined") return d;
+    return window.localStorage.getItem(k) || d;
+  };
+  const [panelTitle, setPanelTitle] = useState<string>(() =>
+    readLS(PANEL_TITLE_KEY, "إدارة فلاتر الأزرار"),
+  );
+  const [tabButtonsLabel, setTabButtonsLabel] = useState<string>(() =>
+    readLS(TAB_BUTTONS_KEY, "الفلاتر"),
+  );
+  const [tabPresetsLabel, setTabPresetsLabel] = useState<string>(() =>
+    readLS(TAB_PRESETS_KEY, "المجموعات المحفوظة"),
+  );
+  const renameSection = (
+    current: string,
+    setter: (v: string) => void,
+    key: string,
+    promptLabel: string,
+  ) => {
+    const next = prompt(promptLabel, current);
+    if (!next) return;
+    const trimmed = next.trim();
+    if (!trimmed) return;
+    setter(trimmed);
+    try {
+      window.localStorage.setItem(key, trimmed);
+    } catch {
+      /* ignore */
+    }
+    flash(`تم تغيير الاسم إلى "${trimmed}"`);
+  };
+
+
   useEffect(() => {
     (async () => {
       setLoading(true);
