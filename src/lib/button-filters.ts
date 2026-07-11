@@ -422,5 +422,5 @@ export function previewButton(cfg: ButtonConfig): string {
     if (f.id === "filter_sort_nearest") return "ترتيب بالأقرب";
     return meta.label;
   });
-  return `عند ضغط "${BUTTON_META[cfg.id].label}": ${parts.join(" ← ")}`;
+  return `عند ضغط "${buttonLabel(cfg)}": ${parts.join(" ← ")}`;
 }
