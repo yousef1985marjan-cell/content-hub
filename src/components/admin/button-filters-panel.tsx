@@ -261,9 +261,46 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     void persist(next, "تم التعديل");
   };
 
+  const addCustomFilter = (label: string, description: string) => {
+    const id = `filter_custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    const meta: FilterMeta = { id, label: label.trim() || "فلتر مخصص", description: description.trim(), hasSettings: false };
+    const nextCustom = [...state.customFilters, meta];
+    setCustomFilters(nextCustom);
+    setState((s) => ({ ...s, customFilters: nextCustom }));
+    flash(`تمت إضافة فلتر "${meta.label}" — لا تنسَ الحفظ`);
+  };
+
+  const renameCustomFilter = (id: FilterId, label: string, description: string) => {
+    const nextCustom = state.customFilters.map((f) =>
+      f.id === id ? { ...f, label: label.trim() || f.label, description: description.trim() } : f,
+    );
+    setCustomFilters(nextCustom);
+    setState((s) => ({ ...s, customFilters: nextCustom }));
+  };
+
+  const deleteCustomFilter = (id: FilterId) => {
+    const meta = state.customFilters.find((f) => f.id === id);
+    if (!meta) return;
+    if (!confirm(`حذف الفلتر "${meta.label}"؟ سيُزال من جميع الأزرار والمجموعات.`)) return;
+    const nextCustom = state.customFilters.filter((f) => f.id !== id);
+    const nextButtons: Record<ButtonId, ButtonConfig> = {};
+    for (const bid of Object.keys(state.buttons)) {
+      const b = state.buttons[bid];
+      nextButtons[bid] = { ...b, filters: b.filters.filter((f) => f.id !== id) };
+    }
+    const nextPresets = state.presets.map((p) => ({
+      ...p,
+      filters: p.filters.filter((f) => f.id !== id),
+    }));
+    setCustomFilters(nextCustom);
+    setState((s) => ({ ...s, customFilters: nextCustom, buttons: nextButtons, presets: nextPresets }));
+    flash(`تم حذف الفلتر "${meta.label}"`);
+  };
+
   if (loading) {
     return <p className="text-muted-foreground">جاري التحميل...</p>;
   }
+
 
   return (
     <div className="space-y-4">
