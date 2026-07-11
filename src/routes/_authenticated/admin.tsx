@@ -13,7 +13,7 @@ import {
   type SectionLink,
 } from "@/lib/content-store";
 import { translateSection } from "@/lib/translate.functions";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Save, Plus, Trash2, Languages } from "lucide-react";
 import { SettingsPanel } from "@/components/admin/settings-panel";
 import { ButtonFiltersPanel } from "@/components/admin/button-filters-panel";
