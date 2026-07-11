@@ -43,7 +43,7 @@ export const createUser = createServerFn({ method: "POST" })
   .inputValidator((data: { email: string; password: string; role: Role }) => {
     if (!data.email || !data.email.includes("@")) throw new Error("بريد غير صالح");
     if (!data.password || data.password.length < 6) throw new Error("كلمة السر يجب 6 أحرف على الأقل");
-    if (data.role !== "admin" && data.role !== "editor") throw new Error("صلاحية غير صالحة");
+    if (!ROLES.includes(data.role)) throw new Error("صلاحية غير صالحة");
     return data;
   })
   .handler(async ({ data, context }) => {
