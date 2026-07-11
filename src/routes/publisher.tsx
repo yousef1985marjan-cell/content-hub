@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/page-shell";
-import { useContent, type PlatformLink } from "@/lib/content-store";
+import { useContent, type PlatformLink, type ExtraLink } from "@/lib/content-store";
 import { ExternalLink } from "lucide-react";
 import { BrandIcon, detectBrand, BRAND_META, isGeneric, type BrandKey } from "@/lib/brand-icons";
 
