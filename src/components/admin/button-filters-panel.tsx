@@ -837,45 +837,47 @@ function ButtonCard({
           onClick={onSave}
           disabled={!dirty}
           className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          title="حفظ التعديلات على هذه البطاقة (الاسم، الرمز، الحالة، الفلاتر)"
         >
           <Save className="h-3 w-3" />
-          حفظ فلتر البطاقة
+          حفظ التغييرات
         </button>
         <button
           onClick={onCopyFilters}
           className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
-          title="نسخ فلاتر هذه البطاقة"
+          title="نسخ قائمة فلاتر هذه البطاقة فقط إلى الحافظة"
         >
           <Copy className="h-3 w-3" />
-          نسخ فلتر البطاقة
+          نسخ الفلاتر
         </button>
         <button
           onClick={onPasteFilters}
           disabled={!hasFiltersClip}
           className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted disabled:opacity-40"
-          title="لصق الفلاتر المنسوخة"
+          title="لصق الفلاتر المنسوخة هنا مع الإبقاء على الفلاتر المثبتة وتجاوز المتعارض"
         >
           <ClipboardPaste className="h-3 w-3" />
-          لصق فلتر البطاقة
+          لصق الفلاتر
         </button>
         <button
           onClick={onCopyCard}
           className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
-          title="نسخ البطاقة كاملة (الاسم/الرمز/الحالة/الفلاتر)"
+          title="نسخ محتوى البطاقة كاملاً (الاسم + الرمز + التفعيل + الفلاتر)"
         >
           <Copy className="h-3 w-3" />
-          نسخ البطاقة كاملة
+          نسخ البطاقة
         </button>
         <button
           onClick={onPasteCard}
           disabled={!hasCardClip}
-          className="inline-flex items-center gap-1 rounded-lg border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent-foreground hover:bg-accent/20 disabled:opacity-40"
-          title="لصق بطاقة كاملة"
+          className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 disabled:opacity-40"
+          title="استبدال هذه البطاقة بالمحتوى المنسوخ سابقاً"
         >
           <ClipboardPaste className="h-3 w-3" />
-          الصق بطاقة كاملة
+          استبدال بالمنسوخة
         </button>
       </div>
+
 
     </div>
   );
