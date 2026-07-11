@@ -308,19 +308,30 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
           <div>
             <label className="mb-1 block text-xs font-bold text-muted-foreground">كلمة السر</label>
             <div className="flex gap-2">
-              <input
-                type="text"
-                required
-                minLength={6}
-                maxLength={200}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="6 أحرف على الأقل"
-              />
+              <div className="relative flex-1">
+                <input
+                  type={showCreatePass ? "text" : "password"}
+                  required
+                  minLength={6}
+                  maxLength={200}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 pe-10 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="6 أحرف على الأقل"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCreatePass((v) => !v)}
+                  className="absolute inset-y-0 end-2 my-auto grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-muted"
+                  aria-label={showCreatePass ? "إخفاء" : "إظهار"}
+                  title={showCreatePass ? "إخفاء" : "إظهار"}
+                >
+                  {showCreatePass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               <button
                 type="button"
-                onClick={() => setPassword(genPass())}
+                onClick={() => { setPassword(genPass()); setShowCreatePass(true); }}
                 className="rounded-lg border border-input bg-background px-3 text-xs font-bold hover:bg-muted"
               >
                 توليد
