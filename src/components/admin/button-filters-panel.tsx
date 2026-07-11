@@ -675,6 +675,7 @@ function ButtonCard({
       alert(`الفلتر "${fm.label}" مثبت لهذا الزر ولا يمكن إزالته.`);
       return;
     }
+    if (!window.confirm(`هل أنت متأكد بأنك ستحذف فلتر "${fm.label}" من هذه البطاقة؟`)) return;
     onChange({ ...cfg, filters: cfg.filters.filter((f) => f.id !== fid) });
   };
 
