@@ -56,7 +56,7 @@ export async function logSecurityEvent(input: LogInput): Promise<void> {
       target_id: input.targetId ?? null,
       target_email: input.targetEmail ?? null,
       status: input.status ?? "success",
-      details: input.details ?? {},
+      details: (input.details ?? {}) as never,
     });
   } catch (e) {
     console.error("[audit] failed to log", e);
