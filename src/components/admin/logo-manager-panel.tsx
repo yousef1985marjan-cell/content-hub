@@ -67,7 +67,7 @@ export function LogoManagerPanel({ flash }: { flash: (m: string) => void }) {
     if (!label) return;
     setCards((cs) => [
       ...cs,
-      { id: crypto.randomUUID(), label: label.trim(), saved: "", draft: "" },
+      { id: crypto.randomUUID(), label: label.trim(), saved: "", draft: "", published: false },
     ]);
     flash("تمت إضافة بطاقة جديدة");
   };
