@@ -1013,3 +1013,169 @@ function PresetCard({
     </div>
   );
 }
+
+// ---------- Custom Filters Manager ----------
+
+function CustomFiltersManager({
+  filters,
+  onAdd,
+  onRename,
+  onDelete,
+  onClose,
+}: {
+  filters: FilterMeta[];
+  onAdd: (label: string, description: string) => void;
+  onRename: (id: FilterId, label: string, description: string) => void;
+  onDelete: (id: FilterId) => void;
+  onClose: () => void;
+}) {
+  const [label, setLabel] = useState("");
+  const [description, setDescription] = useState("");
+  const [editingId, setEditingId] = useState<FilterId | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+
+  const submit = () => {
+    if (!label.trim()) return;
+    onAdd(label, description);
+    setLabel("");
+    setDescription("");
+  };
+
+  const startEdit = (f: FilterMeta) => {
+    setEditingId(f.id);
+    setEditLabel(f.label);
+    setEditDesc(f.description || "");
+  };
+
+  const saveEdit = () => {
+    if (editingId) onRename(editingId, editLabel, editDesc);
+    setEditingId(null);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[85vh] w-full max-w-2xl overflow-auto rounded-2xl border border-border bg-card p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+          <h3 className="text-lg font-black text-primary">إدارة الفلاتر المخصصة</h3>
+          <button
+            onClick={onClose}
+            className="rounded-md border border-input bg-background px-3 py-1 text-xs font-bold hover:bg-muted"
+          >
+            إغلاق
+          </button>
+        </div>
+
+        {/* Add form */}
+        <div className="mb-4 rounded-xl border border-border bg-muted/20 p-3">
+          <h4 className="mb-2 text-sm font-bold text-primary">إضافة فلتر جديد</h4>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <input
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="اسم الفلتر"
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            />
+            <input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="وصف مختصر (اختياري)"
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="mt-2 flex justify-end">
+            <button
+              onClick={submit}
+              disabled={!label.trim()}
+              className="inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              <Plus className="h-3 w-3" /> إضافة
+            </button>
+          </div>
+        </div>
+
+        {/* List */}
+        {filters.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            لا توجد فلاتر مخصصة بعد.
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {filters.map((f) => {
+              const isEditing = editingId === f.id;
+              return (
+                <li
+                  key={f.id}
+                  className="rounded-lg border border-border bg-background p-3"
+                >
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <input
+                        value={editLabel}
+                        onChange={(e) => setEditLabel(e.target.value)}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                        placeholder="اسم الفلتر"
+                      />
+                      <input
+                        value={editDesc}
+                        onChange={(e) => setEditDesc(e.target.value)}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                        placeholder="الوصف"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={saveEdit}
+                          className="rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground hover:opacity-90"
+                        >
+                          حفظ
+                        </button>
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="rounded-lg border border-input bg-background px-3 py-1 text-xs font-bold hover:bg-muted"
+                        >
+                          إلغاء
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold">{f.label}</p>
+                        {f.description && (
+                          <p className="text-xs text-muted-foreground">{f.description}</p>
+                        )}
+                        <p className="mt-0.5 text-[10px] text-muted-foreground/70" dir="ltr">
+                          {f.id}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => startEdit(f)}
+                        className="rounded-md border border-input bg-background p-1.5 hover:bg-muted"
+                        title="تعديل الاسم"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => onDelete(f.id)}
+                        className="rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20"
+                        title="حذف"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
