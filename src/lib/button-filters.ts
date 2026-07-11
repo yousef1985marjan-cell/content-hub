@@ -81,6 +81,9 @@ export type ButtonFiltersState = {
   customFilters: FilterMeta[];
   /** rename/description overrides for any filter (built-in or custom) */
   filterOverrides: Record<string, FilterOverride>;
+  /** built-in filter ids that were hidden by the admin */
+  hiddenFilters: string[];
+
   updated_at: string;
 };
 
