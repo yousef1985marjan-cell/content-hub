@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/page-shell";
-import { useContent, type PlatformLink, type CustomIcon } from "@/lib/content-store";
+import { useContent, type PlatformLink, type CustomIcon, type ExtraLink } from "@/lib/content-store";
 import { useMemo, useRef, useState } from "react";
 import {
   Trash2,
