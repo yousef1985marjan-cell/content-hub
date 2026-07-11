@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { PageShell } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, LogIn, KeyRound, ArrowLeft, ShieldCheck } from "lucide-react";
+import { logSelfSignIn, logSelfPasswordResetRequest } from "@/lib/security-log.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "تسجيل الدخول — لوحة التحكم" }, { name: "robots", content: "noindex" }] }),
@@ -61,6 +62,7 @@ function AuthPage() {
       }
     }
     setLoading(false);
+    try { await logSelfSignIn(); } catch { /* ignore */ }
     navigate({ to: "/admin" });
   };
 
@@ -84,6 +86,7 @@ function AuthPage() {
       setError(error.message);
       return;
     }
+    try { await logSelfSignIn(); } catch { /* ignore */ }
     navigate({ to: "/admin" });
   };
 
@@ -100,7 +103,8 @@ function AuthPage() {
       setError(error.message);
       return;
     }
-    setNotice("تم إرسال رابط استرجاع كلمة السر إلى بريدك.");
+    try { await logSelfPasswordResetRequest({ data: { email } }); } catch { /* ignore */ }
+    setNotice("إن كان البريد مسجّلاً، ستصلك رسالة تحتوي على رابط استرجاع كلمة السر.");
   };
 
   const cancelMfa = async () => {

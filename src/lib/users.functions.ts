@@ -60,6 +60,7 @@ export const createUser = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const admin = await assertAdminOrBootstrap(context.userId);
+    const { data: actor } = await admin.auth.admin.getUserById(context.userId);
     const { data: created, error } = await admin.auth.admin.createUser({
       email: data.email,
       password: data.password,
@@ -77,6 +78,15 @@ export const createUser = createServerFn({ method: "POST" })
       id: uid,
       full_name: data.full_name ?? "",
       description: data.description ?? "",
+    });
+    const { logSecurityEvent } = await import("./security-log.server");
+    await logSecurityEvent({
+      event: "user.created",
+      actorId: context.userId,
+      actorEmail: actor.user?.email ?? null,
+      targetId: uid,
+      targetEmail: data.email,
+      details: { role: data.role },
     });
     return { ok: true, id: uid };
   });
@@ -97,6 +107,17 @@ export const updateUserProfile = createServerFn({ method: "POST" })
       description: data.description ?? "",
     });
     if (error) throw new Error(error.message);
+    const { data: actor } = await admin.auth.admin.getUserById(context.userId);
+    const { data: target } = await admin.auth.admin.getUserById(data.userId);
+    const { logSecurityEvent } = await import("./security-log.server");
+    await logSecurityEvent({
+      event: "user.profile_updated",
+      actorId: context.userId,
+      actorEmail: actor.user?.email ?? null,
+      targetId: data.userId,
+      targetEmail: target.user?.email ?? null,
+      notify: false,
+    });
     return { ok: true };
   });
 
@@ -112,6 +133,17 @@ export const updateUserRole = createServerFn({ method: "POST" })
     await admin.from("user_roles").delete().eq("user_id", data.userId);
     const { error } = await admin.from("user_roles").insert({ user_id: data.userId, role: data.role });
     if (error) throw new Error(error.message);
+    const { data: actor } = await admin.auth.admin.getUserById(context.userId);
+    const { data: target } = await admin.auth.admin.getUserById(data.userId);
+    const { logSecurityEvent } = await import("./security-log.server");
+    await logSecurityEvent({
+      event: "user.role_changed",
+      actorId: context.userId,
+      actorEmail: actor.user?.email ?? null,
+      targetId: data.userId,
+      targetEmail: target.user?.email ?? null,
+      details: { new_role: data.role },
+    });
     return { ok: true };
   });
 
@@ -124,8 +156,19 @@ export const deleteUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     if (data.userId === context.userId) throw new Error("لا يمكنك حذف حسابك الحالي");
     const admin = await assertAdminOrBootstrap(context.userId);
+    const { data: actor } = await admin.auth.admin.getUserById(context.userId);
+    const { data: target } = await admin.auth.admin.getUserById(data.userId);
+    const targetEmail = target.user?.email ?? null;
     const { error } = await admin.auth.admin.deleteUser(data.userId);
     if (error) throw new Error(error.message);
+    const { logSecurityEvent } = await import("./security-log.server");
+    await logSecurityEvent({
+      event: "user.deleted",
+      actorId: context.userId,
+      actorEmail: actor.user?.email ?? null,
+      targetId: data.userId,
+      targetEmail,
+    });
     return { ok: true };
   });
 
@@ -158,6 +201,16 @@ export const resetUserPassword = createServerFn({ method: "POST" })
     const admin = await assertAdminOrBootstrap(context.userId);
     const { error } = await admin.auth.admin.updateUserById(data.userId, { password: data.password });
     if (error) throw new Error(error.message);
+    const { data: actor } = await admin.auth.admin.getUserById(context.userId);
+    const { data: target } = await admin.auth.admin.getUserById(data.userId);
+    const { logSecurityEvent } = await import("./security-log.server");
+    await logSecurityEvent({
+      event: "user.password_reset_admin",
+      actorId: context.userId,
+      actorEmail: actor.user?.email ?? null,
+      targetId: data.userId,
+      targetEmail: target.user?.email ?? null,
+    });
     return { ok: true };
   });
 
@@ -180,6 +233,15 @@ export const sendPasswordResetLink = createServerFn({ method: "POST" })
       options: { redirectTo: data.redirectTo },
     });
     if (error) throw new Error(error.message);
+    const { data: actor } = await admin.auth.admin.getUserById(context.userId);
+    const { logSecurityEvent } = await import("./security-log.server");
+    await logSecurityEvent({
+      event: "user.password_reset_link_sent",
+      actorId: context.userId,
+      actorEmail: actor.user?.email ?? null,
+      targetId: data.userId,
+      targetEmail: email,
+    });
     return { ok: true, actionLink: linkData.properties?.action_link ?? "", email };
   });
 
@@ -196,5 +258,15 @@ export const adminDisableUserMfa = createServerFn({ method: "POST" })
     for (const f of factors.factors ?? []) {
       await admin.auth.admin.mfa.deleteFactor({ userId: data.userId, id: f.id });
     }
+    const { data: actor } = await admin.auth.admin.getUserById(context.userId);
+    const { data: target } = await admin.auth.admin.getUserById(data.userId);
+    const { logSecurityEvent } = await import("./security-log.server");
+    await logSecurityEvent({
+      event: "user.mfa_disabled_admin",
+      actorId: context.userId,
+      actorEmail: actor.user?.email ?? null,
+      targetId: data.userId,
+      targetEmail: target.user?.email ?? null,
+    });
     return { ok: true };
   });

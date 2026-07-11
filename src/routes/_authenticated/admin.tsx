@@ -21,19 +21,21 @@ import { UsersPanel } from "@/components/admin/users-panel";
 import { LogoManagerPanel } from "@/components/admin/logo-manager-panel";
 import { PublisherManagerPanel } from "@/components/admin/publisher-manager-panel";
 import { BrandIdentityPanel } from "@/components/admin/brand-identity-panel";
+import { SecurityAuditPanel } from "@/components/admin/security-audit-panel";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "لوحة التحكم — منصات شفاء" }, { name: "robots", content: "noindex" }] }),
   component: Admin,
 });
 
-type TabKey = SectionKey | "__settings" | "__button_filters" | "__users" | "__logos" | "__brand";
+type TabKey = SectionKey | "__settings" | "__button_filters" | "__users" | "__logos" | "__brand" | "__audit";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "__button_filters", label: "إدارة فلاتر الأزرار" },
   { key: "__brand", label: "البصمة البصرية" },
   ...SECTION_KEYS.map((k) => ({ key: k as TabKey, label: SECTION_LABELS[k] })),
   { key: "__users", label: "المستخدمون والصلاحيات" },
+  { key: "__audit", label: "سجل الأمان" },
   { key: "__settings", label: "الإعدادات" },
 ];
 
@@ -86,6 +88,8 @@ function Admin() {
         <LogoManagerPanel flash={flash} />
       ) : activeTab === "__users" ? (
         <UsersPanel flash={flash} />
+      ) : activeTab === "__audit" ? (
+        <SecurityAuditPanel flash={flash} />
       ) : activeTab === "__settings" ? (
         <SettingsPanel flash={flash} />
       ) : activeTab === "publisher" ? (
