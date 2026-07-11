@@ -96,16 +96,22 @@ function AuthPage() {
     setError(null);
     setNotice(null);
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await sendPasswordResetEmail({
+        data: {
+          email,
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      });
+      try { await logSelfPasswordResetRequest({ data: { email } }); } catch { /* ignore */ }
+      setNotice("إن كان البريد مسجّلاً، ستصلك رسالة تحتوي على رابط استرجاع كلمة السر.");
+    } catch (err) {
+      // Still show generic message to avoid leaking existence of the email
+      setNotice("إن كان البريد مسجّلاً، ستصلك رسالة تحتوي على رابط استرجاع كلمة السر.");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    try { await logSelfPasswordResetRequest({ data: { email } }); } catch { /* ignore */ }
-    setNotice("إن كان البريد مسجّلاً، ستصلك رسالة تحتوي على رابط استرجاع كلمة السر.");
   };
 
   const cancelMfa = async () => {
