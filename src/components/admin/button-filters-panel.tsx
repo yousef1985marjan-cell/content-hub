@@ -836,23 +836,44 @@ function ButtonCard({
           className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
           <Save className="h-3 w-3" />
-          حفظ
+          حفظ فلتر البطاقة
         </button>
         <button
-          onClick={onReset}
+          onClick={onCopyFilters}
           className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
+          title="نسخ فلاتر هذه البطاقة"
         >
-          <RotateCcw className="h-3 w-3" />
-          استعادة الافتراضي
+          <Copy className="h-3 w-3" />
+          نسخ فلتر البطاقة
         </button>
         <button
-          onClick={onSaveAsPreset}
-          className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
+          onClick={onPasteFilters}
+          disabled={!hasFiltersClip}
+          className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted disabled:opacity-40"
+          title="لصق الفلاتر المنسوخة"
         >
-          <Bookmark className="h-3 w-3" />
-          حفظ كمجموعة
+          <ClipboardPaste className="h-3 w-3" />
+          لصق فلتر البطاقة
+        </button>
+        <button
+          onClick={onCopyCard}
+          className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
+          title="نسخ البطاقة كاملة (الاسم/الرمز/الحالة/الفلاتر)"
+        >
+          <Copy className="h-3 w-3" />
+          نسخ البطاقة كاملة
+        </button>
+        <button
+          onClick={onPasteCard}
+          disabled={!hasCardClip}
+          className="inline-flex items-center gap-1 rounded-lg border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent-foreground hover:bg-accent/20 disabled:opacity-40"
+          title="لصق بطاقة كاملة"
+        >
+          <ClipboardPaste className="h-3 w-3" />
+          الصق بطاقة كاملة
         </button>
       </div>
+
     </div>
   );
 }
