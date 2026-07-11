@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-type Role = "admin" | "editor";
+type Role = "super_admin" | "admin" | "editor";
+const ROLES: Role[] = ["super_admin", "admin", "editor"];
 
 async function assertAdminOrBootstrap(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -42,7 +43,7 @@ export const createUser = createServerFn({ method: "POST" })
   .inputValidator((data: { email: string; password: string; role: Role }) => {
     if (!data.email || !data.email.includes("@")) throw new Error("بريد غير صالح");
     if (!data.password || data.password.length < 6) throw new Error("كلمة السر يجب 6 أحرف على الأقل");
-    if (data.role !== "admin" && data.role !== "editor") throw new Error("صلاحية غير صالحة");
+    if (!ROLES.includes(data.role)) throw new Error("صلاحية غير صالحة");
     return data;
   })
   .handler(async ({ data, context }) => {
@@ -63,7 +64,7 @@ export const updateUserRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { userId: string; role: Role }) => {
     if (!data.userId) throw new Error("مستخدم غير محدد");
-    if (data.role !== "admin" && data.role !== "editor") throw new Error("صلاحية غير صالحة");
+    if (!ROLES.includes(data.role)) throw new Error("صلاحية غير صالحة");
     return data;
   })
   .handler(async ({ data, context }) => {
@@ -103,4 +104,19 @@ export const claimBootstrapAdmin = createServerFn({ method: "POST" })
       .insert({ user_id: context.userId, role: "admin" });
     if (error) throw new Error(error.message);
     return { granted: true };
+  });
+
+export const resetUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { userId: string; password: string }) => {
+    if (!data.userId) throw new Error("مستخدم غير محدد");
+    if (!data.password || data.password.length < 6) throw new Error("كلمة السر يجب 6 أحرف على الأقل");
+    if (data.password.length > 200) throw new Error("كلمة السر طويلة جداً");
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    const admin = await assertAdminOrBootstrap(context.userId);
+    const { error } = await admin.auth.admin.updateUserById(data.userId, { password: data.password });
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });

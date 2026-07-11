@@ -4,7 +4,7 @@ import { PageShell } from "@/components/page-shell";
 import { useContent, type PlatformLink, type CustomIcon, type ExtraLink } from "@/lib/content-store";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { listUsers, createUser, updateUserRole, deleteUser, claimBootstrapAdmin } from "@/lib/users.functions";
+import { listUsers, createUser, updateUserRole, deleteUser, claimBootstrapAdmin, resetUserPassword } from "@/lib/users.functions";
 import {
   Trash2,
   Plus,
@@ -1478,12 +1478,26 @@ function AdminInfo({ flash }: { flash: (m: string) => void }) {
   );
 }
 
+type UserRole = "super_admin" | "admin" | "editor";
+
+const ROLE_LABEL: Record<UserRole, string> = {
+  super_admin: "مدير عام",
+  admin: "مدير",
+  editor: "محرّر",
+};
+
+const ROLE_COLOR: Record<UserRole, string> = {
+  super_admin: "bg-amber-500/20 text-amber-700 dark:text-amber-400",
+  admin: "bg-primary/20 text-primary",
+  editor: "bg-muted text-muted-foreground",
+};
+
 type AdminUser = {
   id: string;
   email: string;
   created_at: string;
   last_sign_in_at: string | null;
-  roles: ("admin" | "editor")[];
+  roles: UserRole[];
 };
 
 function UsersManager({ flash }: { flash: (m: string) => void }) {
@@ -1492,6 +1506,7 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
   const doUpdateRole = useServerFn(updateUserRole);
   const doDelete = useServerFn(deleteUser);
   const doClaim = useServerFn(claimBootstrapAdmin);
+  const doReset = useServerFn(resetUserPassword);
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -1500,15 +1515,21 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"admin" | "editor">("editor");
+  const [role, setRole] = useState<UserRole>("editor");
   const [creating, setCreating] = useState(false);
+
+  // Reset password modal
+  const [resetTarget, setResetTarget] = useState<AdminUser | null>(null);
+  const [resetPass, setResetPass] = useState("");
+  const [resetting, setResetting] = useState(false);
+  const [resetDone, setResetDone] = useState<{ email: string; password: string } | null>(null);
 
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetchList();
-      setUsers(res.users);
+      setUsers(res.users as AdminUser[]);
       setCurrentUserId(res.currentUserId);
     } catch (e) {
       const msg = (e as Error).message || "تعذّر تحميل المستخدمين";
@@ -1517,9 +1538,9 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
           const claim = await doClaim();
           if (claim.granted) {
             const res2 = await fetchList();
-            setUsers(res2.users);
+            setUsers(res2.users as AdminUser[]);
             setCurrentUserId(res2.currentUserId);
-            flash("تم منحك صلاحية المدير");
+            flash("تم منحك صلاحية المدير العام");
             setLoading(false);
             return;
           }
@@ -1545,10 +1566,13 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
     setCreating(true);
     try {
       await doCreate({ data: { email, password, role } });
+      const newEmail = email;
+      const newPassword = password;
       setEmail("");
       setPassword("");
       setRole("editor");
       flash("تمت إضافة المستخدم");
+      setResetDone({ email: newEmail, password: newPassword });
       await load();
     } catch (err) {
       setError((err as Error).message);
@@ -1556,7 +1580,7 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
     setCreating(false);
   };
 
-  const onChangeRole = async (userId: string, newRole: "admin" | "editor") => {
+  const onChangeRole = async (userId: string, newRole: UserRole) => {
     setError(null);
     try {
       await doUpdateRole({ data: { userId, role: newRole } });
@@ -1579,12 +1603,47 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
     }
   };
 
+  const openReset = (u: AdminUser) => {
+    setResetTarget(u);
+    setResetPass("");
+  };
+
+  const submitReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetTarget) return;
+    setResetting(true);
+    setError(null);
+    try {
+      await doReset({ data: { userId: resetTarget.id, password: resetPass } });
+      setResetDone({ email: resetTarget.email, password: resetPass });
+      setResetTarget(null);
+      setResetPass("");
+      flash("تم تعيين كلمة السر");
+    } catch (err) {
+      setError((err as Error).message);
+    }
+    setResetting(false);
+  };
+
+  const genPass = () => {
+    const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    let s = "";
+    const arr = new Uint32Array(12);
+    crypto.getRandomValues(arr);
+    for (let i = 0; i < 12; i++) s += chars[arr[i] % chars.length];
+    return s;
+  };
+
   return (
     <div className="space-y-6">
+      <section className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-xs leading-relaxed">
+        <b className="text-amber-700 dark:text-amber-400">ملاحظة أمنية:</b> كلمات السر مُشفّرة في القاعدة ولا يمكن استعراضها. عند إنشاء مستخدم أو إعادة تعيين كلمة سره ستُعرض لك مرة واحدة فقط لتسليمها له.
+      </section>
+
       <section className="rounded-2xl border border-border bg-card p-6">
         <h3 className="mb-1 text-lg font-black text-primary">إضافة مستخدم جديد</h3>
         <p className="mb-4 text-xs text-muted-foreground">
-          أنشئ حساباً جديداً وحدد صلاحيته. صلاحية <b>مدير</b> يمكنها إدارة المستخدمين، بينما <b>محرّر</b> يمكنه تعديل المحتوى فقط.
+          الصلاحيات: <b>مدير عام</b> (كل شيء) — <b>مدير</b> (إدارة المستخدمين والمحتوى) — <b>محرّر</b> (تعديل المحتوى فقط).
         </p>
         <form onSubmit={onCreate} className="grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
@@ -1593,6 +1652,7 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
               type="email"
               dir="ltr"
               required
+              maxLength={255}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -1600,25 +1660,36 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
           </div>
           <div>
             <label className="mb-1 block text-xs font-bold text-muted-foreground">كلمة السر</label>
-            <input
-              type="text"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="6 أحرف على الأقل"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                required
+                minLength={6}
+                maxLength={200}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="6 أحرف على الأقل"
+              />
+              <button
+                type="button"
+                onClick={() => setPassword(genPass())}
+                className="rounded-lg border border-input bg-background px-3 text-xs font-bold hover:bg-muted"
+              >
+                توليد
+              </button>
+            </div>
           </div>
           <div>
             <label className="mb-1 block text-xs font-bold text-muted-foreground">الصلاحية</label>
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as "admin" | "editor")}
+              onChange={(e) => setRole(e.target.value as UserRole)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="editor">محرّر</option>
               <option value="admin">مدير</option>
+              <option value="super_admin">مدير عام</option>
             </select>
           </div>
           <div className="sm:col-span-2">
@@ -1658,10 +1729,10 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
           <div className="space-y-2">
             {users.map((u) => {
               const isMe = u.id === currentUserId;
-              const currentRole: "admin" | "editor" = u.roles.includes("admin")
-                ? "admin"
-                : u.roles.includes("editor")
-                  ? "editor"
+              const currentRole: UserRole = u.roles.includes("super_admin")
+                ? "super_admin"
+                : u.roles.includes("admin")
+                  ? "admin"
                   : "editor";
               return (
                 <div
@@ -1669,8 +1740,12 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
                   className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 bg-muted/20 p-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-mono text-sm" dir="ltr">
-                      {u.email} {isMe && <span className="mr-2 rounded bg-primary/20 px-2 py-0.5 text-[10px] text-primary">أنت</span>}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate font-mono text-sm" dir="ltr">{u.email}</span>
+                      <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${ROLE_COLOR[currentRole]}`}>
+                        {ROLE_LABEL[currentRole]}
+                      </span>
+                      {isMe && <span className="rounded bg-primary/20 px-2 py-0.5 text-[10px] text-primary">أنت</span>}
                     </div>
                     <div className="mt-1 text-[10px] text-muted-foreground">
                       أُنشئ: {new Date(u.created_at).toLocaleDateString("ar")}
@@ -1679,13 +1754,20 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
                   </div>
                   <select
                     value={currentRole}
-                    onChange={(e) => onChangeRole(u.id, e.target.value as "admin" | "editor")}
+                    onChange={(e) => onChangeRole(u.id, e.target.value as UserRole)}
                     disabled={isMe}
                     className="rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                   >
                     <option value="editor">محرّر</option>
                     <option value="admin">مدير</option>
+                    <option value="super_admin">مدير عام</option>
                   </select>
+                  <button
+                    onClick={() => openReset(u)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
+                  >
+                    <KeyRoundIcon /> تعيين كلمة سر
+                  </button>
                   <button
                     onClick={() => onDelete(u.id, u.email)}
                     disabled={isMe}
@@ -1699,6 +1781,101 @@ function UsersManager({ flash }: { flash: (m: string) => void }) {
           </div>
         )}
       </section>
+
+      {resetTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setResetTarget(null)}>
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mb-1 text-lg font-black text-primary">إعادة تعيين كلمة السر</h3>
+            <p className="mb-4 text-xs text-muted-foreground" dir="ltr">{resetTarget.email}</p>
+            <form onSubmit={submitReset} className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  required
+                  minLength={6}
+                  maxLength={200}
+                  value={resetPass}
+                  onChange={(e) => setResetPass(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="كلمة السر الجديدة"
+                />
+                <button
+                  type="button"
+                  onClick={() => setResetPass(genPass())}
+                  className="rounded-lg border border-input bg-background px-3 text-xs font-bold hover:bg-muted"
+                >
+                  توليد
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={resetting}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                >
+                  {resetting ? "جاري الحفظ..." : "حفظ"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResetTarget(null)}
+                  className="rounded-lg border border-input bg-background px-4 py-2 text-sm font-bold hover:bg-muted"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {resetDone && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setResetDone(null)}>
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mb-1 text-lg font-black text-primary">بيانات الدخول</h3>
+            <p className="mb-4 text-xs text-muted-foreground">
+              انسخها الآن وسلّمها للمستخدم — لن تُعرض مرة أخرى.
+            </p>
+            <div className="space-y-2">
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground">البريد</label>
+                <div className="rounded-lg border border-input bg-muted/40 px-3 py-2 font-mono text-sm" dir="ltr">{resetDone.email}</div>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground">كلمة السر</label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 rounded-lg border border-input bg-muted/40 px-3 py-2 font-mono text-sm" dir="ltr">{resetDone.password}</div>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard?.writeText(`${resetDone.email} / ${resetDone.password}`)}
+                    className="rounded-lg border border-input bg-background px-3 py-2 text-xs font-bold hover:bg-muted"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setResetDone(null)}
+              className="mt-4 w-full rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90"
+            >
+              تم النسخ، إغلاق
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+function KeyRoundIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="15" r="4" />
+      <path d="m10.85 12.15 7.4-7.4" />
+      <path d="m18 5 3 3" />
+      <path d="m15 8 3 3" />
+    </svg>
+  );
+}
+
