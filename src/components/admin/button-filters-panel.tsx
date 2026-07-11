@@ -389,10 +389,6 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     const custom = state.customFilters.find((f) => f.id === id);
     const label = custom?.label || getFilterMeta(id).label;
     const isBuiltin = !custom;
-    const msg = isBuiltin
-      ? `إخفاء الفلتر الأساسي "${label}"؟ سيُزال من الأزرار والمجموعات ويختفي من القائمة (يمكن إظهاره لاحقاً).`
-      : `حذف الفلتر "${label}"؟ سيُزال من جميع الأزرار والمجموعات.`;
-    if (!confirm(msg)) return;
 
     const nextCustom = custom
       ? state.customFilters.filter((f) => f.id !== id)
