@@ -1518,9 +1518,26 @@ function CustomFiltersManager({
             </ul>
           </div>
         )}
+      {pendingFilter && (
+        <ConfirmDialog
+          open
+          title={pendingIsCustom ? "تأكيد حذف الفلتر" : "تأكيد إخفاء الفلتر الأساسي"}
+          confirmLabel={pendingIsCustom ? "حذف" : "إخفاء"}
+          cancelLabel="إلغاء"
+          variant="danger"
+          onConfirm={doDelete}
+          onCancel={() => setPendingDeleteId(null)}
+        >
+          {pendingIsCustom
+            ? `حذف الفلتر "${pendingFilter.label}"؟ سيُزال من جميع الأزرار والمجموعات.`
+            : `إخفاء الفلتر الأساسي "${pendingFilter.label}"؟ سيُزال من الأزرار والمجموعات ويختفي من القائمة (يمكن إظهاره لاحقاً).`}
+        </ConfirmDialog>
+      )}
       </div>
     </div>
   );
 }
+
+
 
 
