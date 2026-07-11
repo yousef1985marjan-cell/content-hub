@@ -85,6 +85,8 @@ function Admin() {
         <ButtonFiltersPanel flash={flash} />
       ) : activeTab === "__media" ? (
         <MediaPanel flash={flash} />
+      ) : activeTab === "__users" ? (
+        <UsersPanel flash={flash} />
       ) : activeTab === "__settings" ? (
         <SettingsPanel flash={flash} />
       ) : activeTab === "__logo" ? (
