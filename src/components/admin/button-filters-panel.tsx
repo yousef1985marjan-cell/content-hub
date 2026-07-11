@@ -1076,23 +1076,28 @@ function CustomFiltersManager({
   allList,
   customIds,
   overrides,
+  hiddenIds,
   onAdd,
   onRename,
   onResetOverride,
   onDelete,
+  onRestore,
   onSave,
   onClose,
 }: {
   allList: FilterMeta[];
   customIds: Set<FilterId>;
   overrides: Record<string, { label?: string; description?: string }>;
+  hiddenIds: string[];
   onAdd: (label: string, description: string) => void;
   onRename: (id: FilterId, label: string, description: string) => void;
   onResetOverride: (id: FilterId) => void;
   onDelete: (id: FilterId) => void;
+  onRestore: (id: FilterId) => void;
   onSave: () => void;
   onClose: () => void;
 }) {
+
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
   const [editingId, setEditingId] = useState<FilterId | null>(null);
