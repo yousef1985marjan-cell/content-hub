@@ -103,7 +103,8 @@ function AuthPage() {
       setError(error.message);
       return;
     }
-    setNotice("تم إرسال رابط استرجاع كلمة السر إلى بريدك.");
+    try { await logSelfPasswordResetRequest({ data: { email } }); } catch { /* ignore */ }
+    setNotice("إن كان البريد مسجّلاً، ستصلك رسالة تحتوي على رابط استرجاع كلمة السر.");
   };
 
   const cancelMfa = async () => {
