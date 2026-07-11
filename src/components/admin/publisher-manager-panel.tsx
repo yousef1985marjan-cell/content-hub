@@ -28,8 +28,11 @@ import {
   Save,
   X,
   Upload,
+  Languages,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { LANGS, LANG_LABELS, type Lang } from "@/lib/content-store";
+import { translateSection } from "@/lib/translate.functions";
 import {
   PUB_GROUP_KEYS,
   PUB_GROUP_LABELS,
@@ -164,6 +167,7 @@ export function PublisherManagerPanel({ flash }: { flash: Flash }) {
 
                   {editing?.group === key && (
                     <ItemEditor
+                      flash={flash}
                       groupKey={key}
                       value={editing.item}
                       onChange={(it) => setEditing({ group: key, item: it })}
@@ -451,16 +455,20 @@ function ItemEditor({
   onChange,
   onCancel,
   onSave,
+  flash,
 }: {
   groupKey: PubGroupKey;
   value: PubItem;
   onChange: (v: PubItem) => void;
   onCancel: () => void;
   onSave: (mode: "changes" | "draft" | "publish") => void;
+  flash: Flash;
 }) {
   const [lang, setLang] = useState<Lang>("ar");
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [brandQuery, setBrandQuery] = useState("");
+  const [translating, setTranslating] = useState(false);
+  const doTranslate = useServerFn(translateSection);
   const imgRef = useRef<HTMLInputElement>(null);
   const thumbRef = useRef<HTMLInputElement>(null);
 
@@ -468,6 +476,40 @@ function ItemEditor({
   const patch = (p: Partial<PubItem>) => onChange({ ...value, ...p });
   const patchName = (v: string) => patch({ name: { ...value.name, [lang]: v } });
   const patchDesc = (v: string) => patch({ description: { ...value.description, [lang]: v } });
+
+  const runTranslate = async () => {
+    const arName = value.name.ar?.trim() || "";
+    const arDesc = value.description.ar?.trim() || "";
+    if (!arName && !arDesc) {
+      flash("أدخل الاسم أو الوصف بالعربية أولاً");
+      return;
+    }
+    setTranslating(true);
+    try {
+      const targets = LANGS.filter((l) => l !== "ar");
+      const res = await doTranslate({
+        data: {
+          title: arName,
+          content: arDesc,
+          links: [],
+          targets: targets as unknown as string[],
+        },
+      });
+      const nextName = { ...value.name };
+      const nextDesc = { ...value.description };
+      for (const r of res.results) {
+        const l = r.lang as Lang;
+        if (r.title) nextName[l] = r.title;
+        if (r.content) nextDesc[l] = r.content;
+      }
+      onChange({ ...value, name: nextName, description: nextDesc });
+      flash("تمت الترجمة — راجع ثم احفظ");
+    } catch (e) {
+      flash((e as Error).message || "فشلت الترجمة");
+    }
+    setTranslating(false);
+  };
+
 
   const filteredBrands = useMemo(() => {
     const q = brandQuery.trim().toLowerCase();
@@ -494,8 +536,8 @@ function ItemEditor({
         </button>
       </div>
 
-      {/* language tabs */}
-      <div className="flex flex-wrap gap-1">
+      {/* language tabs + translate */}
+      <div className="flex flex-wrap items-center gap-1">
         {LANGS.map((l) => (
           <button
             key={l}
@@ -507,6 +549,15 @@ function ItemEditor({
             {LANG_LABELS[l]}
           </button>
         ))}
+        <button
+          onClick={runTranslate}
+          disabled={translating}
+          className="ms-auto inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[11px] font-bold text-accent-foreground hover:opacity-90 disabled:opacity-50"
+          title="ترجمة الاسم والوصف من العربية إلى باقي اللغات"
+        >
+          <Languages className="h-3 w-3" />
+          {translating ? "جاري الترجمة..." : "ترجمة إلى جميع اللغات"}
+        </button>
       </div>
 
       <div dir={isRTL ? "rtl" : "ltr"} className="grid gap-3 md:grid-cols-2">
