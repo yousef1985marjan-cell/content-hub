@@ -54,60 +54,82 @@ import {
 
 type Tab = "buttons" | "presets";
 
+const PUBLISHED_KEY = "shifa-button-filters-published-v1";
+function readPublished(): ButtonFiltersState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(PUBLISHED_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as ButtonFiltersState;
+  } catch {
+    return null;
+  }
+}
+function writePublished(s: ButtonFiltersState) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(PUBLISHED_KEY, JSON.stringify(s));
+}
+
 export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
   const [state, setState] = useState<ButtonFiltersState>(() => defaultState());
   const [saved, setSaved] = useState<ButtonFiltersState>(() => defaultState());
+  const [published, setPublished] = useState<ButtonFiltersState | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("buttons");
   const [previewOpen, setPreviewOpen] = useState(false);
   const offline = isOffline();
   const [filtersClip, setFiltersClip] = useState<AppliedFilter[] | null>(null);
-  const [cardClip, setCardClip] = useState<Omit<ButtonConfig, "id" | "builtin"> | null>(null);
 
   const copyFilters = (id: ButtonId) => {
     const b = state.buttons[id];
     if (!b) return;
     setFiltersClip(structuredClone(b.filters));
-    flash(`تم نسخ فلاتر "${buttonLabel(b)}"`);
+    flash("تم نسخ جميع فلاتر البطاقة.");
   };
   const pasteFilters = (id: ButtonId) => {
     if (!filtersClip) return;
     const b = state.buttons[id];
     if (!b) return;
+    let mode: "replace" | "append" = "replace";
+    if (b.filters.length > 0) {
+      const r = window.confirm(
+        "البطاقة تحتوي على فلاتر مسبقاً.\n\nموافق = استبدال الفلاتر الحالية بالمنسوخة\nإلغاء = إضافة الفلاتر المنسوخة إلى الحالية",
+      );
+      mode = r ? "replace" : "append";
+    }
     const sticky = b.filters.filter((f) => getFilterMeta(f.id).stickyOn?.includes(b.id));
     const stickyIds = new Set(sticky.map((s) => s.id));
-    const merged: AppliedFilter[] = [...sticky];
+    const base: AppliedFilter[] =
+      mode === "replace" ? [...sticky] : structuredClone(b.filters);
+    const existingIds = new Set(base.map((f) => f.id));
     for (const f of filtersClip) {
-      if (stickyIds.has(f.id)) continue;
-      if (conflictsIn(merged, f.id).length > 0) continue;
-      merged.push(structuredClone(f));
+      if (mode === "replace" && stickyIds.has(f.id)) continue;
+      if (existingIds.has(f.id)) continue;
+      if (conflictsIn(base, f.id).length > 0) continue;
+      base.push(structuredClone(f));
+      existingIds.add(f.id);
     }
-    patchButton(id, { ...b, filters: merged });
-    flash(`تم لصق الفلاتر في "${buttonLabel(b)}"`);
+    patchButton(id, { ...b, filters: base });
+    flash("تم لصق الفلاتر. اضغط حفظ التعديلات لاعتمادها.");
   };
-  const copyCard = (id: ButtonId) => {
-    const b = state.buttons[id];
-    if (!b) return;
-    setCardClip({
-      label: b.label,
-      icon: b.icon,
-      enabled: b.enabled,
-      filters: structuredClone(b.filters),
-    });
-    flash(`تم نسخ بطاقة "${buttonLabel(b)}"`);
-  };
-  const pasteCard = (id: ButtonId) => {
-    if (!cardClip) return;
-    const b = state.buttons[id];
-    if (!b) return;
-    patchButton(id, {
-      ...b,
-      label: cardClip.label,
-      icon: cardClip.icon,
-      enabled: cardClip.enabled,
-      filters: structuredClone(cardClip.filters),
-    });
-    flash(`تم لصق البطاقة في "${buttonLabel(b)}"`);
+
+  const publishButton = (id: ButtonId) => {
+    const cfg = saved.buttons[id];
+    if (!cfg) return;
+    if (dirtyButtons[id]) {
+      alert("لا يمكن النشر: لديك تعديلات غير محفوظة. احفظ التعديلات أولاً.");
+      return;
+    }
+    if (!window.confirm(`هل تريد نشر التعديلات المحفوظة لبطاقة "${buttonLabel(cfg)}"؟`)) return;
+    const base: ButtonFiltersState = published
+      ? { ...published }
+      : structuredClone(saved);
+    base.buttons = { ...base.buttons, [id]: structuredClone(cfg) };
+    base.order = saved.order;
+    base.updated_at = new Date().toISOString();
+    writePublished(base);
+    setPublished(base);
+    flash("تم نشر التعديلات بنجاح.");
   };
 
 
@@ -121,6 +143,7 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
         setCustomFilters(s.customFilters || []);
         setState(s);
         setSaved(s);
+        setPublished(readPublished());
       } catch (e) {
         flash((e as Error).message || "فشل تحميل الإعدادات");
       }
@@ -128,6 +151,18 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!anyDirty) return;
+      e.preventDefault();
+      e.returnValue = "لديك تعديلات غير محفوظة، هل تريد حفظها؟";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  });
 
 
   const orderedIds = state.order;
@@ -544,22 +579,25 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
                 key={id}
                 cfg={cfg}
                 dirty={!!dirtyButtons[id]}
+                isPublished={
+                  !!published &&
+                  JSON.stringify(published.buttons[id]) ===
+                    JSON.stringify(saved.buttons[id])
+                }
+                everPublished={!!published && !!published.buttons[id]}
                 canMoveUp={idx > 0}
                 canMoveDown={idx < orderedIds.length - 1}
                 hasFiltersClip={!!filtersClip}
-                hasCardClip={!!cardClip}
                 onChange={(c) => patchButton(id, c)}
                 onSave={() => saveButton(id)}
-                onCopyFilters={() => copyFilters(id)}
-                onPasteFilters={() => pasteFilters(id)}
-                onCopyCard={() => copyCard(id)}
-                onPasteCard={() => pasteCard(id)}
+                onCopy={() => copyFilters(id)}
+                onPaste={() => pasteFilters(id)}
+                onPublish={() => publishButton(id)}
                 onRename={() => renameButton(id)}
                 onDelete={() => deleteButton(id)}
                 onMoveUp={() => moveButton(id, -1)}
                 onMoveDown={() => moveButton(id, 1)}
               />
-
             );
           })}
         </div>
@@ -583,16 +621,16 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
 function ButtonCard({
   cfg,
   dirty,
+  isPublished,
+  everPublished,
   canMoveUp,
   canMoveDown,
   hasFiltersClip,
-  hasCardClip,
   onChange,
   onSave,
-  onCopyFilters,
-  onPasteFilters,
-  onCopyCard,
-  onPasteCard,
+  onCopy,
+  onPaste,
+  onPublish,
   onRename,
   onDelete,
   onMoveUp,
@@ -600,16 +638,16 @@ function ButtonCard({
 }: {
   cfg: ButtonConfig;
   dirty: boolean;
+  isPublished: boolean;
+  everPublished: boolean;
   canMoveUp: boolean;
   canMoveDown: boolean;
   hasFiltersClip: boolean;
-  hasCardClip: boolean;
   onChange: (c: ButtonConfig) => void;
   onSave: () => void;
-  onCopyFilters: () => void;
-  onPasteFilters: () => void;
-  onCopyCard: () => void;
-  onPasteCard: () => void;
+  onCopy: () => void;
+  onPaste: () => void;
+  onPublish: () => void;
   onRename: () => void;
   onDelete: () => void;
   onMoveUp: () => void;
@@ -676,9 +714,21 @@ function ButtonCard({
               مخصص
             </span>
           )}
-          {dirty && (
+          {dirty ? (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-              غير محفوظ
+              تعديلات غير محفوظة
+            </span>
+          ) : !everPublished ? (
+            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+              غير منشور
+            </span>
+          ) : isPublished ? (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+              منشور
+            </span>
+          ) : (
+            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-800">
+              محفوظ — بانتظار النشر
             </span>
           )}
         </h3>
@@ -837,44 +887,35 @@ function ButtonCard({
           onClick={onSave}
           disabled={!dirty}
           className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
-          title="حفظ التعديلات على هذه البطاقة (الاسم، الرمز، الحالة، الفلاتر)"
+          title="حفظ التعديلات على هذه البطاقة كمسودة"
         >
           <Save className="h-3 w-3" />
-          حفظ التغييرات
+          حفظ التعديلات
         </button>
         <button
-          onClick={onCopyFilters}
+          onClick={onCopy}
           className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
-          title="نسخ قائمة فلاتر هذه البطاقة فقط إلى الحافظة"
+          title="نسخ جميع فلاتر هذه البطاقة (الفلاتر، ترتيبها، إعداداتها، حد النتائج، وGPS)"
         >
           <Copy className="h-3 w-3" />
-          نسخ الفلاتر
+          نسخ جميع فلاتر البطاقة
         </button>
         <button
-          onClick={onPasteFilters}
+          onClick={onPaste}
           disabled={!hasFiltersClip}
           className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted disabled:opacity-40"
-          title="لصق الفلاتر المنسوخة هنا مع الإبقاء على الفلاتر المثبتة وتجاوز المتعارض"
+          title="لصق الفلاتر المنسوخة في هذه البطاقة (استبدال أو إضافة)"
         >
           <ClipboardPaste className="h-3 w-3" />
           لصق الفلاتر
         </button>
         <button
-          onClick={onCopyCard}
-          className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
-          title="نسخ محتوى البطاقة كاملاً (الاسم + الرمز + التفعيل + الفلاتر)"
+          onClick={onPublish}
+          disabled={dirty || isPublished}
+          className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-40"
+          title={dirty ? "احفظ التعديلات قبل النشر" : isPublished ? "لا توجد تغييرات جديدة للنشر" : "نشر النسخة المحفوظة"}
         >
-          <Copy className="h-3 w-3" />
-          نسخ البطاقة
-        </button>
-        <button
-          onClick={onPasteCard}
-          disabled={!hasCardClip}
-          className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 disabled:opacity-40"
-          title="استبدال هذه البطاقة بالمحتوى المنسوخ سابقاً"
-        >
-          <ClipboardPaste className="h-3 w-3" />
-          استبدال بالمنسوخة
+          نشر
         </button>
       </div>
 
