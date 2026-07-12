@@ -1109,6 +1109,25 @@ function ButtonCard({
           هل أنت متأكد بأنك ستحذف فلتر &quot;{getFilterMeta(pendingRemove).label}&quot; من هذه البطاقة؟
         </ConfirmDialog>
       )}
+
+      {pendingClearAll && (
+        <ConfirmDialog
+          open
+          title="تأكيد حذف جميع الفلاتر"
+          confirmLabel="حذف الكل"
+          cancelLabel="إلغاء"
+          variant="danger"
+          onConfirm={doClearAll}
+          onCancel={() => setPendingClearAll(false)}
+        >
+          هل أنت متأكد من حذف جميع فلاتر بطاقة &quot;{buttonLabel(cfg)}&quot;؟
+          {cfg.filters.some((f) => getFilterMeta(f.id).stickyOn?.includes(cfg.id)) && (
+            <span className="mt-2 block text-amber-600">
+              الفلاتر المثبتة لن تُحذف.
+            </span>
+          )}
+        </ConfirmDialog>
+      )}
     </div>
   );
 }
