@@ -1078,6 +1078,15 @@ function ButtonCard({
           لصق الفلاتر
         </button>
         <button
+          onClick={() => setPendingClearAll(true)}
+          disabled={cfg.filters.length === 0}
+          className="inline-flex items-center gap-1 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20 disabled:opacity-40"
+          title="حذف جميع الفلاتر من هذه البطاقة (يُبقي الفلاتر المثبتة)"
+        >
+          <Trash2 className="h-3 w-3" />
+          حذف جميع الفلاتر
+        </button>
+        <button
           onClick={onPublish}
           disabled={dirty || isPublished}
           className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-40"
