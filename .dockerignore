@@ -1,0 +1,15 @@
+node_modules
+.output
+.nitro
+dist
+.git
+.github
+.vscode
+.idea
+.env
+.env.*
+!.env.example
+npm-debug.log
+bun-debug.log
+.DS_Store
+.lovable
