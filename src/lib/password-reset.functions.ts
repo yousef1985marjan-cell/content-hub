@@ -21,46 +21,66 @@ export const sendPasswordResetEmail = createServerFn({ method: "POST" })
     return { email, redirectTo: redirectUrl.toString() };
   })
   .handler(async ({ data }) => {
-    const { logSecurityEvent } = await import("./security-log.server");
+    const { createPasswordResetToken, writeLocalSecurityEvent } = await import("./local-auth.server");
+    const reset = createPasswordResetToken(data.email);
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const publishableKey =
-      process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
-
-    let accepted = false;
-    if (!supabaseUrl || !publishableKey) {
-      console.error("[reset] Supabase public environment variables are missing");
-    } else {
-      try {
-        const endpoint = new URL("/auth/v1/recover", supabaseUrl);
-        endpoint.searchParams.set("redirect_to", data.redirectTo);
-
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: publishableKey,
-          },
-          body: JSON.stringify({ email: data.email }),
-        });
-
-        accepted = response.ok;
-        if (!response.ok) {
-          console.error("[reset] Supabase recovery request failed", response.status);
-        }
-      } catch (error) {
-        console.error("[reset] Supabase recovery request threw", error);
-      }
+    // Always return a generic success response when the account does not exist.
+    if (!reset) {
+      writeLocalSecurityEvent({ action: "user.password_reset_requested_unknown", targetEmail: data.email });
+      return { ok: true };
     }
 
-    await logSecurityEvent({
-      event: "user.password_reset_link_sent",
-      targetEmail: data.email,
-      status: accepted ? "success" : "failure",
-      details: { delivered_via: "supabase_auth", redirect_host: new URL(data.redirectTo).host },
-      notify: true,
-    });
+    const apiKey = process.env.RESEND_API_KEY?.trim();
+    if (!apiKey) {
+      writeLocalSecurityEvent({ action: "user.password_reset_delivery_failed", targetEmail: data.email, metadata: { reason: "missing_resend_key" } });
+      console.error("[reset] RESEND_API_KEY is missing");
+      return { ok: true };
+    }
 
-    // Always respond generically; never reveal whether the email exists.
+    const resetUrl = new URL(data.redirectTo);
+    resetUrl.searchParams.set("token", reset.token);
+    const from = process.env.RESEND_FROM_EMAIL?.trim() || "Shifaa Content Hub <noreply@shifaa.at>";
+
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from,
+          to: [reset.user.email],
+          subject: "استرجاع كلمة السر — Content Hub",
+          text: `طلبت استرجاع كلمة السر لحسابك. افتح الرابط التالي خلال 20 دقيقة:\n\n${resetUrl.toString()}\n\nإذا لم تطلب ذلك، تجاهل هذه الرسالة.`,
+          html: `<div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8;color:#172033;max-width:600px;margin:auto"><h2>استرجاع كلمة السر</h2><p>تم طلب استرجاع كلمة السر لحسابك في Content Hub.</p><p><a href="${resetUrl.toString()}" style="display:inline-block;background:#165d66;color:white;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:bold">تعيين كلمة سر جديدة</a></p><p>صلاحية الرابط <strong>20 دقيقة</strong> ويُستخدم مرة واحدة فقط.</p><p style="color:#667085;font-size:13px">إذا لم تطلب ذلك، تجاهل هذه الرسالة.</p></div>`,
+        }),
+      });
+
+      if (!response.ok) {
+        const details = await response.text();
+        console.error("[reset] Resend rejected the message", response.status, details.slice(0, 300));
+        writeLocalSecurityEvent({
+          action: "user.password_reset_delivery_failed",
+          targetEmail: data.email,
+          metadata: { provider: "resend", status: response.status },
+        });
+        return { ok: true };
+      }
+
+      writeLocalSecurityEvent({
+        action: "user.password_reset_link_sent",
+        targetEmail: data.email,
+        metadata: { provider: "resend", redirectHost: resetUrl.host },
+      });
+    } catch (error) {
+      console.error("[reset] Resend request failed", error);
+      writeLocalSecurityEvent({
+        action: "user.password_reset_delivery_failed",
+        targetEmail: data.email,
+        metadata: { provider: "resend", reason: "request_failed" },
+      });
+    }
+
     return { ok: true };
   });

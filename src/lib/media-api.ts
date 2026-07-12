@@ -1,5 +1,6 @@
 import { fetchWithTimeout, getSettings } from "./app-settings";
 import { LANGS, type Lang } from "./content-store";
+import { getLocalDocumentValue, setLocalDocumentValue } from "./local-documents.functions";
 
 export type MediaType = "announcement" | "alert" | "news";
 
@@ -88,7 +89,23 @@ async function unwrap<T>(res: Response): Promise<T> {
 }
 
 export async function listMedia(): Promise<MediaItem[]> {
-  if (isOffline()) return readLocal();
+  if (isOffline()) {
+    try {
+      const result = await getLocalDocumentValue({ data: { key: "media" } });
+      if (result.found && Array.isArray(result.value)) {
+        writeLocal(result.value as MediaItem[]);
+        return result.value as MediaItem[];
+      }
+      if (!result.found) {
+        const cached = readLocal();
+        await setLocalDocumentValue({ data: { key: "media", value: cached } });
+        return cached;
+      }
+    } catch {
+      // Fall back to the last browser cache if the local service is unavailable.
+    }
+    return readLocal();
+  }
   const { adminApiBaseUrl } = getSettings();
   const res = await fetchWithTimeout(`${adminApiBaseUrl}/media`, {
     headers: authHeaders(),
@@ -101,6 +118,7 @@ export async function createMedia(item: MediaItem): Promise<MediaItem> {
     const list = readLocal();
     list.push(item);
     writeLocal(list);
+    await setLocalDocumentValue({ data: { key: "media", value: list } });
     return item;
   }
   const { adminApiBaseUrl } = getSettings();
@@ -117,6 +135,7 @@ export async function updateMedia(item: MediaItem): Promise<MediaItem> {
   if (isOffline()) {
     const list = readLocal().map((x) => (x.id === item.id ? item : x));
     writeLocal(list);
+    await setLocalDocumentValue({ data: { key: "media", value: list } });
     return item;
   }
   const { adminApiBaseUrl } = getSettings();
@@ -130,7 +149,9 @@ export async function updateMedia(item: MediaItem): Promise<MediaItem> {
 
 export async function deleteMedia(id: string): Promise<void> {
   if (isOffline()) {
-    writeLocal(readLocal().filter((x) => x.id !== id));
+    const list = readLocal().filter((x) => x.id !== id);
+    writeLocal(list);
+    await setLocalDocumentValue({ data: { key: "media", value: list } });
     return;
   }
   const { adminApiBaseUrl } = getSettings();

@@ -1,63 +1,81 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireLocalAuth } from "./local-auth-middleware";
 
-async function assertAdmin(userId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin.rpc("is_admin_or_bootstrap", { _user_id: userId });
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("غير مصرّح: تحتاج صلاحية مدير");
-  return supabaseAdmin;
+type LocalAuditRow = {
+  id: string;
+  actor_user_id: string | null;
+  actor_email: string | null;
+  action: string;
+  target_email: string | null;
+  metadata_json: string;
+  created_at: string;
+};
+
+function normalizeAuditRow(row: LocalAuditRow) {
+  let metadata: Record<string, unknown> = {};
+  try {
+    metadata = JSON.parse(row.metadata_json || "{}") as Record<string, unknown>;
+  } catch {
+    metadata = {};
+  }
+  return {
+    id: row.id,
+    created_at: row.created_at,
+    event_type: row.action,
+    actor_id: row.actor_user_id,
+    actor_email: row.actor_email || (typeof metadata.actorEmail === "string" ? metadata.actorEmail : null),
+    target_email: row.target_email,
+    status: metadata.status === "failure" ? "failure" : "success",
+    details:
+      metadata.details && typeof metadata.details === "object"
+        ? (metadata.details as Record<string, unknown>)
+        : metadata,
+  };
 }
 
 export const listSecurityEvents = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator(
-    (data: { event?: string; email?: string; limit?: number }) => data ?? {},
-  )
-  .handler(async ({ data, context }) => {
-    const admin = await assertAdmin(context.userId);
-    const limit = Math.min(Math.max(data.limit ?? 100, 1), 500);
-    let q = admin
-      .from("security_audit_log")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (data.event) q = q.eq("event_type", data.event);
-    if (data.email) {
-      const e = `%${data.email}%`;
-      q = q.or(`actor_email.ilike.${e},target_email.ilike.${e}`);
-    }
-    const { data: rows, error } = await q;
-    if (error) throw new Error(error.message);
-    return { events: rows ?? [] };
+  .middleware([requireLocalAuth])
+  .inputValidator((data: { event?: string; email?: string; limit?: number }) => data ?? {})
+  .handler(async ({ data }) => {
+    const { listLocalSecurityEvents, requireLocalAdmin } = await import("./local-auth.server");
+    requireLocalAdmin();
+    const requestedLimit = Math.min(Math.max(data.limit ?? 100, 1), 500);
+    const rows = listLocalSecurityEvents(500) as unknown as LocalAuditRow[];
+    const emailNeedle = data.email?.trim().toLowerCase();
+    const events = rows
+      .map(normalizeAuditRow)
+      .filter((row) => !data.event || row.event_type === data.event)
+      .filter((row) => {
+        if (!emailNeedle) return true;
+        return [row.actor_email, row.target_email].some((value) => value?.toLowerCase().includes(emailNeedle));
+      })
+      .slice(0, requestedLimit);
+    return { events };
   });
 
 export const sendReferenceEmailTest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const admin = await assertAdmin(context.userId);
-    const { data: userRes } = await admin.auth.admin.getUserById(context.userId);
-    const actorEmail = userRes.user?.email ?? null;
+  .middleware([requireLocalAuth])
+  .handler(async () => {
+    const { requireLocalAdmin } = await import("./local-auth.server");
+    const actor = requireLocalAdmin();
     const { logSecurityEvent } = await import("./security-log.server");
     await logSecurityEvent({
       event: "auth.reference_email_test",
-      actorId: context.userId,
-      actorEmail,
+      actorId: actor.id,
+      actorEmail: actor.email,
       details: { source: "admin_panel" },
     });
     return { ok: true };
   });
 
 export const logSelfSignIn = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireLocalAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(context.userId);
     const { logSecurityEvent } = await import("./security-log.server");
     await logSecurityEvent({
       event: "user.signed_in",
-      actorId: context.userId,
-      actorEmail: userRes.user?.email ?? null,
+      actorId: context.user.id,
+      actorEmail: context.user.email,
     });
     return { ok: true };
   });

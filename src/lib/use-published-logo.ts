@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getLocalDocumentValue } from "./local-documents.functions";
 
 export type PublishedLogo = {
   id: string;
@@ -17,6 +18,22 @@ export type PublishedLogoResult = {
 
 export const LOGO_STORAGE_KEY = "shifa-logo-manager-v1";
 export const LOGO_UPDATED_EVENT = "shifa:logos-updated";
+
+let serverSync: Promise<void> | null = null;
+
+function syncLogosFromServer() {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (!serverSync) {
+    serverSync = getLocalDocumentValue({ data: { key: "logos" } })
+      .then((result) => {
+        if (!result.found || !Array.isArray(result.value)) return;
+        window.localStorage.setItem(LOGO_STORAGE_KEY, JSON.stringify(result.value));
+        window.dispatchEvent(new Event(LOGO_UPDATED_EVENT));
+      })
+      .catch(() => undefined);
+  }
+  return serverSync;
+}
 
 function readAll(): PublishedLogo[] {
   if (typeof window === "undefined") return [];
@@ -47,6 +64,7 @@ export function usePublishedLogo(id: string): PublishedLogoResult | null {
   useEffect(() => {
     const refresh = () => setVal(toResult(readAll().find((l) => l.id === id)));
     refresh();
+    void syncLogosFromServer();
     window.addEventListener(LOGO_UPDATED_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
@@ -74,6 +92,7 @@ export function useFirstPublishedLogo(ids: string[]): PublishedLogoResult | null
       setVal(null);
     };
     refresh();
+    void syncLogosFromServer();
     window.addEventListener(LOGO_UPDATED_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Upload, Trash2, Save, Eraser, Plus, Pencil, ImageIcon, Radio, RadioTower } from "lucide-react";
 import { LOGO_STORAGE_KEY, LOGO_UPDATED_EVENT } from "@/lib/use-published-logo";
+import { getLocalDocumentValue, setLocalDocumentValue } from "@/lib/local-documents.functions";
 
 type LogoCard = {
   id: string;
@@ -96,19 +97,38 @@ export function LogoManagerPanel({ flash }: { flash: (m: string) => void }) {
   const [cards, setCards] = useState<LogoCard[]>(() =>
     readStore().map((c) => ({ ...c, draft: c.saved })),
   );
+  const [storageReady, setStorageReady] = useState(false);
 
   useEffect(() => {
-    writeStore(
-      cards.map(({ id, label, saved, published, width, height }) => ({
-        id,
-        label,
-        saved,
-        published,
-        width,
-        height,
-      })),
-    );
-  }, [cards]);
+    let active = true;
+    void getLocalDocumentValue({ data: { key: "logos" } })
+      .then((result) => {
+        if (!active || !result.found || !Array.isArray(result.value)) return;
+        writeStore(result.value as StoredCard[]);
+        setCards(readStore().map((card) => ({ ...card, draft: card.saved })));
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setStorageReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    const stored = cards.map(({ id, label, saved, published, width, height }) => ({
+      id,
+      label,
+      saved,
+      published,
+      width,
+      height,
+    }));
+    writeStore(stored);
+    void setLocalDocumentValue({ data: { key: "logos", value: stored } }).catch(() => undefined);
+  }, [cards, storageReady]);
 
   const patch = (id: string, p: Partial<LogoCard>) =>
     setCards((cs) => cs.map((c) => (c.id === id ? { ...c, ...p } : c)));

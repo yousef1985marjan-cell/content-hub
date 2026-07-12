@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireLocalAuth } from "./local-auth-middleware";
 
 const LANG_NAMES: Record<string, string> = {
   de: "German",
@@ -29,16 +29,11 @@ type Translated = {
 };
 
 export const translateSection = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireLocalAuth])
   .inputValidator((data) => InputSchema.parse(data))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
-      .from("app_secrets")
-      .select("value")
-      .eq("name", "OPENAI_API_KEY")
-      .maybeSingle();
-    const apiKey = row?.value || process.env.OPENAI_API_KEY;
+    const { getLocalAppSecret } = await import("./local-auth.server");
+    const apiKey = getLocalAppSecret("OPENAI_API_KEY")?.value || process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error("لم يتم إعداد مفتاح OpenAI في لوحة التحكم");
 
     async function translateOne(lang: string): Promise<Translated> {

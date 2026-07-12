@@ -50,6 +50,7 @@ import {
   type FilterSettingsMap,
   type WeeklyHours,
 } from "@/lib/button-filters";
+import { getLocalDocumentValue, setLocalDocumentValue } from "@/lib/local-documents.functions";
 
 
 type Tab = "buttons" | "presets";
@@ -68,6 +69,7 @@ function readPublished(): ButtonFiltersState | null {
 function writePublished(s: ButtonFiltersState) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(PUBLISHED_KEY, JSON.stringify(s));
+  void setLocalDocumentValue({ data: { key: "button-filters-published", value: s } }).catch(() => undefined);
 }
 
 export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
@@ -136,58 +138,54 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
   const [filterMgrOpen, setFilterMgrOpen] = useState(false);
 
   const FILTERS_BTN_LABEL_KEY = "shifa-filters-btn-label-v1";
-  const [filtersBtnLabel, setFiltersBtnLabel] = useState<string>(() => {
-    if (typeof window === "undefined") return "الفلاتر";
-    return window.localStorage.getItem(FILTERS_BTN_LABEL_KEY) || "الفلاتر";
-  });
-  const renameFiltersBtn = () => {
-    const next = prompt("اسم زر الفلاتر:", filtersBtnLabel);
-    if (!next) return;
-    const trimmed = next.trim();
-    if (!trimmed) return;
-    setFiltersBtnLabel(trimmed);
-    try {
-      window.localStorage.setItem(FILTERS_BTN_LABEL_KEY, trimmed);
-    } catch {
-      /* ignore */
-    }
-    flash(`تم تغيير اسم الزر إلى "${trimmed}"`);
-  };
-
-  // Editable section labels (panel title + tabs)
   const PANEL_TITLE_KEY = "shifa-filters-panel-title-v1";
   const TAB_BUTTONS_KEY = "shifa-filters-tab-buttons-v1";
   const TAB_PRESETS_KEY = "shifa-filters-tab-presets-v1";
-  const readLS = (k: string, d: string) => {
-    if (typeof window === "undefined") return d;
-    return window.localStorage.getItem(k) || d;
+  const readLS = (key: string, fallback: string) => {
+    if (typeof window === "undefined") return fallback;
+    return window.localStorage.getItem(key) || fallback;
   };
-  const [panelTitle, setPanelTitle] = useState<string>(() =>
-    readLS(PANEL_TITLE_KEY, "إدارة فلاتر الأزرار"),
-  );
-  const [tabButtonsLabel, setTabButtonsLabel] = useState<string>(() =>
-    readLS(TAB_BUTTONS_KEY, "الفلاتر"),
-  );
-  const [tabPresetsLabel, setTabPresetsLabel] = useState<string>(() =>
-    readLS(TAB_PRESETS_KEY, "المجموعات المحفوظة"),
-  );
+  const [filtersBtnLabel, setFiltersBtnLabel] = useState(() => readLS(FILTERS_BTN_LABEL_KEY, "الفلاتر"));
+  const [panelTitle, setPanelTitle] = useState(() => readLS(PANEL_TITLE_KEY, "إدارة فلاتر الأزرار"));
+  const [tabButtonsLabel, setTabButtonsLabel] = useState(() => readLS(TAB_BUTTONS_KEY, "الفلاتر"));
+  const [tabPresetsLabel, setTabPresetsLabel] = useState(() => readLS(TAB_PRESETS_KEY, "المجموعات المحفوظة"));
+
+  const persistLabels = (patch: Partial<{ filterButton: string; panelTitle: string; tabButtons: string; tabPresets: string }>) => {
+    const next = {
+      filterButton: filtersBtnLabel,
+      panelTitle,
+      tabButtons: tabButtonsLabel,
+      tabPresets: tabPresetsLabel,
+      ...patch,
+    };
+    window.localStorage.setItem(FILTERS_BTN_LABEL_KEY, next.filterButton);
+    window.localStorage.setItem(PANEL_TITLE_KEY, next.panelTitle);
+    window.localStorage.setItem(TAB_BUTTONS_KEY, next.tabButtons);
+    window.localStorage.setItem(TAB_PRESETS_KEY, next.tabPresets);
+    void setLocalDocumentValue({ data: { key: "button-filters-labels", value: next } }).catch(() => undefined);
+  };
+
+  const renameFiltersBtn = () => {
+    const next = prompt("اسم زر الفلاتر:", filtersBtnLabel)?.trim();
+    if (!next) return;
+    setFiltersBtnLabel(next);
+    persistLabels({ filterButton: next });
+    flash(`تم تغيير اسم الزر إلى "${next}"`);
+  };
+
   const renameSection = (
     current: string,
-    setter: (v: string) => void,
+    setter: (value: string) => void,
     key: string,
     promptLabel: string,
   ) => {
-    const next = prompt(promptLabel, current);
+    const next = prompt(promptLabel, current)?.trim();
     if (!next) return;
-    const trimmed = next.trim();
-    if (!trimmed) return;
-    setter(trimmed);
-    try {
-      window.localStorage.setItem(key, trimmed);
-    } catch {
-      /* ignore */
-    }
-    flash(`تم تغيير الاسم إلى "${trimmed}"`);
+    setter(next);
+    if (key === PANEL_TITLE_KEY) persistLabels({ panelTitle: next });
+    else if (key === TAB_BUTTONS_KEY) persistLabels({ tabButtons: next });
+    else persistLabels({ tabPresets: next });
+    flash(`تم تغيير الاسم إلى "${next}"`);
   };
 
 
@@ -195,11 +193,40 @@ export function ButtonFiltersPanel({ flash }: { flash: (m: string) => void }) {
     (async () => {
       setLoading(true);
       try {
-        const s = await loadButtonFilters();
+        const [s, publishedResult, labelsResult] = await Promise.all([
+          loadButtonFilters(),
+          getLocalDocumentValue({ data: { key: "button-filters-published" } }),
+          getLocalDocumentValue({ data: { key: "button-filters-labels" } }),
+        ]);
         setCustomFilters(s.customFilters || []);
         setState(s);
         setSaved(s);
-        setPublished(readPublished());
+        if (publishedResult.found) {
+          const publishedState = publishedResult.value as ButtonFiltersState;
+          window.localStorage.setItem(PUBLISHED_KEY, JSON.stringify(publishedState));
+          setPublished(publishedState);
+        } else {
+          const cachedPublished = readPublished();
+          setPublished(cachedPublished);
+          if (cachedPublished) {
+            void setLocalDocumentValue({ data: { key: "button-filters-published", value: cachedPublished } }).catch(() => undefined);
+          }
+        }
+        if (labelsResult.found && labelsResult.value && typeof labelsResult.value === "object") {
+          const labels = labelsResult.value as Partial<{ filterButton: string; panelTitle: string; tabButtons: string; tabPresets: string }>;
+          if (labels.filterButton) setFiltersBtnLabel(labels.filterButton);
+          if (labels.panelTitle) setPanelTitle(labels.panelTitle);
+          if (labels.tabButtons) setTabButtonsLabel(labels.tabButtons);
+          if (labels.tabPresets) setTabPresetsLabel(labels.tabPresets);
+        } else {
+          const cachedLabels = {
+            filterButton: readLS(FILTERS_BTN_LABEL_KEY, "الفلاتر"),
+            panelTitle: readLS(PANEL_TITLE_KEY, "إدارة فلاتر الأزرار"),
+            tabButtons: readLS(TAB_BUTTONS_KEY, "الفلاتر"),
+            tabPresets: readLS(TAB_PRESETS_KEY, "المجموعات المحفوظة"),
+          };
+          void setLocalDocumentValue({ data: { key: "button-filters-labels", value: cachedLabels } }).catch(() => undefined);
+        }
       } catch (e) {
         flash((e as Error).message || "فشل تحميل الإعدادات");
       }

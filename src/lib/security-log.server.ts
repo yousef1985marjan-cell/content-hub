@@ -1,7 +1,7 @@
 // Server-only helpers for audit logging + security email notifications.
 // Never import this file from client-reachable modules at top level.
 
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getLocalUserById, writeLocalSecurityEvent } from "./local-auth.server";
 
 export const REFERENCE_EMAIL = "gozyfgozyf5030018@gmail.com";
 export const SENDER_EMAIL = "noreply@shifaa.at";
@@ -49,21 +49,24 @@ type LogInput = {
 
 export async function logSecurityEvent(input: LogInput): Promise<void> {
   try {
-    await supabaseAdmin.from("security_audit_log").insert({
-      event_type: input.event,
-      actor_id: input.actorId ?? null,
-      actor_email: input.actorEmail ?? null,
-      target_id: input.targetId ?? null,
-      target_email: input.targetEmail ?? null,
-      status: input.status ?? "success",
-      details: (input.details ?? {}) as never,
+    const actor = input.actorId ? getLocalUserById(input.actorId) : null;
+    writeLocalSecurityEvent({
+      actor: actor || undefined,
+      action: input.event,
+      targetEmail: input.targetEmail,
+      metadata: {
+        actorEmail: input.actorEmail ?? actor?.email ?? null,
+        targetId: input.targetId ?? null,
+        status: input.status ?? "success",
+        details: input.details ?? {},
+      },
     });
-  } catch (e) {
-    console.error("[audit] failed to log", e);
+  } catch (error) {
+    console.error("[audit] failed to log", error);
   }
   if (input.notify !== false) {
-    void sendSecurityNotification(input).catch((e) =>
-      console.error("[audit] notification failed", e),
+    void sendSecurityNotification(input).catch((error) =>
+      console.error("[audit] notification failed", error),
     );
   }
 }

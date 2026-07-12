@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutLocal } from "@/lib/local-auth.functions";
 
 import { PageShell } from "@/components/page-shell";
 import {
@@ -49,6 +49,7 @@ function Admin() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [signingOut, setSigningOut] = useState(false);
+  const doSignOut = useServerFn(signOutLocal);
   const flash = (m: string) => {
     setFlashMsg(m);
     setTimeout(() => setFlashMsg(null), 1800);
@@ -61,7 +62,7 @@ function Admin() {
     try {
       await queryClient.cancelQueries();
       queryClient.clear();
-      await supabase.auth.signOut();
+      await doSignOut();
       navigate({ to: "/auth", replace: true });
     } catch {
       setSigningOut(false);

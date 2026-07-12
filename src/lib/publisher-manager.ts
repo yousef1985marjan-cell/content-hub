@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { LANGS, type Lang } from "./content-store";
 import type { BrandKey } from "./brand-icons";
+import { getLocalDocumentValue, setLocalDocumentValue } from "./local-documents.functions";
 
 export const PUB_GROUP_KEYS = ["social", "download", "videos", "apps", "media"] as const;
 export type PubGroupKey = (typeof PUB_GROUP_KEYS)[number];
@@ -102,11 +103,26 @@ export function usePublisherManager() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    let active = true;
     setState(read());
     setHydrated(true);
+    void getLocalDocumentValue({ data: { key: "publisher" } })
+      .then((result) => {
+        if (!active) return;
+        if (!result.found) {
+          void setLocalDocumentValue({ data: { key: "publisher", value: read() } }).catch(() => undefined);
+          return;
+        }
+        if (!result.value || typeof result.value !== "object") return;
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(result.value));
+        setState(read());
+        listeners.forEach((listener) => listener());
+      })
+      .catch(() => undefined);
     const l = () => setState(read());
     listeners.add(l);
     return () => {
+      active = false;
       listeners.delete(l);
     };
   }, []);
@@ -115,6 +131,7 @@ export function usePublisherManager() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     setState(next);
     listeners.forEach((l) => l());
+    void setLocalDocumentValue({ data: { key: "publisher", value: next } }).catch(() => undefined);
   }, []);
 
   const updateGroup = useCallback(

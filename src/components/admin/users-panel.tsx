@@ -1,6 +1,6 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { Plus, Trash2, RotateCcw, Copy, Pencil, Mail, ShieldCheck, ShieldOff, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, RotateCcw, Copy, Pencil, Mail, Eye, EyeOff } from "lucide-react";
 import {
   listUsers,
   createUser,
@@ -10,9 +10,7 @@ import {
   claimBootstrapAdmin,
   resetUserPassword,
   sendPasswordResetLink,
-  adminDisableUserMfa,
 } from "@/lib/users.functions";
-import { MfaSelfEnroll } from "./mfa-self-enroll";
 
 type UserRole = "super_admin" | "admin" | "editor";
 
@@ -72,7 +70,6 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
   const doClaim = useServerFn(claimBootstrapAdmin);
   const doReset = useServerFn(resetUserPassword);
   const doSendLink = useServerFn(sendPasswordResetLink);
-  const doDisableMfa = useServerFn(adminDisableUserMfa);
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -192,17 +189,6 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
     }
   };
 
-  const onDisableMfa = async (u: AdminUser) => {
-    if (!confirm(`تعطيل المصادقة الثنائية للمستخدم ${u.email}؟`)) return;
-    try {
-      await doDisableMfa({ data: { userId: u.id } });
-      flash("تم تعطيل المصادقة الثنائية");
-      await load();
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
-
   const openEdit = (u: AdminUser) => {
     setEditTarget(u);
     setEditName(u.full_name);
@@ -259,8 +245,6 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
 
   return (
     <div className="space-y-6">
-      <MfaSelfEnroll flash={flash} />
-
       <section className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-xs leading-relaxed">
         <b className="text-amber-700 dark:text-amber-400">ملاحظة أمنية:</b> كلمات السر مُشفّرة في القاعدة ولا يمكن استعراضها. عند إنشاء مستخدم أو إعادة تعيين كلمة سره ستُعرض لك مرة واحدة فقط لتسليمها له. لاستعادة ذاتية بواسطة المستخدم، استخدم زر «إرسال رابط الاستعادة».
       </section>
@@ -406,11 +390,6 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
                         <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${ROLE_COLOR[currentRole]}`}>
                           {ROLE_LABEL[currentRole]}
                         </span>
-                        {u.mfa_enabled && (
-                          <span className="inline-flex items-center gap-1 rounded bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
-                            <ShieldCheck className="h-3 w-3" /> 2FA
-                          </span>
-                        )}
                         {isMe && <span className="rounded bg-primary/20 px-2 py-0.5 text-[10px] text-primary">أنت</span>}
                       </div>
                       {u.description && (
@@ -450,15 +429,6 @@ export function UsersPanel({ flash }: { flash: (m: string) => void }) {
                       >
                         <KeyRoundIcon /> تعيين كلمة سر
                       </button>
-                      {u.mfa_enabled && (
-                        <button
-                          onClick={() => onDisableMfa(u)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-bold hover:bg-muted"
-                          title="تعطيل المصادقة الثنائية"
-                        >
-                          <ShieldOff className="h-3 w-3" /> تعطيل 2FA
-                        </button>
-                      )}
                       <button
                         onClick={() => onDelete(u.id, u.email)}
                         disabled={isMe}

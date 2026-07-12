@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { getLocalDocumentValue, setLocalDocumentValue } from "./local-documents.functions";
 
 /* ============================================================
  * Brand Identity — theme mode, colors, icons, fonts
@@ -158,12 +159,14 @@ export function readPublished(): BrandIdentity {
 export function writeDraft(v: BrandIdentity) {
   window.localStorage.setItem(BRAND_DRAFT_KEY, JSON.stringify(v));
   window.dispatchEvent(new Event(BRAND_UPDATED_EVENT));
+  void setLocalDocumentValue({ data: { key: "brand-draft", value: v } }).catch(() => undefined);
 }
 
 export function writePublished(v: BrandIdentity) {
   window.localStorage.setItem(BRAND_PUBLISHED_KEY, JSON.stringify(v));
   window.dispatchEvent(new Event(BRAND_UPDATED_EVENT));
   applyPublished();
+  void setLocalDocumentValue({ data: { key: "brand-published", value: v } }).catch(() => undefined);
 }
 
 /* -------- theme mode -------- */
@@ -321,10 +324,32 @@ export function useBrandIdentity() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    let active = true;
     setDraft(readDraft());
     setPublishedState(readPublished());
     setMode(readThemeMode());
     setHydrated(true);
+    void Promise.all([
+      getLocalDocumentValue({ data: { key: "brand-draft" } }),
+      getLocalDocumentValue({ data: { key: "brand-published" } }),
+    ]).then(([draftResult, publishedResult]) => {
+      if (!active) return;
+      if (draftResult.found) {
+        const nextDraft = safeParse(JSON.stringify(draftResult.value), DEFAULT_BRAND);
+        window.localStorage.setItem(BRAND_DRAFT_KEY, JSON.stringify(nextDraft));
+        setDraft(nextDraft);
+      } else {
+        void setLocalDocumentValue({ data: { key: "brand-draft", value: readDraft() } }).catch(() => undefined);
+      }
+      if (publishedResult.found) {
+        const nextPublished = safeParse(JSON.stringify(publishedResult.value), DEFAULT_BRAND);
+        window.localStorage.setItem(BRAND_PUBLISHED_KEY, JSON.stringify(nextPublished));
+        setPublishedState(nextPublished);
+        window.dispatchEvent(new Event(BRAND_UPDATED_EVENT));
+      } else {
+        void setLocalDocumentValue({ data: { key: "brand-published", value: readPublished() } }).catch(() => undefined);
+      }
+    }).catch(() => undefined);
     const refresh = () => {
       setDraft(readDraft());
       setPublishedState(readPublished());
@@ -333,6 +358,7 @@ export function useBrandIdentity() {
     window.addEventListener(BRAND_UPDATED_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
+      active = false;
       window.removeEventListener(BRAND_UPDATED_EVENT, refresh);
       window.removeEventListener("storage", refresh);
     };

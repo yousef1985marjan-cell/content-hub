@@ -1,4 +1,5 @@
 import { fetchWithTimeout, getSettings } from "./app-settings";
+import { getLocalDocumentValue, setLocalDocumentValue } from "./local-documents.functions";
 
 export type KnownFilterId =
   | "filter_time_auto"
@@ -505,7 +506,21 @@ function authHeaders(): HeadersInit {
 }
 
 export async function loadButtonFilters(): Promise<ButtonFiltersState> {
-  if (isOffline()) return readLocal();
+  if (isOffline()) {
+    try {
+      const result = await getLocalDocumentValue({ data: { key: "button-filters-draft" } });
+      if (result.found) {
+        window.localStorage.setItem(LOCAL_KEY, JSON.stringify(result.value));
+        return readLocal();
+      }
+      const cached = readLocal();
+      await setLocalDocumentValue({ data: { key: "button-filters-draft", value: cached } });
+      return cached;
+    } catch {
+      // Keep the browser cache available if the local server is temporarily unreachable.
+    }
+    return readLocal();
+  }
   const { adminApiBaseUrl } = getSettings();
   const res = await fetchWithTimeout(`${adminApiBaseUrl}/button-filters`, {
     headers: authHeaders(),
@@ -536,6 +551,7 @@ export async function saveButtonFilters(
   const next = { ...state, updated_at: new Date().toISOString() };
   if (isOffline()) {
     writeLocal(next);
+    await setLocalDocumentValue({ data: { key: "button-filters-draft", value: next } });
     return next;
   }
   const { adminApiBaseUrl } = getSettings();

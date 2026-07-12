@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/page-shell";
-import { supabase } from "@/integrations/supabase/client";
 import { Lock, Save, ArrowLeft } from "lucide-react";
+import { resetLocalPassword, validateLocalResetToken } from "@/lib/local-auth.functions";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({ meta: [{ title: "استرجاع كلمة السر" }, { name: "robots", content: "noindex" }] }),
@@ -11,6 +11,8 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
+  const [token, setToken] = useState("");
+  const [checking, setChecking] = useState(true);
   const [ready, setReady] = useState(false);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -19,22 +21,24 @@ function ResetPasswordPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    // Supabase places the recovery token in the URL hash and creates a session
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
-    return () => sub.subscription.unsubscribe();
+    const value = new URLSearchParams(window.location.search).get("token") || "";
+    setToken(value);
+    if (!value) {
+      setChecking(false);
+      return;
+    }
+    validateLocalResetToken({ data: { token: value } })
+      .then(({ valid }) => setReady(valid))
+      .catch(() => setReady(false))
+      .finally(() => setChecking(false));
   }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setNotice(null);
-    if (password.length < 6) {
-      setError("كلمة السر يجب أن تكون 6 أحرف على الأقل");
+    if (password.length < 10) {
+      setError("كلمة السر يجب أن تكون 10 محارف على الأقل");
       return;
     }
     if (password !== confirm) {
@@ -42,14 +46,15 @@ function ResetPasswordPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await resetLocalPassword({ data: { token, password } });
+      setNotice("تم تحديث كلمة السر. جاري التحويل إلى صفحة الدخول...");
+      setTimeout(() => navigate({ to: "/auth" }), 1200);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "تعذّر تحديث كلمة السر");
+    } finally {
+      setLoading(false);
     }
-    setNotice("تم تحديث كلمة السر. جاري التحويل...");
-    setTimeout(() => navigate({ to: "/admin" }), 1200);
   };
 
   return (
@@ -63,9 +68,13 @@ function ResetPasswordPage() {
             </Link>
           </div>
 
-          {!ready ? (
+          {checking ? (
             <p className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-              يرجى فتح هذه الصفحة من الرابط المُرسل إلى بريدك الإلكتروني.
+              جاري التحقق من رابط الاسترجاع...
+            </p>
+          ) : !ready ? (
+            <p className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+              رابط الاسترجاع غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا من صفحة تسجيل الدخول.
             </p>
           ) : (
             <form onSubmit={submit} className="space-y-4">
@@ -76,7 +85,8 @@ function ResetPasswordPage() {
                 <input
                   type="password"
                   required
-                  minLength={6}
+                  minLength={10}
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -89,22 +99,15 @@ function ResetPasswordPage() {
                 <input
                   type="password"
                   required
-                  minLength={6}
+                  minLength={10}
+                  autoComplete="new-password"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
-              {error && (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
-                  {error}
-                </div>
-              )}
-              {notice && (
-                <div className="rounded-lg border border-primary/30 bg-primary/10 p-3 text-xs text-primary">
-                  {notice}
-                </div>
-              )}
+              {error && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">{error}</div>}
+              {notice && <div className="rounded-lg border border-primary/30 bg-primary/10 p-3 text-xs text-primary">{notice}</div>}
               <button
                 type="submit"
                 disabled={loading}

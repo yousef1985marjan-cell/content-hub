@@ -1,15 +1,23 @@
 [Unit]
-Description=Shifaa TanStack Start App
-After=network.target
+Description=Shifaa Content Hub (Local SQLite)
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
 User=www-data
+Group=www-data
 WorkingDirectory=/var/www/shifaa
 EnvironmentFile=/var/www/shifaa/.env
 ExecStart=/usr/bin/node .output/server/index.mjs
 Restart=on-failure
 RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/shifaa
 
 [Install]
 WantedBy=multi-user.target

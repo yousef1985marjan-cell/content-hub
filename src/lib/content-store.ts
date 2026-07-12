@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { getLocalDocumentValue, setLocalDocumentValue } from "./local-documents.functions";
 
 export type ExtraLink = {
   id: string;
@@ -193,7 +194,7 @@ function normalize(raw: unknown): ContentState {
   return merged;
 }
 
-function read(): ContentState {
+function readCache(): ContentState {
   if (typeof window === "undefined") return DEFAULTS;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -211,26 +212,44 @@ export function useContent() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setState(read());
+    let active = true;
+    const cached = readCache();
+    setState(cached);
     setHydrated(true);
-    const l = () => setState(read());
+    void getLocalDocumentValue({ data: { key: "content" } })
+      .then((result) => {
+        if (!active) return;
+        if (!result.found) {
+          void setLocalDocumentValue({ data: { key: "content", value: cached } }).catch(() => undefined);
+          return;
+        }
+        const next = normalize(result.value);
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        setState(next);
+        listeners.forEach((listener) => listener());
+      })
+      .catch(() => undefined);
+    const l = () => setState(readCache());
     listeners.add(l);
     return () => {
+      active = false;
       listeners.delete(l);
     };
   }, []);
 
   const update = useCallback((patch: Partial<ContentState>) => {
-    const next = { ...read(), ...patch };
+    const next = normalize({ ...readCache(), ...patch });
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     setState(next);
     listeners.forEach((l) => l());
+    void setLocalDocumentValue({ data: { key: "content", value: next } }).catch(() => undefined);
   }, []);
 
   const reset = useCallback(() => {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULTS));
     setState(DEFAULTS);
     listeners.forEach((l) => l());
+    void setLocalDocumentValue({ data: { key: "content", value: DEFAULTS } }).catch(() => undefined);
   }, []);
 
   return { state, update, reset, hydrated };
