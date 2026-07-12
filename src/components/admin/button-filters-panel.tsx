@@ -810,6 +810,7 @@ function ButtonCard({
   const [addFid, setAddFid] = useState<FilterId | "">("");
   const [openSettings, setOpenSettings] = useState<string | null>(null);
   const [pendingRemove, setPendingRemove] = useState<FilterId | null>(null);
+  const [pendingClearAll, setPendingClearAll] = useState(false);
 
   const used = new Set(cfg.filters.map((f) => f.id));
 
