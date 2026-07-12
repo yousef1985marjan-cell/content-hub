@@ -840,6 +840,12 @@ function ButtonCard({
     setPendingRemove(null);
   };
 
+  const doClearAll = () => {
+    const sticky = cfg.filters.filter((f) => getFilterMeta(f.id).stickyOn?.includes(cfg.id));
+    onChange({ ...cfg, filters: sticky });
+    setPendingClearAll(false);
+  };
+
   const add = () => {
     if (!addFid) return;
     const conflicts = conflictsIn(cfg.filters, addFid);
