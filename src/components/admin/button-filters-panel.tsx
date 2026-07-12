@@ -810,6 +810,7 @@ function ButtonCard({
   const [addFid, setAddFid] = useState<FilterId | "">("");
   const [openSettings, setOpenSettings] = useState<string | null>(null);
   const [pendingRemove, setPendingRemove] = useState<FilterId | null>(null);
+  const [pendingClearAll, setPendingClearAll] = useState(false);
 
   const used = new Set(cfg.filters.map((f) => f.id));
 
@@ -837,6 +838,12 @@ function ButtonCard({
     if (!pendingRemove) return;
     onChange({ ...cfg, filters: cfg.filters.filter((f) => f.id !== pendingRemove) });
     setPendingRemove(null);
+  };
+
+  const doClearAll = () => {
+    const sticky = cfg.filters.filter((f) => getFilterMeta(f.id).stickyOn?.includes(cfg.id));
+    onChange({ ...cfg, filters: sticky });
+    setPendingClearAll(false);
   };
 
   const add = () => {
@@ -1071,6 +1078,15 @@ function ButtonCard({
           لصق الفلاتر
         </button>
         <button
+          onClick={() => setPendingClearAll(true)}
+          disabled={cfg.filters.length === 0}
+          className="inline-flex items-center gap-1 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20 disabled:opacity-40"
+          title="حذف جميع الفلاتر من هذه البطاقة (يُبقي الفلاتر المثبتة)"
+        >
+          <Trash2 className="h-3 w-3" />
+          حذف جميع الفلاتر
+        </button>
+        <button
           onClick={onPublish}
           disabled={dirty || isPublished}
           className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-40"
@@ -1091,6 +1107,25 @@ function ButtonCard({
           onCancel={() => setPendingRemove(null)}
         >
           هل أنت متأكد بأنك ستحذف فلتر &quot;{getFilterMeta(pendingRemove).label}&quot; من هذه البطاقة؟
+        </ConfirmDialog>
+      )}
+
+      {pendingClearAll && (
+        <ConfirmDialog
+          open
+          title="تأكيد حذف جميع الفلاتر"
+          confirmLabel="حذف الكل"
+          cancelLabel="إلغاء"
+          variant="danger"
+          onConfirm={doClearAll}
+          onCancel={() => setPendingClearAll(false)}
+        >
+          هل أنت متأكد من حذف جميع فلاتر بطاقة &quot;{buttonLabel(cfg)}&quot;؟
+          {cfg.filters.some((f) => getFilterMeta(f.id).stickyOn?.includes(cfg.id)) && (
+            <span className="mt-2 block text-amber-600">
+              الفلاتر المثبتة لن تُحذف.
+            </span>
+          )}
         </ConfirmDialog>
       )}
     </div>
