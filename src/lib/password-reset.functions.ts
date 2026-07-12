@@ -1,82 +1,66 @@
 import { createServerFn } from "@tanstack/react-start";
 
+const ALLOWED_REDIRECT_HOSTS = new Set(["gm.shifaa.at", "localhost", "127.0.0.1"]);
+
 export const sendPasswordResetEmail = createServerFn({ method: "POST" })
   .inputValidator((data: { email: string; redirectTo: string }) => {
-    if (!data?.email || !data.email.includes("@")) throw new Error("بريد غير صالح");
+    const email = data?.email?.trim().toLowerCase();
+    if (!email || !email.includes("@")) throw new Error("بريد غير صالح");
     if (!data?.redirectTo) throw new Error("redirectTo مطلوب");
-    return data;
-  })
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { logSecurityEvent, SENDER_EMAIL, SENDER_NAME } = await import("./security-log.server");
 
-    // Always respond generically; never reveal whether the email exists.
-    let actionLink: string | null = null;
-    let userId: string | null = null;
+    let redirectUrl: URL;
     try {
-      const { data: linkData, error } = await supabaseAdmin.auth.admin.generateLink({
-        type: "recovery",
-        email: data.email,
-        options: { redirectTo: data.redirectTo },
-      });
-      if (!error) {
-        actionLink = linkData?.properties?.action_link ?? null;
-        userId = linkData?.user?.id ?? null;
-      }
+      redirectUrl = new URL(data.redirectTo);
     } catch {
-      // swallow — generic response below
+      throw new Error("عنوان إعادة التوجيه غير صالح");
+    }
+    if (!ALLOWED_REDIRECT_HOSTS.has(redirectUrl.hostname)) {
+      throw new Error("عنوان إعادة التوجيه غير مسموح");
     }
 
-    if (actionLink) {
-      const key = process.env.RESEND_API_KEY;
-      if (key) {
-        const html = `<!doctype html>
-<html lang="ar" dir="rtl"><body style="margin:0;padding:0;background:#f6f7f9;font-family:-apple-system,Segoe UI,Tahoma,Arial,sans-serif;color:#111">
-  <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e5e7eb">
-    <div style="background:#064C32;color:#fff;padding:16px 20px;font-weight:800">استرجاع كلمة السر — منصات شفاء</div>
-    <div style="padding:24px">
-      <p style="margin:0 0 12px;font-size:14px;line-height:1.8">استلمنا طلباً لإعادة تعيين كلمة السر لحسابك. اضغط على الزر أدناه لاختيار كلمة سر جديدة. الرابط صالح لمدة 15 دقيقة ويُستخدم مرة واحدة فقط.</p>
-      <p style="margin:20px 0"><a href="${actionLink}" style="display:inline-block;background:#064C32;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:800">إعادة تعيين كلمة السر</a></p>
-      <p style="margin:12px 0 0;font-size:12px;color:#6b7280">إذا لم يعمل الزر، انسخ الرابط التالي وافتحه في المتصفح:</p>
-      <p style="margin:6px 0 0;font-size:11px;word-break:break-all;color:#374151">${actionLink}</p>
-      <hr style="margin:20px 0;border:none;border-top:1px solid #eee" />
-      <p style="margin:0;font-size:12px;color:#6b7280">إن لم تطلب أنت هذا الاسترجاع، تجاهل هذه الرسالة وستبقى كلمة السر كما هي.</p>
-    </div>
-  </div>
-</body></html>`;
-        try {
-          const res = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${key}`,
-            },
-            body: JSON.stringify({
-              from: `${SENDER_NAME.replace("الأمان", "استرجاع")} <${SENDER_EMAIL}>`,
-              to: [data.email],
-              subject: "استرجاع كلمة السر — منصات شفاء",
-              html,
-            }),
-          });
-          if (!res.ok) {
-            console.error("[reset] resend failed", res.status, await res.text());
-          }
-        } catch (e) {
-          console.error("[reset] resend threw", e);
+    return { email, redirectTo: redirectUrl.toString() };
+  })
+  .handler(async ({ data }) => {
+    const { logSecurityEvent } = await import("./security-log.server");
+
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const publishableKey =
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+
+    let accepted = false;
+    if (!supabaseUrl || !publishableKey) {
+      console.error("[reset] Supabase public environment variables are missing");
+    } else {
+      try {
+        const endpoint = new URL("/auth/v1/recover", supabaseUrl);
+        endpoint.searchParams.set("redirect_to", data.redirectTo);
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: publishableKey,
+          },
+          body: JSON.stringify({ email: data.email }),
+        });
+
+        accepted = response.ok;
+        if (!response.ok) {
+          console.error("[reset] Supabase recovery request failed", response.status);
         }
-      } else {
-        console.warn("[reset] RESEND_API_KEY missing");
+      } catch (error) {
+        console.error("[reset] Supabase recovery request threw", error);
       }
     }
 
     await logSecurityEvent({
       event: "user.password_reset_link_sent",
-      targetId: userId,
       targetEmail: data.email,
-      status: actionLink ? "success" : "failure",
-      details: { delivered_via: "resend", sender: "noreply@shifaa.at" },
+      status: accepted ? "success" : "failure",
+      details: { delivered_via: "supabase_auth", redirect_host: new URL(data.redirectTo).host },
       notify: true,
     });
 
+    // Always respond generically; never reveal whether the email exists.
     return { ok: true };
   });
