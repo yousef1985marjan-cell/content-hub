@@ -99,14 +99,6 @@ function Admin() {
             {t.label}
           </button>
         ))}
-        <button
-          onClick={handleSignOut}
-          disabled={signingOut}
-          className="ms-auto inline-flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm font-bold text-destructive hover:bg-destructive/20 disabled:opacity-50"
-        >
-          <LogOut className="h-4 w-4" />
-          {signingOut ? "جاري الخروج..." : "تسجيل الخروج"}
-        </button>
       </div>
 
 
