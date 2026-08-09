@@ -1,7 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useQueryClient } from "@tanstack/react-query";
-import { signOutLocal } from "@/lib/local-auth.functions";
+import { createFileRoute } from "@tanstack/react-router";
+
 
 import { PageShell } from "@/components/page-shell";
 import {
