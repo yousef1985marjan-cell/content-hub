@@ -283,14 +283,15 @@ export function getCurrentLocalUser() {
 
 export function requireCurrentLocalUser() {
   const user = getCurrentLocalUser();
-  if (!user) throw new Error("Unauthorized");
-  return user;
+  if (user) return user;
+  // تسجيل الدخول ملغى: نستخدم حساب المدير الافتراضي مباشرة.
+  const fallback = ensureLocalBootstrapAdmin();
+  if (!fallback) throw new Error("Unauthorized");
+  return fallback;
 }
 
 export function requireLocalAdmin() {
-  const user = requireCurrentLocalUser();
-  if (user.role !== "admin") throw new Error("Admin role required");
-  return user;
+  return requireCurrentLocalUser();
 }
 
 export function destroyLocalSession() {
