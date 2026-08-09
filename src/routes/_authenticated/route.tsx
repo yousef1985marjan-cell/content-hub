@@ -1,12 +1,7 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { getLocalSession } from "@/lib/local-auth.functions";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
+// تسجيل الدخول ملغى: لوحة التحكم تُفتح مباشرة بدون حماية.
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async () => {
-    const { user } = await getLocalSession();
-    if (!user) throw redirect({ to: "/auth" });
-    return { user };
-  },
   component: () => <Outlet />,
 });

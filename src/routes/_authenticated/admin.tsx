@@ -1,7 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQueryClient } from "@tanstack/react-query";
-import { signOutLocal } from "@/lib/local-auth.functions";
+
 
 import { PageShell } from "@/components/page-shell";
 import {
@@ -46,28 +45,11 @@ function Admin() {
   const { state, update, hydrated } = useContent();
   const [activeTab, setActiveTab] = useState<TabKey>("__button_filters");
   const [flashMsg, setFlashMsg] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [signingOut, setSigningOut] = useState(false);
-  const doSignOut = useServerFn(signOutLocal);
   const flash = (m: string) => {
     setFlashMsg(m);
     setTimeout(() => setFlashMsg(null), 1800);
   };
 
-  const handleSignOut = async () => {
-    if (signingOut) return;
-    if (!confirm("هل تريد تسجيل الخروج من لوحة التحكم؟")) return;
-    setSigningOut(true);
-    try {
-      await queryClient.cancelQueries();
-      queryClient.clear();
-      await doSignOut();
-      navigate({ to: "/auth", replace: true });
-    } catch {
-      setSigningOut(false);
-    }
-  };
 
   if (!hydrated) {
     return (
@@ -99,14 +81,6 @@ function Admin() {
             {t.label}
           </button>
         ))}
-        <button
-          onClick={handleSignOut}
-          disabled={signingOut}
-          className="ms-auto inline-flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm font-bold text-destructive hover:bg-destructive/20 disabled:opacity-50"
-        >
-          <LogOut className="h-4 w-4" />
-          {signingOut ? "جاري الخروج..." : "تسجيل الخروج"}
-        </button>
       </div>
 
 
@@ -197,7 +171,7 @@ function SectionEditor({
           // merge: prefer translated link titles, keep url as-is from arabic
           const linksById = new Map(existingLinks.map((l) => [l.id, l]));
           const mergedLinks: SectionLink[] = ar.links.map((arL) => {
-            const t = r.links.find((x) => x.id === arL.id);
+            const t = r.links.find((x: { id: string; title: string }) => x.id === arL.id);
             return {
               id: arL.id,
               title: t?.title || linksById.get(arL.id)?.title || arL.title,
