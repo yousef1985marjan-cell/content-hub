@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireLocalAuth } from "./local-auth-middleware";
+import type { JsonValue } from "./json";
 
 type LocalAuditRow = {
   id: string;
@@ -12,9 +13,9 @@ type LocalAuditRow = {
 };
 
 function normalizeAuditRow(row: LocalAuditRow) {
-  let metadata: Record<string, unknown> = {};
+  let metadata: Record<string, JsonValue> = {};
   try {
-    metadata = JSON.parse(row.metadata_json || "{}") as Record<string, unknown>;
+    metadata = JSON.parse(row.metadata_json || "{}") as Record<string, JsonValue>;
   } catch {
     metadata = {};
   }
@@ -28,7 +29,7 @@ function normalizeAuditRow(row: LocalAuditRow) {
     status: metadata.status === "failure" ? "failure" : "success",
     details:
       metadata.details && typeof metadata.details === "object"
-        ? (metadata.details as Record<string, unknown>)
+        ? (metadata.details as Record<string, JsonValue>)
         : metadata,
   };
 }
