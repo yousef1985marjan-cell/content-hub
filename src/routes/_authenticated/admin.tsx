@@ -46,28 +46,11 @@ function Admin() {
   const { state, update, hydrated } = useContent();
   const [activeTab, setActiveTab] = useState<TabKey>("__button_filters");
   const [flashMsg, setFlashMsg] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [signingOut, setSigningOut] = useState(false);
-  const doSignOut = useServerFn(signOutLocal);
   const flash = (m: string) => {
     setFlashMsg(m);
     setTimeout(() => setFlashMsg(null), 1800);
   };
 
-  const handleSignOut = async () => {
-    if (signingOut) return;
-    if (!confirm("هل تريد تسجيل الخروج من لوحة التحكم؟")) return;
-    setSigningOut(true);
-    try {
-      await queryClient.cancelQueries();
-      queryClient.clear();
-      await doSignOut();
-      navigate({ to: "/auth", replace: true });
-    } catch {
-      setSigningOut(false);
-    }
-  };
 
   if (!hydrated) {
     return (
