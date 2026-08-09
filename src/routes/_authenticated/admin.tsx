@@ -171,7 +171,7 @@ function SectionEditor({
           // merge: prefer translated link titles, keep url as-is from arabic
           const linksById = new Map(existingLinks.map((l) => [l.id, l]));
           const mergedLinks: SectionLink[] = ar.links.map((arL) => {
-            const t = r.links.find((x) => x.id === arL.id);
+            const t = r.links.find((x: { id: string; title: string }) => x.id === arL.id);
             return {
               id: arL.id,
               title: t?.title || linksById.get(arL.id)?.title || arL.title,
