@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireLocalAuth } from "./local-auth-middleware";
+import type { JsonValue } from "./json";
 
 export const LOCAL_DOCUMENT_KEYS = [
   "content",
@@ -29,7 +30,7 @@ export const getLocalDocumentValue = createServerFn({ method: "POST" })
     const { getLocalDocument } = await import("./local-auth.server");
     const document = getLocalDocument(data.key);
     return document
-      ? { found: true as const, value: document.value, updatedAt: document.updatedAt }
+      ? { found: true as const, value: document.value as JsonValue, updatedAt: document.updatedAt }
       : { found: false as const, value: null, updatedAt: null };
   });
 
